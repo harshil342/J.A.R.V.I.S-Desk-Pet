@@ -669,7 +669,7 @@ test("settings IPC serves agent/about/update/external and remove-theme dialog he
     ]);
     assert.deepStrictEqual(await ipcMain.invoke("settings:get-about-info"), {
       version: "1.2.3",
-      appName: "MiniCPM Desk Pet",
+      appName: "Deskpet",
       repoUrl: "https://github.com/OpenBMB/MiniCPM-Desk-Pet",
       modelRepoUrl: "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF",
       license: "AGPL-3.0-only",

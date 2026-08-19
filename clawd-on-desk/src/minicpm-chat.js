@@ -545,6 +545,14 @@ class Sidecar {
     const env = {
       ...process.env,
       PYTHONUNBUFFERED: "1",
+      // Windows: the gateway's "auto" device resolves to CPU. If a CUDA
+      // llama-server backend ships under bin/<triple>/backends/cuda/ and
+      // the user hasn't pinned a device, default to cuda so NVIDIA
+      // machines get GPU inference out of the box.
+      MINICPM_DEVICE: process.env.MINICPM_DEVICE
+        || (process.platform === "win32" && fs.existsSync(path.join(
+          this.sidecarDir || "", "bin", "win-x64", "backends", "cuda", "llama-server.exe"
+        )) ? "cuda" : "auto"),
       // Mirror our sidecar.log directory into the gateway so its
       // RotatingFileHandler drops sidecar-internal.log next to what
       // Electron captures — easy to grab via Settings → "打开日志目录".
@@ -1274,10 +1282,19 @@ module.exports = function initMinicpmChat(ctx) {
     }
   } catch {}
 
+  // Full gateway sidecar (FastAPI on :18765) — it spawns and owns its
+  // own llama-server, and provides /api/chat, personas (LoRA), thinking
+  // filter, model discovery and tool hooks. The earlier direct
+  // LlamaServerManager wiring bypassed all of that.
   const sidecar = new Sidecar({
-    sidecarDir, sidecarBin, appRoot, port, host, log,
+    sidecarDir,
+    sidecarBin,
+    appRoot,
+    port,
+    host: process.env.MINICPM_HOST || DEFAULT_HOST,
+    log,
     logFile: sidecarLogPath,
-    adapterDir,
+    adapterDir: getEffectiveAdapterDir(),
     modelPresent: (dir) => isModelPresent(dir),
   });
   // Refresh `sidecar.activeAdapterPath` from prefs every time we're about
@@ -1298,6 +1315,11 @@ module.exports = function initMinicpmChat(ctx) {
   refreshActiveAdapterPath();
 
   let bubble = null;
+  // Resolves when the bubble's renderer page has finished loading and its
+  // IPC listeners (onOpen etc.) are registered. Without awaiting this,
+  // cmd-open sent right after createBubble() is dropped and the bubble
+  // never paints (transparent window, phase stays "hidden").
+  let bubbleReady = null;
   let activeSide = "right";
   // Updated from /api/health after the sidecar comes online — drives the
   // narrator's voice (default vs neko etc.).
@@ -1728,6 +1750,11 @@ module.exports = function initMinicpmChat(ctx) {
     bubble.setMenuBarVisibility(false);
     // Bypass any cached HTML so code changes always take effect.
     bubble.webContents.session.clearCache();
+    bubbleReady = new Promise((resolve) => {
+      const wc = bubble.webContents;
+      if (!wc.isLoading()) resolve();
+      else wc.once("did-finish-load", resolve);
+    });
     bubble.loadFile(path.join(__dirname, "minicpm-chat.html"));
 
     bubble.webContents.on("before-input-event", (event, input) => {
@@ -1739,12 +1766,24 @@ module.exports = function initMinicpmChat(ctx) {
     });
     bubble.on("closed", () => { bubble = null; });
 
+    // Diagnostics: surface renderer console + load failures in the main log.
+    bubble.webContents.on("console-message", (_e, level, message) => {
+      log(`[bubble-console:${level}] ${message}`);
+    });
+    bubble.webContents.on("did-fail-load", (_e, code, desc, url) => {
+      log(`[minicpm-chat] bubble did-fail-load: ${code} ${desc} (${url})`);
+    });
+
     return bubble;
   }
 
   function ensureBubble() {
     if (!bubble || bubble.isDestroyed()) createBubble();
     return bubble;
+  }
+
+  async function waitForBubbleReady() {
+    if (bubbleReady) await bubbleReady;
   }
 
   async function open() {
@@ -1761,6 +1800,9 @@ module.exports = function initMinicpmChat(ctx) {
     if (!bubble.isVisible()) bubble.show();
     bubble.focus();
     bubbleShown = true;
+    // Only send cmd-open once the renderer has registered its listeners;
+    // otherwise the first open after createBubble() is silently dropped.
+    await waitForBubbleReady();
     bubble.webContents.send("minicpm:cmd-open", { side: activeSide });
     // Fire a 1-token warmup so the model weights are paged back into RAM
     // by the time the user finishes typing. Throttled — repeated opens
@@ -1804,7 +1846,9 @@ module.exports = function initMinicpmChat(ctx) {
     // The renderer owns the flag; we just nudge it to flip and toast.
     // If the bubble doesn't exist yet, ensure it does so the listener attaches.
     ensureBubble();
-    bubble.webContents.send("minicpm:cmd-toggle-thinking");
+    void waitForBubbleReady().then(() => {
+      if (bubble && !bubble.isDestroyed()) bubble.webContents.send("minicpm:cmd-toggle-thinking");
+    });
   }
 
   function shutdown() {
@@ -2519,7 +2563,7 @@ module.exports = function initMinicpmChat(ctx) {
       try {
         await httpJson("POST", `${sidecar.baseUrl()}/api/set-device`, { device }, 1500);
       } catch {}
-      return { ok: true, device, note: "下次 sidecar 重启时生效" };
+      return { ok: true, device, note: "Takes effect next time the server restarts" };
     },
     "minicpm-settings:set-device-and-restart": async (_evt, payload) => {
       const device = (payload && payload.device) || "";
@@ -2581,10 +2625,10 @@ module.exports = function initMinicpmChat(ctx) {
     "minicpm-settings:pick-model-dir": async () => {
       const { dialog } = require("electron");
       const ret = await dialog.showOpenDialog({
-        title: "选择本地 MiniCPM 模型 (.gguf 文件或包含 .gguf 的目录)",
+        title: "Select local Deskpet model (folder containing .gguf)",
         properties: ["openFile", "openDirectory"],
         filters: [{ name: "GGUF model", extensions: ["gguf"] }],
-        message: "可以是单个 .gguf 文件，或包含 .gguf 的目录",
+        message: "Can be a single .gguf file, or a directory containing a .gguf file",
       });
       if (ret.canceled || !ret.filePaths.length) return { ok: false, canceled: true };
       const picked = ret.filePaths[0];
@@ -2595,11 +2639,11 @@ module.exports = function initMinicpmChat(ctx) {
           const entries = fs.readdirSync(picked)
             .filter((n) => n.toLowerCase().endsWith(".gguf"));
           if (!entries.length) {
-            return { ok: false, error: `所选目录不包含 .gguf：\n${picked}` };
+            return { ok: false, error: `The selected directory does not contain a .gguf file:\n${picked}` };
           }
           target = path.join(picked, entries[0]);
         } else if (!picked.toLowerCase().endsWith(".gguf")) {
-          return { ok: false, error: `请选择 .gguf 文件：\n${picked}` };
+          return { ok: false, error: `Please select a .gguf file:\n${picked}` };
         }
       } catch (err) {
         return { ok: false, error: String(err && err.message || err) };

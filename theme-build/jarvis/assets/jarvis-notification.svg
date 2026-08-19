@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<style>
+@keyframes nTilt{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(-4deg)}}
+@keyframes nPop{0%{transform:translateY(8px) scale(.4);opacity:0}45%{transform:translateY(-4px) scale(1.12);opacity:1}60%{transform:translateY(0) scale(1)}100%{transform:translateY(0) scale(1)}}
+@keyframes nPing{0%{transform:scale(.4);opacity:.8}100%{transform:scale(1.5);opacity:0}}
+@keyframes nLed{0%,100%{opacity:.4}50%{opacity:1}}
+.tilt-g{transform-origin:100px 120px;animation:nTilt 2.4s ease-in-out infinite}
+.packet{transform-origin:132px 34px;animation:nPop 2.4s ease-out infinite}
+.ring{transform-origin:132px 34px;animation:nPing 2.4s ease-out infinite}
+.led{animation:nLed 1.2s ease-in-out infinite}
+</style>
+<ellipse cx="100" cy="178" rx="44" ry="6" fill="#04070C" opacity="0.55"/>
+<g class="tilt-g">
+<polygon points="100,148 84,174 100,164 116,174" fill="#0B1119" stroke="#1C2A3B" stroke-width="1.4"/>
+<path d="M100,30 L138,78 L144,118 Q144,152 100,164 Q56,152 56,118 L62,78 Z" fill="#0F1620" stroke="#22344A" stroke-width="1.6"/>
+<polygon points="100,10 88,38 112,38" fill="#121B27" stroke="#22344A" stroke-width="1.4"/>
+<polyline points="100,10 112,38" fill="none" stroke="#64E6EF" stroke-width="1.8"/>
+<polygon points="56,104 30,124 58,128" fill="#101923" stroke="#22344A" stroke-width="1.4"/>
+<polygon points="144,104 170,124 142,128" fill="#101923" stroke="#22344A" stroke-width="1.4"/>
+<rect x="68" y="82" width="64" height="21" rx="6" fill="#060A10" stroke="#1B2C3F" stroke-width="1.4"/>
+<rect x="72" y="90" width="56" height="5" rx="2.5" fill="#0E4A5C"/>
+<circle cx="88" cy="91" r="3.2" fill="#B4F6FB"/>
+<circle cx="112" cy="91" r="3.2" fill="#B4F6FB"/>
+<circle cx="100" cy="134" r="7" fill="#64E6EF" opacity="0.55"/>
+<path d="M100,137.5 L105,131 L95,131 Z" fill="#D1FBFC"/>
+</g>
+<circle class="ring" cx="132" cy="34" r="18" fill="none" stroke="#FF3D81" stroke-width="1.6"/>
+<g class="packet">
+<rect x="118" y="24" width="28" height="20" fill="#0B1119" stroke="#FF3D81" stroke-width="1.6"/>
+<path d="M118,24 L132,36 L146,24" fill="none" stroke="#FF3D81" stroke-width="1.4"/>
+<circle class="led" cx="141" cy="40" r="2.2" fill="#64E6EF"/>
+</g>
+</svg>

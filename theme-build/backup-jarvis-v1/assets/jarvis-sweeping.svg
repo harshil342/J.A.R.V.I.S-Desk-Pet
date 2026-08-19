@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<style>
+@keyframes glowPulse{0%,100%{opacity:0.5}50%{opacity:0.85}}
+@keyframes spinCW{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes beamSweep{0%{transform:translateX(-46px)}50%{transform:translateX(46px)}100%{transform:translateX(-46px)}}
+@keyframes beamFade{0%,100%{opacity:0.25}50%{opacity:0.9}}
+.glow{animation:glowPulse 2s ease-in-out infinite}
+.ring-in{transform-origin:100px 92px;animation:spinCW 5s linear infinite}
+.ring-out{transform-origin:100px 92px;animation:spinCW 8s linear infinite}
+.beam-g{animation:beamSweep 2.6s ease-in-out infinite}
+.beam{animation:beamFade 2.6s ease-in-out infinite}
+</style>
+<ellipse cx="100" cy="178" rx="40" ry="6" fill="#020B14" opacity="0.5"/>
+<defs>
+<filter id="jarvis-blur" x="-60%" y="-60%" width="220%" height="220%">
+<feGaussianBlur stdDeviation="7"/>
+</filter>
+</defs>
+<circle cx="100" cy="92" r="48" fill="#081426" stroke="#0E2C4A" stroke-width="3"/>
+<circle cx="100" cy="92" r="36" fill="#061020" stroke="#0A2036" stroke-width="2"/>
+<g transform="rotate(0 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<g transform="rotate(36 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<g transform="rotate(72 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<g transform="rotate(108 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<g transform="rotate(144 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<g transform="rotate(180 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<g transform="rotate(216 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<g transform="rotate(252 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<g transform="rotate(288 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<g transform="rotate(324 100 92)"><rect x="96.5" y="58" width="7" height="13" rx="2.5" fill="#155E86"/></g>
+<circle class="glow" cx="100" cy="92" r="26" fill="#1FC8E8" filter="url(#jarvis-blur)"/>
+<circle cx="100" cy="92" r="19" fill="#C9F6FF" stroke="#6FE8FF" stroke-width="2.5"/>
+<polygon points="100,81 109.5,97.5 90.5,97.5" fill="#7FE9FF" opacity="0.9"/>
+<circle cx="100" cy="92" r="4.5" fill="#FFFFFF"/>
+<circle class="ring-in" cx="100" cy="92" r="53" fill="none" stroke="#2FB6D9" stroke-width="2" stroke-dasharray="10 7" opacity="0.75"/>
+<circle class="ring-out" cx="100" cy="92" r="60" fill="none" stroke="#1E8FB3" stroke-width="1.6" stroke-dasharray="2 10" opacity="0.6"/>
+<g class="beam-g"><rect class="beam" x="97" y="30" width="6" height="124" rx="3" fill="#7FE9FF" opacity="0.6"/></g>
+<g class="core-g"><circle cx="100" cy="92" r="19" fill="#C9F6FF" stroke="#6FE8FF" stroke-width="2.5"/>
+<polygon points="100,81 109.5,97.5 90.5,97.5" fill="#7FE9FF" opacity="0.9"/>
+<circle cx="100" cy="92" r="4.5" fill="#FFFFFF"/></g>
+</svg>

@@ -9,10 +9,26 @@ from gateway import llama_client
 from gateway import server as server_mod
 
 
-def test_windows_auto_normalises_to_cpu(monkeypatch):
+def test_windows_auto_prefers_bundled_cuda(tmp_path, monkeypatch):
+    cuda = tmp_path / "llama-server.exe"
+    cuda.write_text("", encoding="utf-8")
     monkeypatch.delenv("MINICPM_DEVICE", raising=False)
     monkeypatch.setattr(llama_client.platform, "system", lambda: "Windows")
     monkeypatch.setattr(llama_client.platform, "machine", lambda: "AMD64")
+    monkeypatch.setattr(
+        llama_client, "_candidate_binary_paths",
+        lambda device=None: [cuda] if device == "cuda" else [],
+    )
+
+    assert llama_client._normalise_device("auto") == "cuda"
+    assert llama_client._normalise_device("") == "cuda"
+
+
+def test_windows_auto_falls_back_to_cpu_without_cuda(monkeypatch):
+    monkeypatch.delenv("MINICPM_DEVICE", raising=False)
+    monkeypatch.setattr(llama_client.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(llama_client.platform, "machine", lambda: "AMD64")
+    monkeypatch.setattr(llama_client, "_candidate_binary_paths", lambda device=None: [])
 
     assert llama_client._normalise_device("auto") == "cpu"
     assert llama_client._normalise_device("") == "cpu"

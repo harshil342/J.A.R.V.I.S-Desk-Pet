@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <filter id="jvGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="jvBlur" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <clipPath id="jvClip"><circle cx="100" cy="100" r="93"/></clipPath>
+  </defs>
+  <style>
+    .txt { font: 6.5px Consolas, 'Courier New', monospace; letter-spacing: 2px; fill: #35E8F7; text-anchor: middle; }
+    .blink { animation: jvBlink .7s steps(2, jump-none) infinite; }
+    @keyframes jvBlink { 0% {opacity:1} 100% {opacity:.3} }
+    .blip1 { animation: jvBlip 1.2s infinite; }
+    .blip2 { animation: jvBlip 1.2s .4s infinite; }
+    .blip3 { animation: jvBlip 1.2s .8s infinite; }
+    @keyframes jvBlip { 0%,60%,100% {opacity:0} 70%,90% {opacity:1} }
+  </style>
+
+  <!-- everything spins hot while tokens stream -->
+  <g opacity="0.7">
+    <circle cx="100" cy="100" r="94" fill="none" stroke="#17C3D6" stroke-width="1.3" stroke-dasharray="12 7 3 9 20 11 5 13"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="12s" repeatCount="indefinite"/>
+  </g>
+  <g opacity="1" filter="url(#jvGlow)">
+    <circle cx="100" cy="100" r="82" fill="none" stroke="#2FE0F2" stroke-width="7" stroke-dasharray="1.6 3.4"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="3s" repeatCount="indefinite"/>
+  </g>
+  <g opacity="0.7">
+    <polygon points="176,100 138,165.9 62,165.9 24,100 62,34.1 138,34.1" fill="none" stroke="#17C3D6" stroke-width="1"/>
+    <animateTransform attributeName="transform" type="rotate" values="-2 100 100; 2 100 100; -2 100 100" dur="2s" repeatCount="indefinite"/>
+  </g>
+  <g opacity="0.95" filter="url(#jvGlow)">
+    <circle cx="100" cy="100" r="66" fill="none" stroke="#2FE0F2" stroke-width="3.5" stroke-dasharray="30 12 10 16 22 14"/>
+    <animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="4s" repeatCount="indefinite"/>
+  </g>
+  <g opacity="0.9">
+    <circle cx="100" cy="100" r="52" fill="none" stroke="#2FE0F2" stroke-width="1.6" stroke-dasharray="0.6 5.4"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="8s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- flared core -->
+  <rect x="78" y="78" width="44" height="44" fill="#17C3D6" opacity="0.6" filter="url(#jvBlur)">
+    <animate attributeName="opacity" values="0.5;0.75;0.5" dur="1.2s" repeatCount="indefinite"/>
+  </rect>
+  <circle cx="100" cy="100" r="38" fill="none" stroke="#35E8F7" stroke-width="4" filter="url(#jvGlow)"/>
+  <circle cx="100" cy="100" r="27" fill="none" stroke="#17C3D6" stroke-width="1.8" opacity="0.9"/>
+  <circle cx="100" cy="100" r="12" fill="#7FF3FC" filter="url(#jvGlow)">
+    <animate attributeName="r" values="12;14;12" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- fast data pulses -->
+  <circle cx="100" cy="100" r="14" fill="none" stroke="#35E8F7" stroke-width="1.4" opacity="0">
+    <animate attributeName="r" values="14;60" dur="1.6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;0" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="100" cy="100" r="14" fill="none" stroke="#35E8F7" stroke-width="1" opacity="0">
+    <animate attributeName="r" values="14;60" dur="1.6s" begin="0.8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0" dur="1.6s" begin="0.8s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- fast scanline -->
+  <g clip-path="url(#jvClip)" opacity="0.45">
+    <line x1="8" y1="100" x2="192" y2="100" stroke="#7FF3FC" stroke-width="1.5">
+      <animateTransform attributeName="transform" type="translate" values="0 -88; 0 88" dur="2.5s" repeatCount="indefinite"/>
+    </line>
+  </g>
+
+  <circle class="blip1" cx="178" cy="72" r="2" fill="#7FF3FC" opacity="0"/>
+  <circle class="blip2" cx="30" cy="140" r="1.8" fill="#7FF3FC" opacity="0"/>
+  <circle class="blip3" cx="152" cy="168" r="2.2" fill="#7FF3FC" opacity="0"/>
+
+  <text class="txt blink" x="100" y="40">PROCESSING</text>
+  <text class="txt" x="100" y="167" opacity="0.9">STREAM_ACTIVE</text>
+</svg>

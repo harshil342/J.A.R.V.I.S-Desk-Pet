@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <filter id="jvGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="jvBlur" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+  <style>
+    .txt { font: 6.5px Consolas, 'Courier New', monospace; letter-spacing: 2px; fill: #FFB020; text-anchor: middle; }
+    .sputter { animation: jvSp 0.9s steps(1, end) infinite; }
+    @keyframes jvSp { 0% {opacity:1} 15% {opacity:.3} 25% {opacity:.9} 40% {opacity:.2} 55% {opacity:.8} 70% {opacity:.35} 85% {opacity:.95} 100% {opacity:.5} }
+  </style>
+
+  <!-- rings stuttering, amber warning tint -->
+  <g opacity="0.4">
+    <circle cx="100" cy="100" r="94" fill="none" stroke="#17C3D6" stroke-width="1.3" stroke-dasharray="12 7 3 9 20 11 5 13"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="16s" repeatCount="indefinite"/>
+  </g>
+  <g class="sputter" filter="url(#jvGlow)">
+    <circle cx="100" cy="100" r="82" fill="none" stroke="#2FE0F2" stroke-width="7" stroke-dasharray="1.6 3.4"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="9s" repeatCount="indefinite"/>
+  </g>
+  <g opacity="0.45">
+    <polygon points="176,100 138,165.9 62,165.9 24,100 62,34.1 138,34.1" fill="none" stroke="#FFB020" stroke-width="1"/>
+  </g>
+  <g opacity="0.5">
+    <circle cx="100" cy="100" r="66" fill="none" stroke="#2FE0F2" stroke-width="3.5" stroke-dasharray="30 12 10 16 22 14"/>
+    <animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="12s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- sputtering core -->
+  <rect x="80" y="80" width="40" height="40" fill="#17C3D6" opacity="0.3" filter="url(#jvBlur)"/>
+  <circle cx="100" cy="100" r="38" fill="none" stroke="#2FE0F2" stroke-width="3.5" opacity="0.7"/>
+  <circle class="sputter" cx="100" cy="100" r="10" fill="#35E8F7" filter="url(#jvGlow)"/>
+
+  <!-- amber coolant vent arcs -->
+  <path d="M56,84 Q44,100 56,116" fill="none" stroke="#FFB020" stroke-width="2.5" stroke-linecap="round" opacity="0">
+    <animate attributeName="opacity" values="0;0.9;0" dur="1.2s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate" values="4 0; -8 0; 4 0" dur="1.2s" repeatCount="indefinite"/>
+  </path>
+  <path d="M144,84 Q156,100 144,116" fill="none" stroke="#FFB020" stroke-width="2.5" stroke-linecap="round" opacity="0">
+    <animate attributeName="opacity" values="0;0.9;0" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate" values="-4 0; 8 0; -4 0" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+  </path>
+  <!-- heat shimmer ticks -->
+  <g stroke="#FFB020" stroke-width="1.4" opacity="0">
+    <line x1="90" y1="60" x2="88" y2="52"/>
+    <line x1="100" y1="56" x2="100" y2="47"/>
+    <line x1="110" y1="60" x2="112" y2="52"/>
+    <animate attributeName="opacity" values="0;0.8;0" dur="1.2s" begin="0.2s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate" values="0 3; 0 -7" dur="1.2s" begin="0.2s" repeatCount="indefinite"/>
+  </g>
+
+  <text class="txt" x="100" y="40" opacity="0.95">COOLING</text>
+  <text class="txt" x="100" y="167" opacity="0.8">TEMP_HIGH</text>
+</svg>

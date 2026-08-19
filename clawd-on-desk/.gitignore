@@ -91,6 +91,9 @@ logs/
 # Telegram approval sidecar build artifacts
 bin/cc-connect-clawd/*/cc-connect-clawd
 bin/cc-connect-clawd/*/cc-connect-clawd.exe
+bin/*.dll
+bin/*.exe
+bin/backends/
 !bin/cc-connect-clawd/
 !bin/cc-connect-clawd/README.md
 

@@ -575,13 +575,13 @@ async function classifyIntentWithLLM(text) {
   if (!resp.ok) return null;
   const d = await resp.json();
   let reply = (d.content || "").trim();
-  reply = reply.split(/\r?\n/)[0].replace(/^[`'""'']+|[`'""''.。]+$/g, "").trim();
-  // Sometimes the model echoes the example format "用户：xxx → LABEL".
+  reply = reply.split(/\r?\n/)[0].replace(/^[`'""'']+|[`'""''.ÒÇé]+$/g, "").trim();
+  // Sometimes the model echoes the example format "þö¿µêÀ´╝Üxxx ÔåÆ LABEL".
   // Strip everything before the arrow so we get the label cleanly.
-  if (reply.includes("→")) reply = reply.split("→").pop().trim();
-  console.log("[classifier]", JSON.stringify(text), "→", JSON.stringify(reply));
+  if (reply.includes("ÔåÆ")) reply = reply.split("ÔåÆ").pop().trim();
+  console.log("[classifier]", JSON.stringify(text), "ÔåÆ", JSON.stringify(reply));
 
-  // Search anywhere in the reply for one of the known labels — handles
+  // Search anywhere in the reply for one of the known labels ÔÇö handles
   // any leading garbage the model leaks through.
   if (/\bNONE\b/i.test(reply))             return null;
   if (/\bLIST_ADAPTER\b/i.test(reply))     return { intent: "list" };
@@ -589,9 +589,9 @@ async function classifyIntentWithLLM(text) {
   if (/\bUPDATE_CHECK\b/i.test(reply))     return { intent: "update_check" };
   if (/\bUPDATE_APPLY\b/i.test(reply))     return { intent: "update_apply" };
   if (/\bSTATUS\b/i.test(reply))           return { intent: "status" };
-  const m = reply.match(/SWITCH_TO\s*=\s*([^\s,。]+)/i);
+  const m = reply.match(/SWITCH_TO\s*=\s*([^\s,ÒÇé]+)/i);
   if (m) {
-    const kw = m[1].replace(/[「」『』"'""''.。]/g, "").trim();
+    const kw = m[1].replace(/[ÒÇîÒÇìÒÇÄÒÇÅ"'""''.ÒÇé]/g, "").trim();
     if (kw) return { intent: "switch", keyword: kw };
   }
   return null;
@@ -657,7 +657,7 @@ async function runAdapterList() {
   if (!d.items || !d.items.length) {
     return { ok: true, text: t("chatAdapterListEmpty") };
   }
-  const lines = d.items.map((a) => t("chatAdapterListItem", { name: a.name }) + (a.path === d.current ? "  ←" : ""));
+  const lines = d.items.map((a) => t("chatAdapterListItem", { name: a.name }) + (a.path === d.current ? "  ÔåÉ" : ""));
   return {
     ok: true,
     text: t("chatAdapterListIntro") + "\n" + lines.join("\n"),
@@ -695,23 +695,23 @@ async function runAdapterOff(progress) {
 const DISABLE_ADAPTER_KEYWORDS = new Set([
   // English
   "base", "default", "vanilla", "plain", "original",
-  // 简体中文
-  "原版", "默认", "原始", "裸", "纯净", "普通",
-  // 繁體中文
-  "原版", "預設", "純淨", "純净",
-  // 한국어
-  "원본", "기본", "순정", "디폴트",
-  // 日本語
-  "素", "デフォルト", "オリジナル", "ベース",
+  // þ«Çõ¢ôõ©¡µûç
+  "ÕÄƒþëê", "Ú╗ÿÞ«ñ", "ÕÄƒÕºï", "Þú©", "þ║»ÕçÇ", "µÖ«ÚÇÜ",
+  // þ╣üÚ½öõ©¡µûç
+  "ÕÄƒþëê", "ÚáÉÞ¿¡", "þ┤öµÀ¿", "þ┤öÕçÇ",
+  // Ýò£ÛÁ¡ýû┤
+  "ýøÉÙ│©", "Û©░Ù│©", "ýê£ýáò", "ÙööÝÅ┤Ýè©",
+  // µùÑµ£¼Þ¬×
+  "þ┤á", "ÒâçÒâòÒé®Òâ½Òâê", "Òé¬Òâ¬Òé©ÒâèÒâ½", "ÒâÖÒâ╝Òé╣",
 ]);
 
 // Find the manifest item that best matches `kw` (already lowercased).
 // Strategies in descending confidence:
 //   1) exact alias hit
-//   2) alias substring (tolerates classifier truncation like "猫娘"→"娘")
+//   2) alias substring (tolerates classifier truncation like "þî½Õ¿ÿ"ÔåÆ"Õ¿ÿ")
 //   3) displayName substring
 //   4) filename substring (legacy fallback for adapters without a
-//      manifest entry — preserves the pre-manifest UX)
+//      manifest entry ÔÇö preserves the pre-manifest UX)
 function pickAdapterByKeyword(items, kw) {
   const probe = (kw || "").toLowerCase().trim();
   if (!probe) return null;
@@ -746,7 +746,7 @@ async function runAdapterSwitchByKeyword(keyword, fullMessage, progress) {
   const kw = (keyword || "").toLowerCase().trim();
 
   // Disable keywords short-circuit before we even touch /api/adapters,
-  // so "切回原版" still works when the user has no LoRAs registered.
+  // so "ÕêçÕø×ÕÄƒþëê" still works when the user has no LoRAs registered.
   if (DISABLE_ADAPTER_KEYWORDS.has(kw)) {
     return runAdapterOff(onProgress);
   }
@@ -774,7 +774,7 @@ async function runAdapterSwitchByKeyword(keyword, fullMessage, progress) {
     // uses) so we share its 90s timeout + the `active_adapter_id`
     // persistence. The direct-fetch flow used to skip both: chat-side
     // switches worked in the current session but didn't survive a
-    // sidecar restart, and a cold reload (Base → LoRA) sometimes
+    // sidecar restart, and a cold reload (Base ÔåÆ LoRA) sometimes
     // hit shorter renderer timeouts.
     const sd = (window.minicpm && window.minicpm.loadAdapter)
       ? await window.minicpm.loadAdapter(picked.path)
@@ -817,7 +817,7 @@ async function submit(text) {
       if (cmd.resetHistory) {
         // Adapter / model swap: the chat "voice" just changed, so we wipe
         // the entire prior history AND we don't even keep this admin turn
-        // — meta-config chatter shouldn't anchor the new model.
+        // ÔÇö meta-config chatter shouldn't anchor the new model.
         history = [];
       } else {
         history.push({ role: "user", content: text });
@@ -833,14 +833,14 @@ async function submit(text) {
   history.push({ role: "user", content: text });
 
   // Tell the sidecar: start generating. The sidecar pushes pet states
-  // (thinking → working → attention) to clawd-on-desk over HTTP, so the
+  // (thinking ÔåÆ working ÔåÆ attention) to clawd-on-desk over HTTP, so the
   // pet animates while we wait.
   abortCtrl = new AbortController();
 
   // Brief "thinking" hint, then hide the bubble so the pet's own reaction
   // animation takes the spotlight. The bubble reappears as soon as the
   // first delta arrives.
-  await showThinking("…");
+  await showThinking("ÔÇª");
   setTimeout(() => {
     if (phase === "thinking") hideBubble({ fade: true });
   }, 350);
@@ -867,10 +867,10 @@ async function submit(text) {
       ? (await window.minicpm.getChatParams()) || {}
       : {};
   } catch {}
-  // thinkingOverride (⌘⇧T) takes precedence over the persisted default
+  // thinkingOverride (ÔîÿÔçºT) takes precedence over the persisted default
   // when the user has overridden this session.
   const effectiveThinking = resolveThinking(chatParams);
-  // Sidecar bumps max_new_tokens to ≥1280 when thinking=true so the
+  // Sidecar bumps max_new_tokens to ÔëÑ1280 when thinking=true so the
   // <think> block doesn't consume the whole generation budget.
   const maxNewTokens = chatParams.max_new_tokens || 768;
 
@@ -933,7 +933,7 @@ async function submit(text) {
           thinkAcc += obj.content;
           typer.feed(obj.content);
         } else if (obj.event === "delta") {
-          // First reply chunk → drain whatever's left in the thought
+          // First reply chunk ÔåÆ drain whatever's left in the thought
           // typewriter, then transition to a fresh reply bubble.
           if (!sawReply) {
             sawReply = true;
@@ -959,14 +959,14 @@ async function submit(text) {
     if (speakEl) {
       speakEl.classList.remove("streaming");
       // Swap the plain typewriter text for a markdown-rendered version
-      // once the stream completes — keeps the streaming reveal smooth
+      // once the stream completes ÔÇö keeps the streaming reveal smooth
       // (no HTML thrash per chunk) while still presenting bold/italics/
       // headings/lists/code in their final form.
       speakEl.classList.add("rendered");
       speakEl.innerHTML = renderMarkdown(replyAcc);
     }
 
-    // ── New: keep the bubble alive for follow-up turns. After a tiny
+    // ÔöÇÔöÇ New: keep the bubble alive for follow-up turns. After a tiny
     // dwell so the streaming animation settles, swap the speak content
     // back to an ask box so the user can type the next message without
     // having to re-click the pet. If no follow-up arrives within the

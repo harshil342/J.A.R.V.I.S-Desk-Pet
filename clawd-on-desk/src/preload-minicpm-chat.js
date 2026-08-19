@@ -46,4 +46,22 @@ contextBridge.exposeInMainWorld("minicpm", {
   onNarrate:        (cb) => ipcRenderer.on("minicpm:narrate",             (_e, p) => cb(p || {})),
   onCmdReply:       (cb) => ipcRenderer.on("minicpm:cmd-reply",           (_e, p) => cb(p || {})),
   onEditMode:       (cb) => ipcRenderer.on("minicpm:edit-mode",           (_e, p) => cb(p || {})),
+
+  // Native LLM Tool Engine IPC streams
+  submitChat: (payload) => ipcRenderer.send("minicpm:chat-request", payload),
+  onChatDelta: (cb) => {
+    const listener = (_e, p) => cb(p);
+    ipcRenderer.on("minicpm:chat-delta", listener);
+    return () => ipcRenderer.removeListener("minicpm:chat-delta", listener);
+  },
+  onChatDone: (cb) => {
+    const listener = () => cb();
+    ipcRenderer.on("minicpm:chat-done", listener);
+    return () => ipcRenderer.removeListener("minicpm:chat-done", listener);
+  },
+  onChatError: (cb) => {
+    const listener = (_e, p) => cb(p);
+    ipcRenderer.on("minicpm:chat-error", listener);
+    return () => ipcRenderer.removeListener("minicpm:chat-error", listener);
+  },
 });

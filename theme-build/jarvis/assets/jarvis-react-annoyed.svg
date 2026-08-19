@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<style>
+@keyframes anShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-1.6px)}40%{transform:translateX(1.6px)}60%{transform:translateX(-1.2px)}80%{transform:translateX(1.2px)}}
+@keyframes anSteam{0%{opacity:0;transform:translate(0,0) scale(.5)}30%{opacity:.7}100%{opacity:0;transform:translate(-4px,-24px) scale(1.3)}}
+@keyframes anSquint{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(.62)}}
+.shake-g{animation:anShake .5s linear infinite}
+.steam1{animation:anSteam 1.8s ease-out infinite}
+.steam2{animation:anSteam 1.8s ease-out infinite .6s}
+.steam3{animation:anSteam 1.8s ease-out infinite 1.2s}
+.steam4{animation:anSteam 1.8s ease-out infinite .3s}
+.lid{transform-origin:100px 92px;animation:anSquint 1.6s ease-in-out infinite}
+</style>
+<ellipse cx="100" cy="178" rx="44" ry="6" fill="#04070C" opacity="0.55"/>
+<defs><filter id="mk-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.5"/></filter></defs>
+<g class="shake-g">
+<polygon points="100,148 84,174 100,164 116,174" fill="#0B1119" stroke="#1C2A3B" stroke-width="1.4"/>
+<path d="M100,30 L138,78 L144,118 Q144,152 100,164 Q56,152 56,118 L62,78 Z" fill="#0F1620" stroke="#22344A" stroke-width="1.6"/>
+<polygon points="100,10 88,38 112,38" fill="#121B27" stroke="#22344A" stroke-width="1.4"/>
+<polyline points="100,10 112,38" fill="none" stroke="#FF3D81" stroke-width="1.8" opacity="0.9"/>
+<polygon points="56,104 32,126 58,128" fill="#101923" stroke="#22344A" stroke-width="1.4"/>
+<polygon points="144,104 168,126 142,128" fill="#101923" stroke="#22344A" stroke-width="1.4"/>
+<rect x="68" y="82" width="64" height="21" rx="6" fill="#060A10" stroke="#1B2C3F" stroke-width="1.4"/>
+<rect x="72" y="90" width="56" height="5" rx="2.5" fill="#0E4A5C"/>
+<g class="lid">
+<circle cx="88" cy="92.5" r="3.6" fill="#B4F6FB"/>
+<circle cx="112" cy="92.5" r="3.6" fill="#B4F6FB"/>
+</g>
+<path d="M72,116 L78,124 M79,114 L85,122 M86,112 L92,120" stroke="#1E90A8" stroke-width="1.4" opacity="0.6"/>
+<path d="M128,116 L122,124 M121,114 L115,122 M114,112 L108,120" stroke="#1E90A8" stroke-width="1.4" opacity="0.6"/>
+<path d="M100,138 L105.5,131 L94.5,131 Z" fill="#FF8FB1" stroke="#FF3D81" stroke-width="1.4"/>
+</g>
+<circle class="steam1" cx="80" cy="112" r="4" fill="#8FB6C6" filter="url(#mk-blur)"/>
+<circle class="steam2" cx="88" cy="110" r="3.2" fill="#8FB6C6" filter="url(#mk-blur)"/>
+<circle class="steam3" cx="120" cy="112" r="4" fill="#8FB6C6" filter="url(#mk-blur)"/>
+<circle class="steam4" cx="112" cy="110" r="3.2" fill="#8FB6C6" filter="url(#mk-blur)"/>
+</svg>

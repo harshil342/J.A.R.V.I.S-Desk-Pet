@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "name": "Jarvis — Mako Class",
+  "author": "DeskPet Jarvis",
+  "version": "2.0.0",
+  "description": "MAKO-9 cyber-shark drone: dark gunmetal hull, neon cyan optics, magenta accents. Stylized cyberpunk, 18 CSS-animated SVG states. Built for the DeskPet Jarvis hackathon build.",
+  "viewBox": { "x": 0, "y": 0, "width": 200, "height": 200 },
+
+  "layout": {
+    "contentBox": { "x": 30, "y": 14, "width": 140, "height": 164 },
+    "centerX": 100,
+    "baselineY": 178,
+    "visibleHeightRatio": 0.62,
+    "baselineBottomRatio": 0.05
+  },
+
+  "eyeTracking": {
+    "enabled": true,
+    "states": ["idle"],
+    "eyeRatioX": 0.5,
+    "eyeRatioY": 0.45,
+    "maxOffset": 3,
+    "trackingLayers": {
+      "eyes": {
+        "ids": ["sensor-left", "sensor-right"],
+        "maxOffset": 3,
+        "ease": 0.2
+      }
+    }
+  },
+
+  "sleepSequence": { "mode": "full" },
+
+  "states": {
+    "idle":         ["jarvis-idle.svg"],
+    "yawning":      ["jarvis-yawning.svg"],
+    "dozing":       ["jarvis-dozing.svg"],
+    "collapsing":   ["jarvis-collapsing.svg"],
+    "sleeping":     ["jarvis-sleeping.svg"],
+    "waking":       ["jarvis-waking.svg"],
+    "thinking":     ["jarvis-thinking.svg"],
+    "working":      ["jarvis-working.svg"],
+    "juggling":     ["jarvis-juggling.svg"],
+    "sweeping":     ["jarvis-sweeping.svg"],
+    "carrying":     ["jarvis-carrying.svg"],
+    "error":        ["jarvis-error.svg"],
+    "attention":    ["jarvis-attention.svg"],
+    "notification": ["jarvis-notification.svg"]
+  },
+
+  "workingTiers": [
+    { "minSessions": 3, "file": "jarvis-building.svg" },
+    { "minSessions": 2, "file": "jarvis-juggling.svg" },
+    { "minSessions": 1, "file": "jarvis-working.svg" }
+  ],
+
+  "reactions": {
+    "drag":      { "file": "jarvis-react-drag.svg" },
+    "clickLeft": { "file": "jarvis-react-spark.svg", "duration": 2500 },
+    "double":    { "files": ["jarvis-react-spark.svg"], "duration": 3000 },
+    "annoyed":   { "file": "jarvis-react-annoyed.svg", "duration": 3500 }
+  },
+
+  "hitBoxes": {
+    "default":  { "x": 52, "y": 30, "w": 96, "h": 140 },
+    "sleeping": { "x": 52, "y": 88, "w": 96, "h": 84 }
+  },
+  "sleepingHitboxFiles": ["jarvis-sleeping.svg"],
+
+  "miniMode": { "supported": false },
+
+  "timings": {
+    "minDisplay": { "attention": 3000 },
+    "autoReturn": { "attention": 4000 },
+    "mouseIdleTimeout": 20000,
+    "mouseSleepTimeout": 60000
+  }
+}

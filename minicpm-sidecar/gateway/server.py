@@ -12,8 +12,10 @@ import asyncio
 import json
 import os
 import platform
+import re
 import time
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import AsyncGenerator, List, Optional
 
@@ -25,9 +27,22 @@ from pydantic import BaseModel, Field
 from .clawd_state import ClawdBridge
 from .llama_client import LlamaServer, detect_backend
 from .log_setup import get_logger
+from .persona import JARVIS_SYSTEM_PROMPT, prune_history
 from .think_filter import ThinkBlockFilter
+from . import tools
 from .updater import DEFAULT_SOURCE as DEFAULT_UPDATE_SOURCE
 from .updater import ModelUpdater
+
+# 1B models parrot what they see. The router's [label] tags stay in the logs
+# but are stripped before injection; this net catches any tag that still
+# leaks into the reply stream.
+_RE_TOOL_TAG = re.compile(
+    r"\s*\[(?:set_reminder|todo_add|todo_list|todo_done|todo_remove|todo_clear|"
+    r"create_document|convert_currency|get_weather|get_time|system_status|"
+    r"clipboard_assist|launch_app|web_search|calculate|unit_convert|fetch_page|"
+    r"wikipedia|remember|recall|open_url|media_control|screenshot|lock|"
+    r"safety_refusal)\]:?"
+)
 
 
 # ── Request / response shapes ────────────────────────────────────────────────
@@ -270,6 +285,7 @@ def build_app(
 ) -> FastAPI:
     log = get_logger()
     bridge = ClawdBridge(enabled=True, debug=False)
+    tools.bind_bridge(bridge)  # lets reminders ping the pet when they fire
 
     # Resolve the adapter root so /api/adapters can scan it; we still
     # show the full list to the UI even when none are loaded yet, so
@@ -692,12 +708,57 @@ def build_app(
                 status_code=503,
             )
         lora_arr = _lora_arr_for(req)
+        # F2 Phase A: keyword-route the latest user message through the tool
+        # layer BEFORE inference, then inject the live results as context.
+        # Skipped for silent calls (the renderer's intent classifier).
+        tool_context: Optional[str] = None
+        canned: Optional[str] = None
+        if not req.silent:
+            last_user = next(
+                (m.content for m in reversed(req.messages) if m.role == "user"), None
+            )
+            if last_user:
+                hits = await asyncio.to_thread(tools.route_tools, last_user)
+                if hits:
+                    log.info("tool routing matched %d tool(s) for: %r", len(hits), last_user[:80])
+                    # Deterministic path: a single mechanical tool gets a fixed
+                    # Jarvis line with NO inference — the 1B model cannot be
+                    # trusted to relay results without narrating actions it
+                    # never took ("I used the web search tool...").
+                    if len(hits) == 1:
+                        canned = tools.canned_reply(hits[0][0], hits[0][1])
+                    if not canned:
+                        # Inject the raw results (no [label] tags — the small
+                        # model copies whatever brackets it sees).
+                        clean = "\n".join(out for _, out in hits)
+                        tool_context = (
+                            "Live tool results fetched for the user's latest message:\n"
+                            + clean
+                            + "\nUsing these results, reply in your Jarvis voice in 1-3 sentences. "
+                            "State the answer directly (the numbers are already computed); "
+                            "weave the facts in naturally; never say 'tool results' "
+                            "and never mention tool names or brackets. "
+                            "If a result reports a failure or something not installed, "
+                            "say so briefly and stop — do not offer or narrate any substitute action. "
+                            "Example for failures: 'Apologies, sir — X is not installed on this machine.'"
+                        )
+        if canned is not None:
+            bridge.new_session()
+            bridge.post("working")
+            if req.stream:
+                return StreamingResponse(
+                    _canned_stream(bridge, canned), media_type="text/event-stream"
+                )
+            bridge.post("attention")
+            return JSONResponse({"content": canned, "thinking": None})
         if req.stream:
             return StreamingResponse(
-                _stream_chat(server, bridge, req, lora=lora_arr),
+                _stream_chat(server, bridge, req, lora=lora_arr, tool_context=tool_context),
                 media_type="text/event-stream",
             )
-        return JSONResponse(await _blocking_chat(server, bridge, req, lora=lora_arr))
+        return JSONResponse(
+            await _blocking_chat(server, bridge, req, lora=lora_arr, tool_context=tool_context)
+        )
 
     @app.post("/api/state")
     def manual_state(payload: dict):
@@ -732,18 +793,19 @@ async def _stream_chat(
     req: ChatRequest,
     *,
     lora: Optional[List[dict]] = None,
+    tool_context: Optional[str] = None,
 ) -> AsyncGenerator[bytes, None]:
     if not req.silent:
         bridge.new_session()
         bridge.post("thinking")
 
-    messages = _build_messages(req)
+    messages = _build_messages(req, tool_context=tool_context)
 
     try:
         agen = server.stream_chat(
             messages=messages,
             max_tokens=_effective_max_new_tokens(req),
-            temperature=max(0.0, float(req.temperature)),
+            temperature=_chat_temperature(req, tool_context),
             top_p=float(req.top_p),
             top_k=int(req.top_k),
             repetition_penalty=float(req.repetition_penalty),
@@ -777,6 +839,7 @@ async def _stream_chat(
                 if req.thinking:
                     yield _sse({"event": "think", "content": piece})
             else:  # "content"
+                piece = _RE_TOOL_TAG.sub("", piece)
                 for ev in think_filter.feed(piece):
                     yield _sse(ev)
             now = time.time()
@@ -809,11 +872,12 @@ async def _blocking_chat(
     req: ChatRequest,
     *,
     lora: Optional[List[dict]] = None,
+    tool_context: Optional[str] = None,
 ) -> dict:
     if not req.silent:
         bridge.new_session()
         bridge.post("thinking")
-    messages = _build_messages(req)
+    messages = _build_messages(req, tool_context=tool_context)
     think_filter = ThinkBlockFilter(expose=req.thinking, start_inside=False)
     content_parts: list[str] = []
     think_parts: list[str] = []
@@ -823,7 +887,7 @@ async def _blocking_chat(
         async for kind, piece in server.stream_chat(
             messages=messages,
             max_tokens=_effective_max_new_tokens(req),
-            temperature=max(0.0, float(req.temperature)),
+            temperature=_chat_temperature(req, tool_context),
             top_p=float(req.top_p),
             top_k=int(req.top_k),
             repetition_penalty=float(req.repetition_penalty),
@@ -833,6 +897,7 @@ async def _blocking_chat(
             if kind == "reasoning":
                 think_parts.append(piece)
             else:
+                piece = _RE_TOOL_TAG.sub("", piece)
                 for ev in think_filter.feed(piece):
                     (think_parts if ev["event"] == "think" else content_parts).append(ev["content"])
         for ev in think_filter.flush():
@@ -846,14 +911,52 @@ async def _blocking_chat(
     }
 
 
-def _build_messages(req: ChatRequest) -> list[dict]:
+def _chat_temperature(req: ChatRequest, tool_context: Optional[str]) -> float:
+    """Tool-augmented replies are relay tasks — dampen sampling so the
+    1B model reports the live facts instead of freewheeling."""
+    temp = max(0.0, float(req.temperature))
+    if tool_context:
+        temp = min(temp, 0.35)
+    return temp
+
+
+def _build_messages(req: ChatRequest, *, tool_context: Optional[str] = None) -> list[dict]:
     out: list[dict] = []
-    if req.system:
-        out.append({"role": "system", "content": req.system})
-    for m in req.messages:
-        out.append({"role": m.role, "content": m.content})
+    # Default to the Jarvis persona when the caller didn't bring its own
+    # system prompt (the renderer's intent classifier always sends one,
+    # so this never leaks into classifier calls).
+    if req.system is not None:
+        system = req.system
+    else:
+        # Ground the 1B model with the live clock on every request. Small
+        # models parrot what they see — without this they happily invent
+        # plausible times ("10:30 PM sir") when the router misses a
+        # phrasing. Fresh per request, so it never goes stale mid-session.
+        now = datetime.now().strftime("%A, %d %B %Y, %H:%M")
+        system = (
+            JARVIS_SYSTEM_PROMPT
+            + f"\n\nCurrent date and time (live, from the system clock): {now}. "
+            "If asked about the time or date, quote this value exactly; never estimate."
+        )
+    out.append({"role": "system", "content": system})
+    history = [{"role": m.role, "content": m.content} for m in req.messages]
+    history = prune_history(history)
+    # Small models obey tool context far more reliably when it sits right
+    # next to the question than as a second system message.
+    if tool_context and history and history[-1]["role"] == "user":
+        history[-1] = dict(history[-1])
+        history[-1]["content"] = tool_context + "\n\nUser request: " + history[-1]["content"]
+    out.extend(history)
     return out
 
 
 def _sse(payload: dict) -> bytes:
     return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n".encode("utf-8")
+
+
+async def _canned_stream(bridge: ClawdBridge, text: str) -> AsyncGenerator[bytes, None]:
+    """Serve a deterministic canned tool reply over the same SSE shape."""
+    yield _sse({"event": "start"})
+    yield _sse({"event": "delta", "content": text})
+    yield _sse({"event": "end"})
+    bridge.post("attention")

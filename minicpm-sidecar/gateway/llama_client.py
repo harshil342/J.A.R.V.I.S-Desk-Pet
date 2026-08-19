@@ -66,6 +66,10 @@ def _normalise_device(raw: Optional[str] = None) -> str:
         return "metal" if machine in ("arm64", "aarch64") else "cpu"
     if device in ("", "auto"):
         if sys_name == "Windows":
+            # Prefer the bundled CUDA backend when it ships with the
+            # package; otherwise fall back to stable CPU inference.
+            if any(p.is_file() for p in _candidate_binary_paths("cuda")):
+                return "cuda"
             return "cpu"
         if sys_name == "Darwin" and machine in ("arm64", "aarch64"):
             return "metal"
@@ -164,6 +168,10 @@ def detect_backend() -> dict:
     if sys_name == "Windows":
         backends.append("cpu")
         reasons["cpu"] = "Stable CPU inference for Windows"
+        cuda_available = any(p.is_file() for p in _candidate_binary_paths("cuda"))
+        if cuda_available:
+            backends.append("cuda")
+            reasons["cuda"] = "NVIDIA CUDA GPU backend (bundled runtime)"
         vulkan_available = any(p.is_file() for p in _candidate_binary_paths("vulkan"))
         if vulkan_available:
             backends.append("vulkan")
@@ -171,7 +179,7 @@ def detect_backend() -> dict:
             reasons["vulkan"] = "Experimental Vulkan GPU backend"
         return {
             "available": backends,
-            "recommended": "cpu",
+            "recommended": "cuda" if cuda_available else "cpu",
             "current": current if current in backends else "cpu",
             "experimental": experimental,
             "reasons": reasons,

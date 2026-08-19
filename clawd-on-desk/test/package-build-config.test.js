@@ -215,59 +215,31 @@ describe("package build config", () => {
     });
   });
 
-  describe("Telegram approval sidecar packaging", () => {
+  describe("Sidecar and adapter packaging", () => {
     it("does not preflight remote approval sidecars during source launches", () => {
       assert.strictEqual(
         pkg.scripts.start,
         "node launch.js",
         "source launch should not fetch or verify remote-control sidecars automatically"
       );
-      assert.match(pkg.scripts.prebuild, /node scripts\/verify-sidecar-binaries\.js/);
-      assert.strictEqual(pkg.scripts["fetch:sidecars"], "node scripts/fetch-sidecar-binaries.js");
+      assert.match(pkg.scripts.prebuild, /node scripts\/verify-adapters\.js/);
+      assert.strictEqual(pkg.scripts["fetch:adapters"], "node scripts/fetch-adapters.js");
     });
 
-    it("copies cc-connect-clawd sidecars into packaged resources", () => {
+    it("copies bundled bin and adapters into packaged resources", () => {
       const extra = pkg.build.extraResources || [];
-      const copied = extra.some(
-        (e) => e && e.from === "bin/cc-connect-clawd" && e.to === "sidecars/cc-connect-clawd"
+      const binCopied = extra.some(
+        (e) => e && e.from === "bin" && e.to === "bin"
       );
-      assert.ok(
-        copied,
-        "build.extraResources must copy bin/cc-connect-clawd -> sidecars/cc-connect-clawd"
+      const adaptersCopied = extra.some(
+        (e) => e && e.from === "../adapters" && e.to === "adapters"
       );
+      assert.ok(binCopied, "build.extraResources must copy bin -> bin");
+      assert.ok(adaptersCopied, "build.extraResources must copy ../adapters -> adapters");
     });
+  });
 
-    it("documents the expected sidecar binary names in the README", () => {
-      const readme = path.join(ROOT, "bin", "cc-connect-clawd", "README.md");
-      assert.ok(fs.existsSync(readme), "bin/cc-connect-clawd/README.md should document release binary names");
-      const text = fs.readFileSync(readme, "utf8");
-      assert.match(text, /windows-x64\/cc-connect-clawd\.exe/);
-      assert.match(text, /darwin-arm64\/cc-connect-clawd/);
-      assert.match(text, /linux-x64\/cc-connect-clawd/);
-    });
-
-    it("fetches and verifies pinned sidecars before release builds", () => {
-      const workflow = fs.readFileSync(path.join(ROOT, ".github", "workflows", "build.yml"), "utf8");
-      assertWorkflowOrder(
-        workflow,
-        "npm run fetch:sidecars -- --target windows-x64,windows-arm64",
-        "node scripts/verify-sidecar-binaries.js prebuild:win:all",
-        "npx electron-builder --win --publish never"
-      );
-      assertWorkflowOrder(
-        workflow,
-        "npm run fetch:sidecars -- --target darwin-x64,darwin-arm64",
-        "node scripts/verify-sidecar-binaries.js prebuild:mac",
-        "npx electron-builder --mac --publish never"
-      );
-      assertWorkflowOrder(
-        workflow,
-        "npm run fetch:sidecars -- --target linux-x64",
-        "node scripts/verify-sidecar-binaries.js prebuild:linux",
-        "npx electron-builder --linux --publish never"
-      );
-    });
-
+  describe("GitHub release publication", () => {
     it("publishes GitHub releases only for version tags", () => {
       const workflow = fs.readFileSync(path.join(ROOT, ".github", "workflows", "build.yml"), "utf8");
       const releaseIndex = findWorkflowJobIndex(workflow, "release");

@@ -1,5 +1,5 @@
 {
-  "name": "minicpm-desk-pet",
+  "name": "deskpet",
   "version": "0.11.0",
   "description": "MiniCPM Desk Pet — local-first desktop pet powered by MiniCPM5. Forked from clawd-on-desk.",
   "main": "src/main.js",
@@ -20,13 +20,13 @@
     "verify:sidecars": "node scripts/verify-sidecar-binaries.js",
     "fetch:adapters": "node scripts/fetch-adapters.js",
     "verify:adapters": "node scripts/verify-adapters.js",
-    "prebuild": "node scripts/verify-sidecar-binaries.js && node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:win:x64": "node scripts/verify-sidecar-binaries.js && node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:win:arm64": "node scripts/verify-sidecar-binaries.js && node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:win:all": "node scripts/verify-sidecar-binaries.js && node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:mac": "node scripts/verify-sidecar-binaries.js && node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:linux": "node scripts/verify-sidecar-binaries.js && node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:all": "node scripts/verify-sidecar-binaries.js && node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
+    "prebuild": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
+    "prebuild:win:x64": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
+    "prebuild:win:arm64": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
+    "prebuild:win:all": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
+    "prebuild:mac": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
+    "prebuild:linux": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
+    "prebuild:all": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
     "test": "node test/run-tests.js",
     "create-theme": "node scripts/create-theme.js",
     "export-agent-icons": "node scripts/export-agent-icons.js",
@@ -73,8 +73,8 @@
   "upstreamRepository": "https://github.com/rullerzhou-afk/clawd-on-desk",
   "type": "commonjs",
   "build": {
-    "appId": "com.openbmb.minicpm-desk-pet",
-    "productName": "MiniCPM Desk Pet",
+    "appId": "com.openbmb.deskpet",
+    "productName": "Deskpet",
     "copyright": "Copyright © 2026 OpenBMB. Based on clawd-on-desk by rullerzhou-afk (AGPL-3.0-only).",
     "protocols": [
       {
@@ -86,7 +86,7 @@
     ],
     "mac": {
       "icon": "assets/icon.icns",
-      "artifactName": "MiniCPM-Desk-Pet-${version}-${arch}.${ext}",
+      "artifactName": "Deskpet-${version}-${arch}.${ext}",
       "target": [
         {
           "target": "dmg",
@@ -107,7 +107,7 @@
     },
     "win": {
       "icon": "assets/icon.ico",
-      "artifactName": "MiniCPM-Desk-Pet-Setup-${version}-${arch}.${ext}",
+      "artifactName": "Deskpet-${version}-${arch}.${ext}",
       "target": [
         {
           "target": "nsis",
@@ -122,7 +122,7 @@
       "maintainer": "OpenBMB <contact@openbmb.cn>",
       "icon": "assets/icons",
       "category": "Utility",
-      "artifactName": "MiniCPM-Desk-Pet-${version}-${arch}.${ext}",
+      "artifactName": "Deskpet-${version}-${arch}.${ext}",
       "target": [
         {
           "target": "AppImage",
@@ -177,22 +177,8 @@
         "to": "icon.ico"
       },
       {
-        "from": "bin/cc-connect-clawd",
-        "to": "sidecars/cc-connect-clawd"
-      },
-      {
-        "from": "../minicpm-sidecar/bin/${os}-${arch}",
-        "to": "sidecar-bin"
-      },
-      {
-        "from": "../minicpm-sidecar",
-        "to": "minicpm-sidecar",
-        "filter": [
-          "gateway/**/*.py",
-          "pyproject.toml",
-          ".python-version",
-          "README.md"
-        ]
+        "from": "bin",
+        "to": "bin"
       },
       {
         "from": "../adapters",
@@ -219,9 +205,10 @@
     "electron-builder": "^26.8.1"
   },
   "dependencies": {
+    "duck-duck-scrape": "^2.2.7",
     "electron-updater": "^6.8.3",
-    "http-proxy-agent": "^7.0.2",
     "htmlparser2": "^12.0.0",
+    "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.6",
     "koffi": "^2.15.2",
     "socks-proxy-agent": "^8.0.5",

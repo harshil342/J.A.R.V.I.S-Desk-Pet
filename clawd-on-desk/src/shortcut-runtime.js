@@ -68,20 +68,26 @@ function createShortcutRuntime(options = {}) {
 
   function registerPersistentShortcutsFromSettings() {
     const shortcuts = getSnapshotShortcuts();
+    console.log(`Clawd: registering persistent shortcuts from settings: ${JSON.stringify(shortcuts)}`);
     for (const actionId of SHORTCUT_ACTION_IDS) {
       const meta = SHORTCUT_ACTIONS[actionId];
       if (!meta || !meta.persistent) continue;
       const accelerator = shortcuts[actionId];
       if (!accelerator) {
+        console.log(`Clawd: shortcut ${actionId}: no accelerator in settings, skipping`);
         clearFailure(actionId);
         continue;
       }
       const handler = getPersistentHandler(actionId);
-      if (!handler) continue;
+      if (!handler) {
+        console.warn(`Clawd: shortcut ${actionId}: no handler registered, skipping`);
+        continue;
+      }
       let ok = false;
       try {
         ok = !!globalShortcut.register(accelerator, handler);
-      } catch {
+      } catch (err) {
+        console.warn(`Clawd: shortcut ${actionId}: register threw: ${err && err.message}`);
         ok = false;
       }
       if (!ok) {
@@ -89,6 +95,7 @@ function createShortcutRuntime(options = {}) {
         console.warn(`Clawd: failed to register shortcut ${actionId}: ${accelerator}`);
         continue;
       }
+      console.log(`Clawd: registered shortcut ${actionId}: ${accelerator} (isRegistered=${globalShortcut.isRegistered(accelerator)})`);
       clearFailure(actionId);
     }
   }
