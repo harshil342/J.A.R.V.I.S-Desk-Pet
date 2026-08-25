@@ -189,7 +189,10 @@
       },
       {
         "from": "bin",
-        "to": "bin"
+        "to": "bin",
+        "filter": [
+          "cc-connect-clawd/**/*"
+        ]
       },
       {
         "from": "../adapters",
@@ -205,8 +208,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "OpenBMB",
-        "repo": "MiniCPM-Desk-Pet"
+        "owner": "harshil342",
+        "repo": "J.A.R.V.I.S-Desk-Pet"
       }
     ]
   },

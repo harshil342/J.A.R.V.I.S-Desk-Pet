@@ -72,6 +72,7 @@ const fs = require("fs");
 const { EventEmitter } = require("events");
 const {
   applyWindowsAppUserModelId,
+  registerAumidForToasts,
   shouldOpenSettingsWindowFromArgv,
 } = require("./settings-window-icon");
 const createSettingsWindowRuntime = require("./settings-window");
@@ -143,6 +144,7 @@ const THEME_SWITCH_FADE_IN_MS = 180;
 const THEME_SWITCH_FADE_FALLBACK_MS = 4000;
 
 applyWindowsAppUserModelId(app, process.platform);
+registerAumidForToasts(app, process.platform);
 
 
 // ── Windows: AllowSetForegroundWindow via FFI ──
@@ -3916,7 +3918,11 @@ if (!gotTheLock) {
     // Register persistent global shortcuts from the validated prefs snapshot.
     shortcutRuntime.registerPersistentShortcutsFromSettings();
 
-    if (!shouldShowMinicpmOnboarding) {
+    if (!shouldShowMinicpmOnboarding || process.env.DESKPET_REMOTE_DEBUGGING_PORT) {
+      // Dev UI smoke tests (DESKPET_REMOTE_DEBUGGING_PORT) open the chat
+      // bubble even while Onboarding is showing, so the harness can find
+      // its CDP target without completing onboarding. Production behaviour
+      // is unchanged: warmup only auto-runs after onboarding when not in dev.
       setTimeout(() => {
         if (_minicpmChat && typeof _minicpmChat.warmup === "function") {
           _minicpmChat.warmup();

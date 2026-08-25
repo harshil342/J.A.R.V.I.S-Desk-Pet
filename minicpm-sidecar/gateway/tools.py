@@ -276,6 +276,29 @@ _PROTOCOL_FALLBACKS = {
     "steam": "steam:",
 }
 
+# Web services with canonical hosts — "open youtube" opens the site when
+# no local app matches. Checked after every install/protocol path fails.
+_WEB_SERVICES = {
+    "youtube": "https://www.youtube.com",
+    "yt": "https://www.youtube.com",
+    "google": "https://www.google.com",
+    "gmail": "https://mail.google.com",
+    "maps": "https://maps.google.com",
+    "google maps": "https://maps.google.com",
+    "github": "https://github.com",
+    "reddit": "https://www.reddit.com",
+    "twitter": "https://x.com",
+    "x": "https://x.com",
+    "wikipedia": "https://www.wikipedia.org",
+    "netflix": "https://www.netflix.com",
+    "amazon": "https://www.amazon.com",
+    "chatgpt": "https://chat.openai.com",
+    "whatsapp": "https://web.whatsapp.com",
+    "instagram": "https://www.instagram.com",
+    "linkedin": "https://www.linkedin.com",
+    "stack overflow": "https://stackoverflow.com",
+}
+
 # Human-friendly names echoed back to the model/user.
 _PRETTY_NAMES = {
     "onenote": "OneNote", "winword": "Word", "excel": "Excel",
@@ -399,6 +422,20 @@ def launch_app(name: str) -> str:
         try:
             os.startfile(target)  # noqa: S606 — user-requested launch
             return f"Launched {display} via shell association."
+        except Exception:
+            pass
+
+    # Web-service fallback: "open youtube" on a machine without a YouTube
+    # app should open the site, not apologise. Curated hosts first (their
+    # canonical domains), then a last-resort https://<name>.com guess.
+    host = _WEB_SERVICES.get(target)
+    if not host and re.fullmatch(r"[a-z0-9]{2,20}", target):
+        host = f"https://{target}.com"
+    if host:
+        try:
+            import webbrowser
+            webbrowser.open(host)
+            return f"Opened {display} in your browser ({host})."
         except Exception:
             pass
     return (f"Could not find an application called '{display}' on this machine; "
@@ -686,7 +723,7 @@ def _native_toast(title: str) -> None:
     try:
         from winotify import Notification, audio
 
-        n = Notification(app_id="DeskPet", title="DeskPet", msg=title)
+        n = Notification(app_id="com.deskpet.assistant", title="DeskPet", msg=title)
         n.set_audio(audio.Silent, loop=False)  # chime handled by the pet
         n.show()
     except Exception as exc:
@@ -736,6 +773,10 @@ def restore_reminders(now: Optional[float] = None) -> dict:
     fired = rearmed = dropped = 0
     with _REMINDERS_LOCK:
         for entry in _load_reminders_unlocked():
+            # Dispatcher-owned entries (drawer /api/tasks) are restored by
+            # task_dispatcher.restore() — skipping here prevents double-fire.
+            if entry.get("via") == "task":
+                continue
             try:
                 fire_at = float(entry["fire_at"])
             except (KeyError, TypeError, ValueError):
@@ -946,13 +987,37 @@ def system_status() -> str:
 # ── Tool 9: clipboard_assist (read clipboard, model does the work) ──────────
 
 
+# Sentinel returned by _read_clipboard when the clipboard holds an image but
+# no text. The text-only model cannot ingest images; surfacing this clearly
+# beats forwarding image bytes (which makes llama-server throw
+# "this model does not support image input").
+_CLIPBOARD_IMAGE = "__CLIPBOARD_IMAGE_ONLY__"
+
+
+def _clipboard_has_image() -> bool:
+    try:
+        r = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "(Get-Clipboard -Format Image) -ne $null"],
+            capture_output=True, text=True, timeout=5,
+        )
+        return r.stdout.strip().lower() == "true"
+    except Exception:
+        return False
+
+
 def _read_clipboard() -> str:
     if platform.system() == "Windows":
         r = subprocess.run(
             ["powershell", "-NoProfile", "-Command", "Get-Clipboard -Raw"],
             capture_output=True, text=True, timeout=5,
         )
-        return (r.stdout or "").strip()
+        text = (r.stdout or "").strip()
+        # Empty text but an image present: report the image case so the
+        # model never receives image data it can't process.
+        if not text and _clipboard_has_image():
+            return _CLIPBOARD_IMAGE
+        return text
     r = subprocess.run(["xclip", "-selection", "clipboard", "-o"],
                        capture_output=True, text=True, timeout=5)
     return (r.stdout or "").strip()
@@ -962,6 +1027,9 @@ def clipboard_assist(action: str) -> str:
     text = _read_clipboard()
     if not text:
         return "The clipboard is empty."
+    if text == _CLIPBOARD_IMAGE:
+        return ("The clipboard currently holds an image, which I can't view "
+                "with the text-only model. Copy some text and I'll help.")
     snippet = text[:1500]
     verb = (action or "show").strip().lower()
     if verb == "show":
@@ -1454,6 +1522,23 @@ _RE_LOCK = re.compile(
     r"\block\s+(?:my\s+|the\s+)?(?:screen|pc|computer|workstation|machine|laptop)\b", re.IGNORECASE)
 _RE_REMEMBER = re.compile(
     r"\b(?:remember|note\s+down|keep\s+in\s+mind)\s+(?:that\s+)?(.+)", re.IGNORECASE)
+# Declarative personal facts worth storing even without "remember": a
+# possessive + stable-attribute noun + "is" + value. Question words and
+# verbs of state disqualify (that's chitchat, not a fact to store).
+_RE_PERSONAL_FACT = re.compile(
+    r"^\s*(?:hey\s+\w+,?\s*)?(?:please\s+)?my\s+"
+    r"(codename|code\s*name|callsign|call\s*sign|nickname|name|password|"
+    r"passcode|pin|birthday|anniversary|email(?:\s*address)?|phone(?:\s*number)?|"
+    r"address|timezone|favourite|favorite)\s+(?:is|=)\s+(.{2,80}?)[.!?]*\s*$",
+    re.IGNORECASE,
+)
+_RE_MY_ATTR_Q = re.compile(
+    r"^\s*what(?:'s| is|\s+was)\s+(?:my|our)\s+"
+    r"(?:codename|code\s*name|callsign|call\s*sign|nickname|name|password|"
+    r"passcode|pin|birthday|anniversary|email(?:\s*address)?|phone(?:\s*number)?|"
+    r"address|timezone|favourite|favorite)\b[?.!]*\s*$",
+    re.IGNORECASE,
+)
 _RE_RECALL = re.compile(
     r"\b(?:what\s+do\s+you\s+(?:remember|know)|do\s+you\s+remember|recall|"
     r"remind\s+me\s+what)\b\s*(?:about\s+)?(.*)", re.IGNORECASE)
@@ -2045,6 +2130,22 @@ def route_tools(
         run(remember_fact, _clean(m.group(1)), label="remember")
         return results
 
+    # 7d — implicit personal-fact statements ("my codename is Blue Falcon").
+    # No "remember" keyword, so this used to fall to the native round where
+    # the model would web-search the noun instead of saving the fact.
+    # The FULL sentence is stored (m.group(0)), not just the attribute.
+    m = _RE_PERSONAL_FACT.search(text)
+    if m:
+        run(remember_fact, _clean(m.group(0)), label="remember")
+        return results
+
+    # 7d' — personal-attribute questions recall from notes instead of
+    # searching the world for the noun.
+    m = _RE_MY_ATTR_Q.search(text)
+    if m:
+        run(recall_fact, _clean(m.group(0)), label="recall")
+        return results
+
     # 7e — open a website (must run before launch_app grabs the domain)
     m = _RE_URL.search(text)
     if m:
@@ -2090,15 +2191,14 @@ def route_tools(
     # 9 — who/what questions: try Wikipedia first, then web search.
     # Referential mid-chat forms ("what is it / who is he") still skip —
     # Wikipedia-ing a literal pronoun is exactly how follow-ups used to
-    # break. Named subjects route regardless of turn position, so
-    # follow-ups like "who was Nikola Tesla's rival" get real answers
-    # instead of native-round rambling.
+    # break. First/second-person possessives skip too: "what is my
+    # codename" must never become an encyclopedia search for the noun.
     m = _RE_WHOIS.search(text)
     if m:
         subject = _clean(m.group(1))
         if subject and not re.match(
-            r"^(?:he|she|it|they|that|this|his|her|their|them)\b", subject,
-            re.IGNORECASE,
+            r"^(?:he|she|it|they|that|this|his|her|their|them|my|our|your)\b",
+            subject, re.IGNORECASE,
         ):
             res = wikipedia_summary(subject)
             if res:

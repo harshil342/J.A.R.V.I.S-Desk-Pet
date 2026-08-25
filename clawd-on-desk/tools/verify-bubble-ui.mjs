@@ -141,8 +141,18 @@ try {
   );
   record("created tasks listed in drawer", true);
 
-  // The 5s task must fire via the gateway dispatcher. "triggered" is
-  // transient — non-recurring tasks flip to "completed" right after.
+  // The 5s task must fire via the gateway dispatcher. Non-recurring tasks
+  // are *removed* from list_tasks() the instant they fire (status flips
+  // triggered→completed and the entry is popped), so a 1s poll can never
+  // catch the transient string. The reliable signal that it fired is that
+  // "smoke-check" is gone from the list (and _notify/toast ran just before
+  // that removal). First confirm it was created, then wait for it to vanish.
+  const createdOk = await page.evaluate(async () => {
+    const r = await window.minicpm.tasksList();
+    return (r.tasks || []).some((t) => t.name === "smoke-check");
+  });
+  if (!createdOk) throw new Error("smoke-check task was not created");
+
   let fired = false;
   let lastSnap = "";
   for (let i = 0; i < 20 && !fired; i++) {
@@ -150,12 +160,12 @@ try {
     lastSnap = await page.evaluate(async () => {
       try {
         const r = await window.minicpm.tasksList();
-        return JSON.stringify(r).slice(0, 300);
+        return JSON.stringify(r.tasks || []).slice(0, 300);
       } catch (e) {
         return "LIST-ERROR: " + e.message;
       }
     });
-    fired = /"(?:triggered|completed)"/.test(lastSnap);
+    fired = !/"name":"smoke-check"/.test(lastSnap);
   }
   if (!fired) console.log(`  [poll tail] ${lastSnap}`);
   record("short task fires within ~15s", fired);

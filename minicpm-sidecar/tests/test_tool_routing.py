@@ -200,6 +200,54 @@ def test_bare_who_is_he_stays_unrouted(monkeypatch, _fresh_last_topic):
     assert tools.route_tools("what is it", prior_turns=4) == []
 
 
+def test_personal_fact_statement_routes_to_remember():
+    hits = tools.route_tools("my codename is Blue Falcon")
+    assert hits and hits[0][0] == "remember"
+    assert "codename is Blue Falcon" in hits[0][1]
+
+
+def test_personal_fact_question_recalls_instead_of_searching():
+    seen = {}
+    saved = tools.recall_fact
+    tools.recall_fact = lambda q: seen.update(q=q) or f"You told me: {q}"
+    try:
+        hits = tools.route_tools("what is my codename?")
+    finally:
+        tools.recall_fact = saved
+    assert hits and hits[0][0] == "recall"
+    assert "codename" in seen["q"]
+
+
+def test_personal_fact_negative_cases_stay_unrouted():
+    # Attribute outside the stable-noun list = chitchat, model handles it.
+    assert tools.route_tools("my day is going great") == []
+    assert tools.route_tools("my team is winning") == []
+
+
+def test_launch_app_falls_back_to_web_services(monkeypatch):
+    import webbrowser as wb
+
+    opened = []
+    monkeypatch.setattr(wb, "open", lambda u: opened.append(u) or True)
+
+    def refuse(*a, **k):
+        raise OSError("not an app")
+
+    monkeypatch.setattr(tools.os, "startfile", refuse)
+    monkeypatch.setattr(tools.shutil, "which", lambda *a, **k: None)
+    monkeypatch.setattr(tools, "_winreg_app_path", lambda t: None)
+    monkeypatch.setattr(tools, "_find_start_menu_shortcut", lambda n: None)
+
+    out = tools.launch_app("youtube")
+    assert opened == ["https://www.youtube.com"]
+    assert "browser" in out
+
+    # Unknown single-word slug gets a last-resort .com guess.
+    assert "https://exampleblog.com" in tools.launch_app("exampleblog")
+    # Multi-word junk can't become a URL — honest give-up stays.
+    assert "Could not find" in tools.launch_app("zz qq")
+
+
 def test_pronoun_followup_enriches_with_article_intent(monkeypatch, _fresh_last_topic):
     monkeypatch.setattr(tools, "_LAST_TOPIC", "nikola tesla")
     monkeypatch.setattr(

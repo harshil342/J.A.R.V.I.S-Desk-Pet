@@ -472,6 +472,18 @@ def build_app(
         except Exception as exc:
             log.warning("reminder restore failed: %s", exc)
 
+        # Drawer/dispatcher tasks persist to the same store with via="task";
+        # their restore is handled here so both doors survive a restart.
+        try:
+            tstats = default_task_dispatcher.restore()
+            if tstats["fired"] or tstats["rearmed"]:
+                log.info(
+                    "restored dispatcher tasks: %d fired (overdue), %d re-armed",
+                    tstats["fired"], tstats["rearmed"],
+                )
+        except Exception as exc:
+            log.warning("dispatcher task restore failed: %s", exc)
+
         bridge.post("idle", title="MiniCPM Desk Pet")
 
         # Daily proactive events (local time): the morning briefing at

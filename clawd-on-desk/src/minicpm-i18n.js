@@ -320,6 +320,15 @@
       "Reply: The AI suggested hot pot, ramen, BBQ, and Sichuan stir-fry.\n\n" +
       "Event: The owner just wrapped up an AI conversation about \"what to eat for dinner\". The AI's last line: Hot pot is a great pick!\n" +
       "Reply: The AI also thinks hot pot is a great pick.\n\n",
+    drawerToggleTitle: "Reminders & memory",
+    drawerTabReminders: "Reminders",
+    drawerTabMemory: "Memory",
+    drawerSet: "Set",
+    drawerMinsPlaceholder: "min",
+    drawerRemindPlaceholder: "What should I remind you about?",
+    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
+    drawerMemPlaceholder: "Search or add a memory…",
+    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── ZH strings ──
   const ZH_STRINGS = {
@@ -495,6 +504,15 @@
       "回复:AI 推荐了火锅、拉面、烤肉和川菜\n\n" +
       "事件:主人刚结束跟 AI 关于「晚饭吃啥」的对话。AI 最后说:火锅好选择!\n" +
       "回复:AI 也觉得火锅是好选择\n\n",
+    drawerToggleTitle: "Reminders & memory",
+    drawerTabReminders: "Reminders",
+    drawerTabMemory: "Memory",
+    drawerSet: "Set",
+    drawerMinsPlaceholder: "min",
+    drawerRemindPlaceholder: "What should I remind you about?",
+    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
+    drawerMemPlaceholder: "Search or add a memory…",
+    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── ZH-TW strings ──
   const ZH_TW_STRINGS = {
@@ -670,6 +688,15 @@
       "回覆:AI 推薦了火鍋、拉麵、燒肉和川菜\n\n" +
       "事件:主人剛結束跟 AI 關於「晚餐吃啥」的對話。AI 最後說:火鍋好選擇!\n" +
       "回覆:AI 也覺得火鍋是好選擇\n\n",
+    drawerToggleTitle: "Reminders & memory",
+    drawerTabReminders: "Reminders",
+    drawerTabMemory: "Memory",
+    drawerSet: "Set",
+    drawerMinsPlaceholder: "min",
+    drawerRemindPlaceholder: "What should I remind you about?",
+    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
+    drawerMemPlaceholder: "Search or add a memory…",
+    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── KO strings ──
   const KO_STRINGS = {
@@ -845,6 +872,15 @@
       "응답: AI가 핫팟, 라멘, 바비큐, 사천 볶음을 추천했어요\n\n" +
       "이벤트: 주인님이 AI와 「저녁 뭐 먹지」 대화를 막 끝냈어요. AI의 마지막 말: 핫팟 좋은 선택이에요!\n" +
       "응답: AI도 핫팟이 좋은 선택이라고 했어요\n\n",
+    drawerToggleTitle: "Reminders & memory",
+    drawerTabReminders: "Reminders",
+    drawerTabMemory: "Memory",
+    drawerSet: "Set",
+    drawerMinsPlaceholder: "min",
+    drawerRemindPlaceholder: "What should I remind you about?",
+    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
+    drawerMemPlaceholder: "Search or add a memory…",
+    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── JA strings ──
   const JA_STRINGS = {
@@ -1020,6 +1056,15 @@
       "返答：AI が火鍋、ラーメン、焼肉、四川炒め物を提案したよ\n\n" +
       "イベント：ご主人が AI と「夕食何にする」の会話をちょうど終えた。AI が最後に言ったこと：火鍋いい選択！\n" +
       "返答：AI も火鍋がいい選択って言ってたよ\n\n",
+    drawerToggleTitle: "Reminders & memory",
+    drawerTabReminders: "Reminders",
+    drawerTabMemory: "Memory",
+    drawerSet: "Set",
+    drawerMinsPlaceholder: "min",
+    drawerRemindPlaceholder: "What should I remind you about?",
+    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
+    drawerMemPlaceholder: "Search or add a memory…",
+    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── Language data ──
   // Attached below so that each language is one self-contained block.

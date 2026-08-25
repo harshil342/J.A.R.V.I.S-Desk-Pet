@@ -114,6 +114,53 @@ function applyWindowsAppUserModelId(app, platform = process.platform) {
   app.setAppUserModelId(WINDOWS_APP_USER_MODEL_ID);
 }
 
+// Windows drops toast notifications whose AUMID isn't registered. The running
+// process sets com.deskpet.assistant via setAppUserModelId (taskbar grouping),
+// but the toast subsystem additionally needs that AUMID present in
+// HKCU\Software\Classes\AppUserModelId AND a Start Menu shortcut. Without it,
+// winotify's n.show() "succeeds" but nothing appears. Register both at startup
+// so native reminders surface on every machine, not just where an installer did.
+function registerAumidForToasts(app, platform = process.platform) {
+  if (platform !== "win32") return;
+  const { execFile } = require("child_process");
+  const aumid = WINDOWS_APP_USER_MODEL_ID;
+  const display = "Deskpet Assistant";
+
+  // 1) Register the AUMID key so Windows shows the app in Notification settings
+  //    and routes Action Center toasts to it.
+  const regKey = `HKCU\\Software\\Classes\\AppUserModelId\\${aumid}`;
+  execFile(
+    "reg",
+    ["add", regKey, "/ve", "/t", "REG_SZ", "/d", display, "/f"],
+    { windowsHide: true },
+    () => {}
+  );
+
+  // 2) Ensure a Start Menu shortcut exists pointing at this exe.
+  let exePath = null;
+  try {
+    exePath = app && typeof app.getPath === "function" ? app.getPath("exe") : process.execPath;
+  } catch (_) {
+    exePath = process.execPath;
+  }
+  if (!exePath) return;
+  const ps = [
+    `$lnk = Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Deskpet.lnk';`,
+    `$s = New-Object -ComObject WScript.Shell;`,
+    `$sc = $s.CreateShortcut($lnk);`,
+    `$sc.TargetPath = ${JSON.stringify(exePath)};`,
+    `$sc.WorkingDirectory = Split-Path ${JSON.stringify(exePath)};`,
+    `$sc.Description = ${JSON.stringify(display)};`,
+    `$sc.Save();`,
+  ].join(" ");
+  execFile(
+    "powershell",
+    ["-NoProfile", "-NonInteractive", "-Command", ps],
+    { windowsHide: true },
+    () => {}
+  );
+}
+
 module.exports = {
   WINDOWS_APP_USER_MODEL_ID,
   SETTINGS_WINDOW_TITLE,
@@ -123,4 +170,5 @@ module.exports = {
   getSettingsWindowTaskbarDetails,
   shouldOpenSettingsWindowFromArgv,
   applyWindowsAppUserModelId,
+  registerAumidForToasts,
 };

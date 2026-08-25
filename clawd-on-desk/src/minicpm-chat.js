@@ -1612,6 +1612,16 @@ module.exports = function initMinicpmChat(ctx) {
   // MPS kernels are ready by the time the user clicks the pet. Also probes
   // for a newer model revision once the sidecar is healthy.
   async function warmup() {
+    // Dev UI smoke tests: with the CDP debug port enabled, open the bubble
+    // FIRST so tools/verify-bubble-ui.mjs can find its target without
+    // anyone pressing Ctrl+Shift+M. This must happen before the sidecar
+    // warmup below: `ensureRunning()` can block for minutes (or hang when
+    // the model is missing), and a hung `await` would never reach the
+    // `finally`, leaving the smoke harness racing an empty CDP forever.
+    if (process.env.DESKPET_REMOTE_DEBUGGING_PORT) {
+      void open().catch((err) =>
+        log(`[minicpm-chat] dev auto-open bubble failed: ${err && err.message || err}`));
+    }
     try {
       log("[minicpm-chat] warming up sidecar in background…");
       // Pass the user-effective model dir so the sidecar's `--model` flag
@@ -1622,14 +1632,6 @@ module.exports = function initMinicpmChat(ctx) {
       void refreshPersona();
       // Boot-time address/behavior config push (deduped inside).
       void syncAssistantConfig();
-      // Dev UI smoke tests: with the CDP debug port enabled, open the
-      // bubble immediately so tools/verify-bubble-ui.mjs can find its
-      // target without anyone pressing Ctrl+Shift+M.
-      if (process.env.DESKPET_REMOTE_DEBUGGING_PORT) {
-        try { await open(); } catch (err) {
-          log(`[minicpm-chat] dev auto-open bubble failed: ${err && err.message || err}`);
-        }
-      }
     } catch (err) {
       log(`[minicpm-chat] sidecar warmup failed: ${err && err.message || err}`);
     }

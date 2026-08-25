@@ -61,6 +61,17 @@ Both round-trips are gated by `npm run smoke` (create → list → fire → dele
 3. ~~**UI smoke tests in CI**~~ ✅ **Done locally (August 2026)** — `npm run smoke` (`tools/run-ui-smoke.mjs`) spawns the app with CDP enabled, drives `verify-bubble-ui.mjs` against the real bubble (weather flow + no markup leaks), and kills the app; exit code gates it. Wire into a hosted workflow when one has GPU/model access.
 4. ~~**Module splits**~~ ✅ **Done (August 2026)** — `minicpm-chat.js` (3.4k → 2.6k lines) shed `minicpm-sidecar-manager.js` (locators, adapter seeding, Sidecar process manager) and `minicpm-history-store.js` (pure v2 session-store helpers, both re-imported so eval-based tests keep binding); `server.py` shed `gateway/tag_scrubber.py`. All names stay importable from their old homes.
 
+### 🚢 Production hardening backlog
+
+The Windows installer (`dist/Deskpet-0.11.0-x64.exe`) installs and runs end-to-end; these six items stand between it and public distribution:
+
+1. **Code signing** — no certificate yet, so SmartScreen shows "Unknown publisher" on first run. Purchase an OV/EV cert and wire signing into electron-builder.
+2. **GitHub Release hosting** — the installer is local-only; publish per-version artifacts so it's actually downloadable.
+3. **Auto-update target** — `electron-updater` is integrated but its publish target points at upstream OpenBMB; retarget to this fork (or a feed) or users get no updates.
+4. **Installer size** — ships the whole llama.cpp tool tree (~1.2 GB). Trim extraResources filters to `llama-server` + needed DLLs + one backend; several hundred MB recoverable.
+5. **First-run model acquisition** — the GGUF isn't bundled; verify/robustify the Hugging Face download path on a clean machine (consider a ModelScope mirror).
+6. **Hardware breadth** — validated on one CUDA box only; verify CPU-only and Vulkan backends post-install.
+
 ---
 
 ## 🏰 Architectural & Product Moats
