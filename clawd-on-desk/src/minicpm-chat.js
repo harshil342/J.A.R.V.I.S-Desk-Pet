@@ -1921,6 +1921,62 @@ module.exports = function initMinicpmChat(ctx) {
     }
   });
 
+  // ── Proactive drawer IPC (tasks + memory → gateway REST) ──────────────
+  // Thin proxy: the renderer stays CSP-clean (no direct fetch to :18765)
+  // and the gateway stays the single source of truth for both stores.
+  const gw = (method, path, body, timeoutMs) =>
+    httpJson(method, `${sidecar.baseUrl()}${path}`, body === undefined ? null : body, timeoutMs || 4000)
+      .then((r) => (r && r.json) || { ok: false, error: r ? `HTTP ${r.status}` : "no response" })
+      .catch((err) => ({ ok: false, error: (err && err.message) || String(err) }));
+
+  try { ipcMain.removeHandler("minicpm:tasks-list"); } catch {}
+  ipcMain.handle("minicpm:tasks-list", () => gw("GET", "/api/tasks"));
+
+  try { ipcMain.removeHandler("minicpm:tasks-create"); } catch {}
+  ipcMain.handle("minicpm:tasks-create", (_e, p) => {
+    const a = (p && p.args) || p || {};
+    const name = String(a.name || "").trim().slice(0, 80);
+    const delay = Number(a.delaySeconds);
+    if (!name || !Number.isFinite(delay) || delay <= 0) {
+      return Promise.resolve({ ok: false, error: "name and a positive delaySeconds are required" });
+    }
+    return gw("POST", "/api/tasks", {
+      name,
+      delay_seconds: Math.min(delay, 60 * 60 * 24 * 30), // cap at 30 days
+      payload: String(a.payload || ""),
+      recurring: !!a.recurring,
+    }, 6000);
+  });
+
+  try { ipcMain.removeHandler("minicpm:tasks-delete"); } catch {}
+  ipcMain.handle("minicpm:tasks-delete", (_e, p) => {
+    const id = String((p && p.id) || "").trim();
+    return id ? gw("DELETE", `/api/tasks/${encodeURIComponent(id)}`) : Promise.resolve({ ok: false });
+  });
+
+  try { ipcMain.removeHandler("minicpm:memory-list"); } catch {}
+  ipcMain.handle("minicpm:memory-list", () => gw("GET", "/api/memory"));
+
+  try { ipcMain.removeHandler("minicpm:memory-add"); } catch {}
+  ipcMain.handle("minicpm:memory-add", (_e, p) => {
+    const text = String((p && p.text) || "").trim().slice(0, 2000);
+    return text
+      ? gw("POST", "/api/memory", { text }, 6000)
+      : Promise.resolve({ ok: false, error: "text is required" });
+  });
+
+  try { ipcMain.removeHandler("minicpm:memory-delete"); } catch {}
+  ipcMain.handle("minicpm:memory-delete", (_e, p) => {
+    const id = String((p && p.id) || "").trim();
+    return id ? gw("DELETE", `/api/memory/${encodeURIComponent(id)}`) : Promise.resolve({ ok: false });
+  });
+
+  try { ipcMain.removeHandler("minicpm:memory-search"); } catch {}
+  ipcMain.handle("minicpm:memory-search", (_e, p) => {
+    const q = String((p && p.q) || "").trim();
+    return q ? gw("POST", "/api/memory/search", { query: q }, 6000) : Promise.resolve({ ok: false });
+  });
+
   // ── Settings-window facing IPC ────────────────────────────────────────
   // Surface the MiniCPM panel state to the main Settings window.
   const settingsHandlers = {

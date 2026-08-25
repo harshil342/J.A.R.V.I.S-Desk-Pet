@@ -92,6 +92,14 @@ page.on("response", async (r) => {
   try { body = (await r.text()).replace(/\s+/g, " ").slice(0, 220); } catch {}
   console.log(`  [chat ${r.status()}] ${body}`);
 });
+// Task/memory mutations are logged so stray deletes can't hide: if a
+// check fails while a DELETE it didn't send appears here, someone else
+// is mutating the store.
+page.on("request", (r) => {
+  if (/\/api\/(tasks|memory)/.test(r.url()) && r.method() !== "GET") {
+    console.log(`  [mutate] ${r.method()} ${new URL(r.url()).pathname}`);
+  }
+});
 
 try {
   // Settle like a human: window shown, layout done, focus stable.
@@ -114,6 +122,68 @@ try {
 
   // 3 — no tool-call markup ever leaks into the visible DOM
   record("no <function> markup in DOM", !/<function|<param|<tool_call/i.test(t2));
+
+  // 4 — proactive drawer: task roundtrip through IPC → gateway → DOM,
+  // then a real fire (5s) so the dispatcher's bridge push is exercised.
+  await page.click("#proactive-toggle");
+  await page.waitForSelector("#proactive-drawer .drawer-tab", { timeout: 8000 });
+  record("drawer opens with tabs", true);
+
+  const created = await page.evaluate(() =>
+    window.minicpm.tasksCreate({ name: "smoke-check", delaySeconds: 5 })
+  );
+  if (!created || !created.ok) throw new Error("tasksCreate failed: " + JSON.stringify(created));
+  await page.evaluate(() => window.minicpm.tasksCreate({ name: "smoke-later", delaySeconds: 3600 }));
+  await page.click("#proactive-toggle"); await page.click("#proactive-toggle");
+  await page.waitForFunction(
+    () => document.body.innerText.includes("smoke-later"),
+    { timeout: 8000 },
+  );
+  record("created tasks listed in drawer", true);
+
+  // The 5s task must fire via the gateway dispatcher. "triggered" is
+  // transient — non-recurring tasks flip to "completed" right after.
+  let fired = false;
+  let lastSnap = "";
+  for (let i = 0; i < 20 && !fired; i++) {
+    await new Promise((r) => setTimeout(r, 1000));
+    lastSnap = await page.evaluate(async () => {
+      try {
+        const r = await window.minicpm.tasksList();
+        return JSON.stringify(r).slice(0, 300);
+      } catch (e) {
+        return "LIST-ERROR: " + e.message;
+      }
+    });
+    fired = /"(?:triggered|completed)"/.test(lastSnap);
+  }
+  if (!fired) console.log(`  [poll tail] ${lastSnap}`);
+  record("short task fires within ~15s", fired);
+
+  // Cleanup: cancel the leftover long task.
+  await page.evaluate(async () => {
+    const r = await window.minicpm.tasksList();
+    for (const t of r.tasks || []) {
+      if (t.name === "smoke-later") await window.minicpm.tasksDelete(t.id);
+    }
+  });
+
+  // 5 — memory roundtrip: add → list contains → search finds → delete.
+  const memAdd = await page.evaluate(() =>
+    window.minicpm.memoryAdd("smoke-memory-zebra-42")
+  );
+  if (!memAdd || !memAdd.ok) throw new Error("memoryAdd failed: " + JSON.stringify(memAdd));
+  const found = await page.evaluate(async () => {
+    const r = await window.minicpm.memorySearch("zebra");
+    return (r.matches || []).some((m) => m.memory && /smoke-memory-zebra-42/.test(m.memory.text));
+  });
+  record("memory add + semantic search roundtrip", found);
+  await page.evaluate(async () => {
+    const r = await window.minicpm.memoryList();
+    for (const m of r.memories || []) {
+      if (/smoke-memory-zebra-42/.test(m.text)) await window.minicpm.memoryDelete(m.id);
+    }
+  });
 } catch (err) {
   record("flow", false, String(err.message || err).slice(0, 500));
 }

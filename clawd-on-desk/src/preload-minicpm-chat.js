@@ -66,6 +66,16 @@ contextBridge.exposeInMainWorld("minicpm", {
   // Resolves { status: "ok" } or { status: "error", message }.
   setAssistantPrefs: (patch) => ipcRenderer.invoke("minicpm:set-assistant-prefs", { patch }),
 
+  // Proactive drawer: tasks + memory CRUD, proxied by main to the
+  // gateway's /api/tasks and /api/memory REST endpoints.
+  tasksList: () => ipcRenderer.invoke("minicpm:tasks-list"),
+  tasksCreate: (args) => ipcRenderer.invoke("minicpm:tasks-create", { args }),
+  tasksDelete: (id) => ipcRenderer.invoke("minicpm:tasks-delete", { id }),
+  memoryList: () => ipcRenderer.invoke("minicpm:memory-list"),
+  memoryAdd: (text) => ipcRenderer.invoke("minicpm:memory-add", { text }),
+  memoryDelete: (id) => ipcRenderer.invoke("minicpm:memory-delete", { id }),
+  memorySearch: (q) => ipcRenderer.invoke("minicpm:memory-search", { q }),
+
   // Messages from main → renderer
   onOpen:           (cb) => ipcRenderer.on("minicpm:cmd-open",            (_e, payload) => cb(payload || {})),
   onDismiss:        (cb) => ipcRenderer.on("minicpm:cmd-dismiss",         () => cb()),

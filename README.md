@@ -46,6 +46,15 @@ The assistant layer was hardened around a simple rule: **the keyword router owns
 
 Dev extras: `DESKPET_REMOTE_DEBUGGING_PORT=9222 npm start` + `node tools/verify-bubble-ui.mjs` drives the real bubble over CDP and asserts the weather flow end-to-end in the DOM. A `graphify` knowledge graph (`graphify-out/`) maps this repo for fast architecture queries — see `AGENTS.md`.
 
+### 🎛️ Proactive drawer & memory viewer (August 2026)
+
+The bubble's slim row gained an **⏰ pill**: a drawer with two tabs over the gateway's REST stores —
+
+- **Reminders** (`/api/tasks`): create with a one-line form (what + minutes), see each task's status and ETA, cancel with ×; non-recurring tasks flip to completed after firing through the dispatcher → bridge → Windows-toast pipeline.
+- **Memory** (`/api/memory`): everything Jarvis remembers, with semantic search-as-you-type (≥2 chars), inline add, and forget-on-×.
+
+Both round-trips are gated by `npm run smoke` (create → list → fire → delete, plus add → search → forget).
+
 ### 🗺️ Roadmap
 1. ~~**Durable reminders**~~ ✅ **Done (August 2026)** — timers persist to `Documents/DeskPet/pending-reminders.json`; a gateway restart re-arms future ones and fires overdue ones immediately with an "Overdue reminder" label. "cancel my reminders" clears the store.
 2. ~~**Better search fallback**~~ ✅ **Done (August 2026)** — when DuckDuckGo has no instant answer, searches fall back to Wikipedia with relevance-ranked full-text lookup (`list=search` beats opensearch: 'zdzislaw pawlak rough sets' → Pawlak himself, 'nikola tesla die' → Nikola Tesla), and wiki-backed results are relayed verbatim instead of being rephrased by the model.

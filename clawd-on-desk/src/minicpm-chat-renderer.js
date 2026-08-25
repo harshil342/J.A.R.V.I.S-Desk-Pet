@@ -277,12 +277,222 @@ async function createSession() {
 function sessionsRowHtml() {
   return '<div class="sessions-row">' +
     '<button id="sessions-add" class="sessions-add" title="' + escapeHtml(t("chatSessionsNew")) + '">+</button>' +
+    '<button id="proactive-toggle" class="sessions-add" title="Reminders & memory">⏰</button>' +
   '</div>';
 }
 
 function wireSessionsRow() {
   const addBtn = document.getElementById("sessions-add");
   if (addBtn) addBtn.addEventListener("click", () => { void createSession(); });
+  const pBtn = document.getElementById("proactive-toggle");
+  if (pBtn) pBtn.addEventListener("click", () => { void toggleProactiveDrawer(); });
+}
+
+// ── Proactive drawer: reminders (/api/tasks) + memory (/api/memory) ──────
+let proactiveOpen = false;
+let proactiveTab = "tasks";
+
+async function toggleProactiveDrawer() {
+  proactiveOpen = !proactiveOpen;
+  const d = document.getElementById("proactive-drawer");
+  if (!d) return;
+  d.style.display = proactiveOpen ? "block" : "none";
+  if (proactiveOpen) await renderProactiveDrawer();
+  else measureAndShow({ animate: true });
+}
+
+async function renderProactiveDrawer() {
+  const d = document.getElementById("proactive-drawer");
+  if (!d) return;
+  d.innerHTML =
+    '<div class="drawer-tabs">' +
+      '<button class="drawer-tab' + (proactiveTab === "tasks" ? " active" : "") + '" data-tab="tasks">Reminders</button>' +
+      '<button class="drawer-tab' + (proactiveTab === "memory" ? " active" : "") + '" data-tab="memory">Memory</button>' +
+    '</div>' +
+    '<div id="proactive-body" class="drawer-body"><div class="drawer-empty">…</div></div>';
+  d.querySelectorAll(".drawer-tab").forEach((b) =>
+    b.addEventListener("click", () => {
+      proactiveTab = b.dataset.tab;
+      void renderProactiveDrawer();
+    })
+  );
+  if (proactiveTab === "tasks") await renderTasksTab();
+  else await renderMemoryTab();
+  measureAndShow({ animate: false });
+}
+
+async function renderTasksTab() {
+  const body = document.getElementById("proactive-body");
+  if (!body) return;
+  body.innerHTML =
+    '<div class="drawer-form">' +
+      '<input id="drawer-mins" class="drawer-input drawer-input-slim" type="text" inputmode="decimal" placeholder="min" />' +
+      '<input id="drawer-new-text" class="drawer-input" type="text" placeholder="What should I remind you about?" />' +
+      '<button id="drawer-add-btn" class="drawer-add">Set</button>' +
+    '</div>' +
+    '<div id="task-list" class="drawer-list"></div>';
+  const res = await window.minicpm.tasksList();
+  renderTaskRows((res && res.tasks) || []);
+
+  document.getElementById("drawer-add-btn").addEventListener("click", () => void createTaskFromForm());
+  ["drawer-new-text", "drawer-mins"].forEach((id) =>
+    document.getElementById(id).addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); void createTaskFromForm(); }
+    })
+  );
+}
+
+function fmtIn(seconds) {
+  if (!(seconds > 0)) return "";
+  if (seconds < 90) return Math.round(seconds) + "s";
+  if (seconds < 5400) return Math.round(seconds / 60) + "m";
+  return (seconds / 3600).toFixed(1) + "h";
+}
+
+function renderTaskRows(tasks) {
+  const list = document.getElementById("task-list");
+  if (!list) return;
+  if (!tasks.length) {
+    list.innerHTML = '<div class="drawer-empty">No pending reminders. Ask in chat or add one above.</div>';
+    return;
+  }
+  list.innerHTML = tasks.map((t) => {
+    const eta = t.status === "pending" && t.delay_seconds ? " · in " + escapeHtml(fmtIn(t.delay_seconds)) : "";
+    const badge = t.recurring ? ' <span class="row-badge">↻</span>' : "";
+    return '<div class="drawer-row" data-id="' + escapeHtml(String(t.id)) + '">' +
+      '<span class="row-main">' + escapeHtml(t.name) + badge + '</span>' +
+      '<span class="row-meta">' + escapeHtml(t.status) + eta + '</span>' +
+      '<button class="row-del" title="Cancel">×</button>' +
+    '</div>';
+  }).join("");
+  list.querySelectorAll(".row-del").forEach(wireTaskDel);
+}
+
+function wireTaskDel(btn) {
+  btn.addEventListener("click", async () => {
+    const row = btn.closest(".drawer-row");
+    await window.minicpm.tasksDelete(row.dataset.id);
+    const list = row.parentElement;
+    row.remove();
+    if (list && !list.children.length) await renderTasksTab();
+    measureAndShow({ animate: false });
+  });
+}
+
+async function createTaskFromForm() {
+  const nameEl = document.getElementById("drawer-new-text");
+  const minsEl = document.getElementById("drawer-mins");
+  const name = nameEl.value.trim();
+  const mins = parseFloat(minsEl.value.replace(",", "."));
+  if (!name || !(mins > 0)) {
+    minsEl.style.borderBottomColor = "rgba(255,110,110,0.8)";
+    setTimeout(() => { minsEl.style.borderBottomColor = ""; }, 1200);
+    return;
+  }
+  const res = await window.minicpm.tasksCreate({ name, delaySeconds: mins * 60, recurring: false });
+  if (res && res.ok && res.task) {
+    nameEl.value = ""; minsEl.value = "";
+    const list = document.getElementById("task-list");
+    const empty = list && list.querySelector(".drawer-empty");
+    if (empty) empty.remove();
+    // Newest first; reuse the same row markup the list renderer uses.
+    const t = res.task;
+    const eta = t.delay_seconds ? " · in " + escapeHtml(fmtIn(t.delay_seconds)) : "";
+    list.insertAdjacentHTML(
+      "afterbegin",
+      '<div class="drawer-row" data-id="' + escapeHtml(String(t.id)) + '">' +
+        '<span class="row-main">' + escapeHtml(t.name) + '</span>' +
+        '<span class="row-meta">' + escapeHtml(t.status) + eta + '</span>' +
+        '<button class="row-del" title="Cancel">×</button>' +
+      '</div>'
+    );
+    wireTaskDel(list.firstElementChild.querySelector(".row-del"));
+    measureAndShow({ animate: false });
+  }
+}
+
+// Memory tab shares the row language; typing ≥2 chars switches from the
+// full listing to the gateway's semantic search.
+let memSearchTimer = null;
+
+async function renderMemoryTab() {
+  const body = document.getElementById("proactive-body");
+  if (!body) return;
+  body.innerHTML =
+    '<div class="drawer-form">' +
+      '<input id="drawer-mem-search" class="drawer-input" type="text" placeholder="Search or add a memory…" />' +
+      '<button id="drawer-mem-add-btn" class="drawer-add">+</button>' +
+    '</div>' +
+    '<div id="mem-list" class="drawer-list"></div>';
+  const res = await window.minicpm.memoryList();
+  renderMemRows((res && res.memories) || []);
+
+  const searchEl = document.getElementById("drawer-mem-search");
+  document.getElementById("drawer-mem-add-btn").addEventListener("click", () => void addMemoryFromBox(searchEl));
+  searchEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); void addMemoryFromBox(searchEl); }
+  });
+  searchEl.addEventListener("input", () => {
+    clearTimeout(memSearchTimer);
+    memSearchTimer = setTimeout(async () => {
+      const q = searchEl.value.trim();
+      const r = q.length >= 2
+        ? await window.minicpm.memorySearch(q)
+        : await window.minicpm.memoryList();
+      renderMemRows(((r && r.matches) ? r.matches.map((m) => m.memory) : (r && r.memories)) || []);
+    }, 180);
+  });
+}
+
+function renderMemRows(items) {
+  const list = document.getElementById("mem-list");
+  if (!list) return;
+  if (!items.length) {
+    list.innerHTML = '<div class="drawer-empty">Nothing remembered yet. Tell me things in chat, or add above.</div>';
+    return;
+  }
+  list.innerHTML = items.map((m) =>
+    '<div class="drawer-row" data-id="' + escapeHtml(String(m.id)) + '">' +
+      '<span class="row-main">' + escapeHtml(m.text || "") + '</span>' +
+      '<button class="row-del" title="Forget">×</button>' +
+    '</div>'
+  ).join("");
+  list.querySelectorAll(".row-del").forEach((b) =>
+    b.addEventListener("click", async () => {
+      const row = b.closest(".drawer-row");
+      await window.minicpm.memoryDelete(row.dataset.id);
+      const list = row.parentElement;
+      row.remove();
+      if (list && !list.children.length) await renderMemoryTab();
+      measureAndShow({ animate: false });
+    })
+  );
+}
+
+async function addMemoryFromBox(inputEl) {
+  const text = inputEl.value.trim();
+  if (!text) return;
+  const res = await window.minicpm.memoryAdd(text);
+  if (res && res.ok && res.memory) {
+    inputEl.value = "";
+    const list = document.getElementById("mem-list");
+    const empty = list && list.querySelector(".drawer-empty");
+    if (empty) empty.remove();
+    list.insertAdjacentHTML(
+      "afterbegin",
+      '<div class="drawer-row" data-id="' + escapeHtml(String(res.memory.id)) + '">' +
+        '<span class="row-main">' + escapeHtml(res.memory.text || text) + '</span>' +
+        '<button class="row-del" title="Forget">×</button>' +
+      '</div>'
+    );
+    const del = list.firstElementChild.querySelector(".row-del");
+    del.addEventListener("click", async () => {
+      await window.minicpm.memoryDelete(del.closest(".drawer-row").dataset.id);
+      del.closest(".drawer-row").remove();
+      measureAndShow({ animate: false });
+    });
+    measureAndShow({ animate: false });
+  }
 }
 
 function stopGeneration(kind) {
@@ -409,6 +619,7 @@ async function showAsk(lastReply, opts = {}) {
             '</div>'
           : '') +
         sessionsRowHtml() +
+        '<div id="proactive-drawer" style="display:none"></div>' +
         '<div class="ask-input-wrap">' +
           '<textarea id="ask-input" placeholder="' + placeholder + '" rows="1"></textarea>' +
         '</div>' +

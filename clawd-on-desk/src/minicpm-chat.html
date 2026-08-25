@@ -361,6 +361,69 @@
     background: rgba(var(--accent-rgb), 0.20);
     color: var(--accent);
   }
+
+  /* ── Proactive drawer (reminders + memory) ──────────────────────────
+     Slides open between the sessions row and the input. Same pill
+     language as .sessions-add; list rows are compact one-liners with a
+     trailing delete glyph. */
+  #proactive-drawer {
+    margin: 4px 0 2px;
+    border: 1px solid rgba(var(--accent-rgb), 0.22);
+    border-radius: 10px;
+    padding: 6px;
+    background: rgba(var(--accent-rgb), 0.06);
+    -webkit-app-region: no-drag;
+  }
+  .drawer-tabs { display: flex; gap: 6px; margin-bottom: 5px; }
+  .drawer-tab {
+    all: unset; cursor: pointer; user-select: none;
+    font-size: 10.5px; line-height: 1.2; color: var(--muted);
+    background: rgba(var(--accent-rgb), 0.08);
+    border: 1px solid transparent; border-radius: 999px; padding: 2px 9px;
+    transition: background 140ms ease, color 140ms ease;
+  }
+  .drawer-tab.active {
+    color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.18);
+    border-color: rgba(var(--accent-rgb), 0.35);
+  }
+  .drawer-body { max-height: 190px; overflow-y: auto; }
+  .drawer-list { display: flex; flex-direction: column; gap: 2px; }
+  .drawer-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 4px; border-radius: 7px; font-size: 11.5px;
+  }
+  .drawer-row:hover { background: rgba(var(--accent-rgb), 0.10); }
+  .row-main {
+    flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .row-badge { color: var(--accent); margin-left: 3px; }
+  .row-meta { color: var(--muted); font-size: 10px; white-space: nowrap; }
+  .row-del {
+    all: unset; cursor: pointer; user-select: none;
+    color: var(--muted); font-size: 13px; line-height: 1; padding: 0 3px;
+    border-radius: 5px; transition: color 120ms ease, background 120ms ease;
+  }
+  .row-del:hover { color: #ff7a7a; background: rgba(255,110,110,0.12); }
+  .drawer-empty { color: var(--muted); font-size: 11px; padding: 4px 4px 2px; }
+  .drawer-form { display: flex; gap: 5px; align-items: center; margin-bottom: 5px; }
+  .drawer-input {
+    all: unset; flex: 1; min-width: 0;
+    font-size: 11.5px; line-height: 1.4; color: var(--text);
+    border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
+    padding: 2px 2px; transition: border-color 140ms ease;
+  }
+  .drawer-input:focus { outline: none; border-bottom-color: rgba(var(--accent-rgb), 0.75); }
+  .drawer-input-slim { flex: 0 0 44px; text-align: center; }
+  .drawer-add {
+    all: unset; cursor: pointer; user-select: none;
+    font-size: 10.5px; line-height: 1.2; color: var(--muted);
+    background: rgba(var(--accent-rgb), 0.12);
+    border: 1px solid rgba(var(--accent-rgb), 0.30);
+    border-radius: 999px; padding: 2px 9px;
+    transition: background 140ms ease, color 140ms ease;
+  }
+  .drawer-add:hover { background: rgba(var(--accent-rgb), 0.24); color: var(--accent); }
 </style>
 </head>
 <body>
