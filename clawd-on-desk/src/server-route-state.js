@@ -184,7 +184,14 @@ function handleStatePost(req, res, options) {
       // with 204 so hook scripts get a quick no-op response instead of
       // hanging on our HTTP connection. Still surfaces as a success code
       // so hook exit behavior is unchanged.
-      if (typeof ctx.isAgentEnabled === "function" && !ctx.isAgentEnabled(agentId)) {
+      // EXCEPTION - internal proactive pushes (reminders, daily briefings;
+      // session ids prefixed "deskpet-proactive-") bypass the gate: they
+      // originate from our own sidecar, not a third-party coding agent.
+      // Gating them is what silently killed reminder/briefing bubbles
+      // whenever the borrowed agent id was toggled off.
+      const isProactivePush = typeof session_id === "string"
+        && session_id.startsWith("deskpet-proactive-");
+      if (!isProactivePush && typeof ctx.isAgentEnabled === "function" && !ctx.isAgentEnabled(agentId)) {
         recordRequestHookEvent.droppedByDisabled();
         res.writeHead(204, { [CLAWD_SERVER_HEADER]: CLAWD_SERVER_ID });
         res.end();

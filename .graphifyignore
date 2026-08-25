@@ -1,0 +1,20 @@
+# Vendored / generated / non-source material
+llama.cpp/
+models/
+saas-explainer-video/
+adapters/
+assets/
+skills/
+theme-build/
+.github/
+.kilo/
+.kimchi/
+
+# Binary/media noise
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.ico
+*.gguf

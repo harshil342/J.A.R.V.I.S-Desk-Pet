@@ -313,6 +313,9 @@ function enterMiniMode(wa, viaMenu, edge) {
   miniSleepPeeked = false;
   miniPeeked = false;
   if (edge) miniEdge = edge;
+  if (!viaMenu && typeof ctx.setMiniDockSidePref === "function") {
+    try { ctx.setMiniDockSidePref(miniEdge); } catch {}
+  }
   const size = _getSize();
   currentMiniX = calcMiniX(wa, size);
   lastMiniWorkArea = wa;
@@ -336,25 +339,10 @@ function enterMiniMode(wa, viaMenu, edge) {
   const enterSvgState = ctx.doNotDisturb ? "mini-enter-sleep" : "mini-enter";
 
   if (viaMenu) {
-    const adjacent = containedBoundary != null;
-    let jumpTarget;
-    if (adjacent) {
-      // Internal seam: skip fly-off-screen; arc lands at the contained mini X
-      // so the parabola never crosses onto the neighbouring display.
-      jumpTarget = currentMiniX;
-    } else {
-      const displays = screen.getAllDisplays();
-      if (miniEdge === "right") {
-        let maxRight = 0;
-        for (const d of displays) maxRight = Math.max(maxRight, d.bounds.x + d.bounds.width);
-        jumpTarget = maxRight;
-      } else {
-        let minLeft = Infinity;
-        for (const d of displays) minLeft = Math.min(minLeft, d.bounds.x);
-        jumpTarget = minLeft - size.width;
-      }
-    }
-    animateWindowParabola(jumpTarget, bounds.y, JUMP_DURATION, () => {
+    // Land directly at the dock position. The old sliver design flew the pet
+    // fully off-screen and back here ("materialize from the wall"); with
+    // always-visible mini art that reads as a glitch jump, so settle in place.
+    animateWindowParabola(currentMiniX, bounds.y, JUMP_DURATION, () => {
       const enterDurationMs = getMiniEnterDurationMs(enterSvgState);
       ctx.applyState(enterSvgState);
       if (MINI_ENTER_PRELOAD_MS <= 0) {
@@ -461,10 +449,13 @@ function enterMiniViaMenu() {
   const size = _getSize();
   const wa = ctx.getNearestWorkArea(bounds.x + size.width / 2, bounds.y + size.height / 2);
 
-  // Auto-detect nearest edge
+  // Auto-detect nearest edge; an explicit miniDockSide pref wins
   const centerX = bounds.x + size.width / 2;
   const waMid = wa.x + wa.width / 2;
-  const edge = centerX <= waMid ? "left" : "right";
+  const dockPref = typeof ctx.getMiniDockSidePref === "function" ? ctx.getMiniDockSidePref() : "";
+  const edge = (dockPref === "left" || dockPref === "right")
+    ? dockPref
+    : (centerX <= waMid ? "left" : "right");
   miniEdge = edge;
 
   miniTransitioning = true;
@@ -478,15 +469,10 @@ function enterMiniViaMenu() {
 
   ctx.applyState("mini-crabwalk");
 
-  const adjacent = seamBoundary(wa, bounds.y + size.height / 2, edge) != null;
-  let edgeX;
-  if (edge === "right") {
-    edgeX = adjacent
-      ? wa.x + wa.width - size.width
-      : wa.x + wa.width - size.width + Math.round(size.width * 0.25);
-  } else {
-    edgeX = adjacent ? wa.x : wa.x - Math.round(size.width * 0.25);
-  }
+  // Walk flush to the edge — no overhang past the screen boundary. The old
+  // 25% overhang served the off-screen sliver look; fully-visible mini art
+  // must stay on-screen for the whole approach.
+  const edgeX = miniEdge === "right" ? wa.x + wa.width - size.width : wa.x;
   const walkDist = Math.abs(bounds.x - edgeX);
   const walkDuration = walkDist / CRABWALK_SPEED;
   animateWindowX(edgeX, walkDuration);

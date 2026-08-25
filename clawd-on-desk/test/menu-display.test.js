@@ -440,8 +440,8 @@ describe("menu dashboard action", () => {
     menu.buildContextMenu();
     menu.createTray();
 
-    assert.ok(ctx.contextMenu.template.some((item) => item.label === "MiniCPM Chat"));
-    assert.ok(ctx.tray.contextMenu.template.some((item) => item.label === "MiniCPM Chat"));
+    assert.ok(ctx.contextMenu.template.some((item) => item.label === "Deskpet Chat"));
+    assert.ok(ctx.tray.contextMenu.template.some((item) => item.label === "Deskpet Chat"));
     assert.strictEqual(ctx.contextMenu.template.some((item) => item.label === "menuMinicpmChat"), false);
     assert.strictEqual(ctx.tray.contextMenu.template.some((item) => item.label === "menuMinicpmChat"), false);
   });

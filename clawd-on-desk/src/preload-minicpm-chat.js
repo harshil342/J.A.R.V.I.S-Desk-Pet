@@ -22,6 +22,21 @@ contextBridge.exposeInMainWorld("minicpm", {
   // Chat generation parameters (shared with Settings tab)
   getChatParams: () => ipcRenderer.invoke("minicpm:get-chat-params"),
 
+  // Chat history persistence — mirrored to <userData>/minicpm-chat-history.json
+  // by main (capped + sanitized there). v2 session store both ways:
+  // loadHistory resolves { ok, store: { version, activeId, sessions } };
+  // saveHistory accepts that same store object and returns { ok, count, sessions }.
+  loadHistory: () => ipcRenderer.invoke("minicpm-chat:history-load"),
+  saveHistory: (store) => ipcRenderer.invoke("minicpm-chat:history-save", { store }),
+
+  // Sidecar lifecycle events from the crash auto-restart supervisor:
+  // { state: "restarting", attempt } | { state: "back" } | { state: "down", reason }
+  onSidecarState: (cb) => {
+    const listener = (_e, p) => cb(p || {});
+    ipcRenderer.on("minicpm:sidecar-state", listener);
+    return () => ipcRenderer.removeListener("minicpm:sidecar-state", listener);
+  },
+
   // Adapter (LoRA) load/unload — same IPC handler the Settings tab
   // uses, so chat-based switching ("切到猫娘") persists the user's
   // choice to prefs and shares the 90s timeout + bubble notification
@@ -35,6 +50,21 @@ contextBridge.exposeInMainWorld("minicpm", {
     ipcRenderer.on("minicpm:lang-change", listener);
     return () => ipcRenderer.removeListener("minicpm:lang-change", listener);
   },
+
+  // Assistant look/feel + behavior prefs (clawd-prefs.json → Settings →
+  // Deskpet Assistant). getAssistantPrefs resolves the validated snapshot
+  // projection from main; onAssistantPrefsChanged fires on the shared
+  // "settings-changed" broadcast (no payload needed — refetch after it).
+  getAssistantPrefs: () => ipcRenderer.invoke("minicpm:get-assistant-prefs"),
+  onAssistantPrefsChanged: (cb) => {
+    const listener = () => { try { cb(); } catch {} };
+    ipcRenderer.on("settings-changed", listener);
+    return () => ipcRenderer.removeListener("settings-changed", listener);
+  },
+  // Write path for the quick-customize popover: { patch } of whitelisted
+  // assistant pref keys → validated settings-controller commits in main.
+  // Resolves { status: "ok" } or { status: "error", message }.
+  setAssistantPrefs: (patch) => ipcRenderer.invoke("minicpm:set-assistant-prefs", { patch }),
 
   // Messages from main → renderer
   onOpen:           (cb) => ipcRenderer.on("minicpm:cmd-open",            (_e, payload) => cb(payload || {})),

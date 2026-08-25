@@ -303,6 +303,36 @@ const updateRegistry = {
   fullscreenOverlay: requireBoolean("fullscreenOverlay"),
   mobilePreviewEnabled: requireBoolean("mobilePreviewEnabled"),
 
+  // ── Assistant section (pure data; projection lives in the chat renderer) ──
+  assistantAccent(value) {
+    if (typeof value !== "string" || !/^#[0-9a-fA-F]{6}$/.test(value)) {
+      return { status: "error", message: "assistantAccent must be a #RRGGBB hex color" };
+    }
+    return { status: "ok" };
+  },
+  accentPreset: requireEnum("accentPreset", ["cyan", "violet", "amber", "green", "custom"]),
+  bubbleOpacity: requireNumberInRange("bubbleOpacity", 0.5, 1),
+  bubbleBlur: requireNumberInRange("bubbleBlur", 0, 40),
+  bubbleTextScale: requireNumberInRange("bubbleTextScale", 0.85, 1.3),
+  bubbleDensity: requireEnum("bubbleDensity", ["comfortable", "compact"]),
+  typewriterEnabled: requireBoolean("typewriterEnabled"),
+  assistantAddress(value) {
+    if (typeof value !== "string" || value.trim().length === 0) {
+      return { status: "error", message: "assistantAddress must be a non-empty string" };
+    }
+    if (value.length > 24) {
+      return { status: "error", message: "assistantAddress must be at most 24 characters" };
+    }
+    return { status: "ok" };
+  },
+  briefingHour: requireIntegerInRange("briefingHour", 0, 23),
+  recapHour: requireIntegerInRange("recapHour", 0, 23),
+  reminderChime: requireBoolean("reminderChime"),
+  autoMemory: requireBoolean("autoMemory"),
+  clarifyStrength: requireEnum("clarifyStrength", ["off", "ambiguous", "confirm_all"]),
+  idleSleepSeconds: requireIntegerInRange("idleSleepSeconds", 15, 300),
+  miniDockSide: requireEnum("miniDockSide", ["", "left", "right"]),
+
   // ── System-backed prefs (object-form: validate + effect pre-commit gate) ──
   autoStartWithClaude,
   manageClaudeHooksAutomatically,

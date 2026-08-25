@@ -209,7 +209,10 @@ let wakePollTimer = null;
 let lastWakeCursorX = null, lastWakeCursorY = null;
 
 function isWakePollState(state) {
-  return state === "dozing" || state === "collapsing" || state === "sleeping";
+  // mini-sleep parks the pet docked with DND off — cursor movement should
+  // wake it exactly like desktop sleeping does.
+  return state === "dozing" || state === "collapsing" || state === "sleeping"
+    || state === "mini-sleep";
 }
 
 // ── Kimi CLI permission hold ──
@@ -720,6 +723,12 @@ function stopWakePoll() {
 }
 
 function wakeFromDoze() {
+  if (currentState === "mini-sleep") {
+    // Docked sleep wakes straight to mini-idle — the full-size "waking"
+    // stand-up art would flash a giant pet over the compact docked one.
+    applyState("mini-idle");
+    return;
+  }
   if (currentState === "sleeping" || currentState === "collapsing") {
     playWakeTransitionOrResolve();
     return;

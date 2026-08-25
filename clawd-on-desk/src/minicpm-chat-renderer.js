@@ -22,14 +22,16 @@ let CLASSIFIER_PROMPT = minicpmI18n ? minicpmI18n.getClassifierPrompt(currentLan
 
 function applyLang(lang) {
   if (typeof lang !== "string" || !lang) return;
-  currentLang = lang;
+  // English-only product: pin chat command patterns + classifier to en.
+  currentLang = "en";
+  lang = "en";
   if (minicpmI18n) {
     RGX = minicpmI18n.getCommandPatterns(lang);
     COMMAND_HINTS = RGX.hints || /./;
     CLASSIFIER_PROMPT = minicpmI18n.getClassifierPrompt(lang);
   }
   try { document.documentElement.setAttribute("lang", lang); } catch {}
-  try { document.title = "MiniCPM"; } catch {}
+  try { document.title = "Deskpet Assistant"; } catch {}
   // Update statically-rendered strings (update pill, ask placeholder, etc.).
   refreshStaticUi();
 }
@@ -46,6 +48,9 @@ function refreshStaticUi() {
   if (inputEl) {
     inputEl.placeholder = t("chatAskPlaceholder");
   }
+  // Sessions row: tooltip re-localizes live.
+  const addBtn = document.getElementById("sessions-add");
+  if (addBtn) addBtn.title = t("chatSessionsNew");
 }
 
 // Event listener: open native context menu on right-click. Replaced the
@@ -68,7 +73,7 @@ const updPill = document.getElementById("updPill");
 let phase = "hidden";        // hidden | starting | ask | thinking | speak | error
 let booted = false;
 let sidecarUrl = null;
-let history = [];            // multi-turn conversation; persists across opens
+let history = [];            // ACTIVE session's messages — aliases the v2 session store
 let abortCtrl = null;
 let fadeTimer = null;
 let inputEl = null;          // <textarea> while in ask state
@@ -80,6 +85,212 @@ let updPillRevision = null;
 // thinkingOverride is a per-session override from ⌘⇧T; null means follow
 // the persisted default on each submit.
 let thinkingOverride = null;
+
+// ── assistant look/feel + behavior prefs (clawd-prefs.json) ──────────────
+// Fetched via main (validated controller snapshot) at boot and re-fetched
+// whenever the settings-changed broadcast fires, then projected onto CSS
+// custom properties / body[data-density] / the typewriter toggle.
+const ASSISTANT_PREF_DEFAULTS = {
+  assistantAccent: "#8A939B",
+  accentPreset: "custom",
+  bubbleOpacity: 0.94,
+  bubbleBlur: 28,
+  bubbleTextScale: 1,
+  bubbleDensity: "comfortable",
+  typewriterEnabled: true,
+};
+let assistantPrefs = { ...ASSISTANT_PREF_DEFAULTS };
+let typewriterEnabled = true;
+
+function clampPrefNum(v, lo, hi, fallback) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : fallback;
+}
+
+function applyAssistantPrefs(prefs) {
+  if (!prefs || typeof prefs !== "object") return;
+  assistantPrefs = { ...assistantPrefs };
+  for (const key of Object.keys(ASSISTANT_PREF_DEFAULTS)) {
+    if (prefs[key] !== undefined && prefs[key] !== null) assistantPrefs[key] = prefs[key];
+  }
+  const rootStyle = document.documentElement.style;
+  const accent = typeof assistantPrefs.assistantAccent === "string"
+    && /^#[0-9a-fA-F]{6}$/.test(assistantPrefs.assistantAccent.trim())
+    ? assistantPrefs.assistantAccent.trim()
+    : ASSISTANT_PREF_DEFAULTS.assistantAccent;
+  rootStyle.setProperty("--accent", accent);
+  // Derived channels let the border / inner edge / outer glow follow the
+  // accent, so changing the color visibly recolors the bubble itself.
+  const r = parseInt(accent.slice(1, 3), 16);
+  const g = parseInt(accent.slice(3, 5), 16);
+  const b = parseInt(accent.slice(5, 7), 16);
+  if ([r, g, b].every(Number.isFinite)) {
+    rootStyle.setProperty("--accent-rgb", `${r}, ${g}, ${b}`);
+  }
+  rootStyle.setProperty("--bubble-alpha", String(clampPrefNum(assistantPrefs.bubbleOpacity, 0.5, 1, 0.94)));
+  rootStyle.setProperty("--bubble-blur", `${clampPrefNum(assistantPrefs.bubbleBlur, 0, 40, 28)}px`);
+  rootStyle.setProperty("--bubble-text-scale", String(clampPrefNum(assistantPrefs.bubbleTextScale, 0.85, 1.3, 1)));
+  if (assistantPrefs.bubbleDensity === "compact") {
+    document.body.dataset.density = "compact";
+  } else {
+    delete document.body.dataset.density;
+  }
+  typewriterEnabled = assistantPrefs.typewriterEnabled !== false;
+}
+
+async function bootstrapAssistantPrefs() {
+  applyAssistantPrefs(ASSISTANT_PREF_DEFAULTS);
+  const fetchPrefs = async () => {
+    try {
+      if (window.minicpm && typeof window.minicpm.getAssistantPrefs === "function") {
+        applyAssistantPrefs(await window.minicpm.getAssistantPrefs());
+      }
+    } catch {}
+  };
+  await fetchPrefs();
+  // Live: the effect router broadcasts every controller change to all
+  // windows — refetch on each event and re-apply what we care about.
+  if (window.minicpm && typeof window.minicpm.onAssistantPrefsChanged === "function") {
+    window.minicpm.onAssistantPrefsChanged(() => { void fetchPrefs(); });
+  }
+}
+
+// ── chat history persistence (v2 named sessions) ──
+// Main mirrors the session store to <userData>/minicpm-chat-history.json
+// via the debounced save below; we reload it once per boot so
+// conversations survive app relaunches. Main re-sanitizes/caps on both
+// sides, so a corrupted or hand-edited file can't balloon context here.
+let historyLoaded = false;
+let historySaveTimer = null;
+const HISTORY_SAVE_DEBOUNCE_MS = 800;
+
+// ── named chat sessions ──
+// `history` always ALIASES the active session's messages array — never
+// reassign it, mutate in place, or the store loses the conversation.
+const MAX_CHAT_SESSIONS = 20;   // mirrors main's HISTORY_MAX_SESSIONS cap
+let sessions = null;            // { <id>: { name, messages } } — insertion order = age
+let activeSessionId = "default";
+let nextSessionNum = 2;         // auto-name counter → "Chat 2", "Chat 3", …
+
+function ensureSessions() {
+  if (!sessions || typeof sessions !== "object" || !Object.keys(sessions).length) {
+    sessions = { default: { name: "Chat", messages: [] } };
+    // Alias (not copy) the module-init `history` array so any turn pushed
+    // before the persisted store loaded still lands in the default session.
+    if (activeSessionId === "default" && sessions.default.messages !== history) {
+      sessions.default.messages = history;
+    }
+  }
+  if (!sessions[activeSessionId]) activeSessionId = Object.keys(sessions)[0];
+  return sessions;
+}
+
+function buildHistoryStore() {
+  ensureSessions();
+  return { version: 2, activeId: activeSessionId, sessions };
+}
+
+// Most recent assistant turn of a message array ("" when none) — used to
+// re-pin the last-reply region after a session switch.
+function lastReplyOf(messages) {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m && m.role === "assistant" && typeof m.content === "string") return m.content;
+  }
+  return "";
+}
+
+// Why the current generation was aborted: "user" (stop button — recover
+// to ask state) vs "system" (dismiss/open/reset — stay quiet). Null when
+// no abort is in flight.
+let abortKind = null;
+
+function scheduleHistorySave() {
+  if (!window.minicpm || typeof window.minicpm.saveHistory !== "function") return;
+  if (historySaveTimer) clearTimeout(historySaveTimer);
+  historySaveTimer = setTimeout(() => {
+    historySaveTimer = null;
+    try { window.minicpm.saveHistory(buildHistoryStore()); } catch {}
+  }, HISTORY_SAVE_DEBOUNCE_MS);
+}
+
+async function loadPersistedHistory() {
+  if (historyLoaded || !window.minicpm || typeof window.minicpm.loadHistory !== "function") return;
+  historyLoaded = true;
+  try {
+    const r = await window.minicpm.loadHistory();
+    // Only seed when nothing chatted yet — this session's turns always
+    // win if something already happened before the load resolved.
+    if (r && r.ok && r.store && r.store.sessions
+        && Object.keys(r.store.sessions).length && !history.length) {
+      sessions = r.store.sessions;
+      activeSessionId = sessions[r.store.activeId] ? r.store.activeId : Object.keys(sessions)[0];
+      history = sessions[activeSessionId].messages;
+      // Resume the auto-name counter past any persisted "chat-N" ids.
+      for (const id of Object.keys(sessions)) {
+        const m = /^chat-(\d+)$/.exec(id);
+        if (m) nextSessionNum = Math.max(nextSessionNum, Number(m[1]) + 1);
+      }
+    }
+  } catch {}
+}
+
+// ── session switching / creating ──
+// Both only run from the ask-phase sessions row, so re-rendering the
+// ask pane afterwards is always safe.
+
+async function switchSession(id) {
+  const map = ensureSessions();
+  if (!map[id] || id === activeSessionId) return;
+  // Quietly abort any in-flight generation first: its completion callback
+  // closes over nothing — it pushes via the shared `history` alias — so
+  // swapping arrays mid-stream would land the reply in the WRONG session.
+  stopGeneration("system");
+  abortCtrl = null;
+  clearFade();
+  activeSessionId = id;
+  history = map[id].messages;   // swap the alias to the new session's array
+  scheduleHistorySave();
+  await showAsk(lastReplyOf(history), { forcePane: true });
+}
+
+// Cap enforcement mirrors main's sanitize: beyond MAX_CHAT_SESSIONS the
+// oldest non-active session (insertion order) is deleted silently.
+function evictOldestSession(map) {
+  for (const id of Object.keys(map)) {
+    if (id !== activeSessionId) { delete map[id]; return; }
+  }
+}
+
+async function createSession() {
+  const map = ensureSessions();
+  if (Object.keys(map).length >= MAX_CHAT_SESSIONS) evictOldestSession(map);
+  let id = "chat-" + nextSessionNum;
+  while (map[id]) { nextSessionNum += 1; id = "chat-" + nextSessionNum; }
+  nextSessionNum += 1;
+  map[id] = { name: "Chat " + id.slice(5), messages: [] };
+  await switchSession(id);
+}
+
+// ── new-chat button (continuous-chat mode only) ──
+
+function sessionsRowHtml() {
+  return '<div class="sessions-row">' +
+    '<button id="sessions-add" class="sessions-add" title="' + escapeHtml(t("chatSessionsNew")) + '">+</button>' +
+  '</div>';
+}
+
+function wireSessionsRow() {
+  const addBtn = document.getElementById("sessions-add");
+  if (addBtn) addBtn.addEventListener("click", () => { void createSession(); });
+}
+
+function stopGeneration(kind) {
+  abortKind = kind || "system";
+  if (abortCtrl) {
+    try { abortCtrl.abort(); } catch {}
+  }
+}
 
 function resolveThinking(chatParams) {
   if (typeof thinkingOverride === "boolean") return thinkingOverride;
@@ -144,6 +355,7 @@ async function ensureBooted() {
   }
   sidecarUrl = r.url || SIDECAR_URL;
   booted = true;
+  await loadPersistedHistory();
   return true;
 }
 
@@ -166,11 +378,13 @@ async function showError(msg) {
 }
 
 // ── render: ask (input field) ──
-// When there's a `lastReply`, render in continuous-chat mode: a fixed-
-// size bubble where the previous reply scrolls inside its own region
-// at the top, and the input box is pinned at the bottom. While typing,
-// the bubble's outer dimensions stay locked — only inner regions scroll.
-async function showAsk(lastReply) {
+// When there's a `lastReply` (or opts.forcePane after a session switch),
+// render in continuous-chat mode: a fixed-size bubble where the previous
+// reply scrolls inside its own region at the top, and the input box is
+// pinned at the bottom. While typing, the bubble's outer dimensions stay
+// locked — only inner regions scroll. Continuous mode also carries the
+// new-chat button row above the input.
+async function showAsk(lastReply, opts = {}) {
   clearFade();
   phase = "ask";
   abortCtrl = null;
@@ -182,13 +396,19 @@ async function showAsk(lastReply) {
     try { await window.minicpm.setChatAnchor(null); } catch {}
   }
 
-  if (lastReply) {
+  if (lastReply || opts.forcePane) {
     // Continuous-chat layout: bubble starts compact, grows as user types.
     // Outer height tracks content.offsetHeight via measureAndShow.
     const placeholder = escapeHtml(t("chatAskPlaceholder"));
     content.innerHTML =
       '<div class="chat-pane">' +
-        '<div class="last-reply-region rendered" id="last-reply-region">' + renderMarkdown(lastReply) + '</div>' +
+        (lastReply
+          ? '<div class="last-reply-region rendered" id="last-reply-region">' + renderMarkdown(lastReply) + '</div>' +
+            '<div style="display:flex;justify-content:flex-end;padding:0 2px;">' +
+              '<button id="regen-btn" title="' + escapeHtml(t("chatRegenerate")) + '" style="all:unset;cursor:pointer;font-size:11px;line-height:1;color:var(--muted);padding:1px 4px;">↻</button>' +
+            '</div>'
+          : '') +
+        sessionsRowHtml() +
         '<div class="ask-input-wrap">' +
           '<textarea id="ask-input" placeholder="' + placeholder + '" rows="1"></textarea>' +
         '</div>' +
@@ -196,6 +416,9 @@ async function showAsk(lastReply) {
     inputEl = document.getElementById("ask-input");
     inputEl.addEventListener("input", () => autoresizeFixed(inputEl));
     inputEl.addEventListener("keydown", onAskKey);
+    const regenBtn = document.getElementById("regen-btn");
+    if (regenBtn) regenBtn.addEventListener("click", () => { void regenerateLast(); });
+    wireSessionsRow();
     await measureAndShow();
     const lr = document.getElementById("last-reply-region");
     if (lr) lr.scrollTop = lr.scrollHeight;
@@ -287,8 +510,33 @@ async function showThink() {
 async function showSpeak() {
   phase = "speak";
   await clearChatAnchor();
-  content.innerHTML = `<div class="speak streaming" id="speak"></div>`;
+  content.innerHTML =
+    `<div class="speak streaming" id="speak"></div>` +
+    '<div style="display:flex;justify-content:flex-end;padding:0 2px 2px;">' +
+      '<button id="stop-btn" title="' + escapeHtml(t("chatStop")) + '" style="all:unset;cursor:pointer;font-size:10px;line-height:1;color:var(--muted);padding:1px 4px;">■</button>' +
+    '</div>';
+  const stopBtn = document.getElementById("stop-btn");
+  if (stopBtn) {
+    stopBtn.addEventListener("click", () => stopGeneration("user"));
+  }
   await measureAndShow({ width: 300 });
+}
+
+// Regenerate the last exchange: drop everything from the last user turn
+// onward and resubmit it. The trailing assistant reply (if any) goes with
+// it — submit() re-pushes a fresh user turn before streaming.
+async function regenerateLast() {
+  if (phase !== "ask" || !history.length) return;
+  let lastUserIdx = -1;
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].role === "user") { lastUserIdx = i; break; }
+  }
+  if (lastUserIdx < 0) return;
+  const text = history[lastUserIdx].content;
+  // In-place so the active session's array identity survives the trim.
+  history.splice(lastUserIdx);
+  scheduleHistorySave();
+  await submit(text);
 }
 
 // Animate the bubble fading out, briefly drop the window, then fade it back
@@ -817,11 +1065,13 @@ async function submit(text) {
       if (cmd.resetHistory) {
         // Adapter / model swap: the chat "voice" just changed, so we wipe
         // the entire prior history AND we don't even keep this admin turn
-        // ÔÇö meta-config chatter shouldn't anchor the new model.
-        history = [];
+        // — meta-config chatter shouldn't anchor the new model.
+        history.length = 0;
+        scheduleHistorySave();
       } else {
         history.push({ role: "user", content: text });
         history.push({ role: "assistant", content: cmd.text });
+        scheduleHistorySave();
       }
       await showCommandReply(cmd);
       return;
@@ -831,10 +1081,12 @@ async function submit(text) {
   }
 
   history.push({ role: "user", content: text });
+  scheduleHistorySave();
 
   // Tell the sidecar: start generating. The sidecar pushes pet states
   // (thinking ÔåÆ working ÔåÆ attention) to clawd-on-desk over HTTP, so the
   // pet animates while we wait.
+  abortKind = null;
   abortCtrl = new AbortController();
 
   // Brief "thinking" hint, then hide the bubble so the pet's own reaction
@@ -883,7 +1135,7 @@ async function submit(text) {
     messagesToSend = chatContext.trimHistoryForContext(history, { maxNewTokens });
     const cap = chatContext.MAX_HISTORY_TURNS;
     if (Number.isFinite(cap) && history.length > cap) {
-      history = history.slice(-cap);
+      history.splice(0, history.length - cap);  // in-place: keep session alias
     }
   }
 
@@ -903,7 +1155,16 @@ async function submit(text) {
       }),
       signal: abortCtrl.signal,
     });
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    if (!resp.ok) {
+      // Surface the gateway's error text (e.g. "llama-server not running —
+      // watchdog gave up after 3 restarts") instead of a bare HTTP code.
+      let msg = "HTTP " + resp.status;
+      try {
+        const j = await resp.json();
+        if (j && typeof j.error === "string" && j.error.trim()) msg = j.error.trim();
+      } catch {}
+      throw new Error(msg);
+    }
 
     const reader = resp.body.getReader();
     const dec = new TextDecoder();
@@ -948,6 +1209,14 @@ async function submit(text) {
           }
           replyAcc += obj.content;
           typer.feed(obj.content);
+        } else if (obj.event === "tool") {
+          // Gateway ran a local tool (regex router or native function-
+          // calling round). Re-surface the bubble with a labeled spinner
+          // so the silent tool-execution wait feels accounted for.
+          // Skipped once text is streaming (element would be destroyed).
+          if (!sawReply && !sawThink && obj.name) {
+            await showThinking(t("chatToolRunning", { name: String(obj.name) }));
+          }
         } else if (obj.event === "error") {
           throw new Error(obj.message || "model error");
         }
@@ -956,6 +1225,7 @@ async function submit(text) {
 
     if (typer) await typer.drain();
     history.push({ role: "assistant", content: replyAcc });
+    scheduleHistorySave();
     if (speakEl) {
       speakEl.classList.remove("streaming");
       // Swap the plain typewriter text for a markdown-rendered version
@@ -987,10 +1257,32 @@ async function submit(text) {
     }, readingMs);
   } catch (err) {
     if (typer) typer.stop();
-    if (err.name === "AbortError") return;
-    await showError(err.message || String(err));
+    if (err && err.name === "AbortError") {
+      const byUser = abortKind === "user";
+      abortKind = null;
+      abortCtrl = null;
+      if (!byUser) return; // dismiss/open flows manage the UI themselves
+      if (replyAcc.trim()) {
+        // Keep the partial reply as a real turn so the conversation and
+        // the next prompt stay coherent.
+        history.push({ role: "assistant", content: replyAcc });
+        scheduleHistorySave();
+      } else {
+        // Nothing arrived — drop the dangling user turn.
+        if (history.length && history[history.length - 1].role === "user") history.pop();
+        scheduleHistorySave();
+      }
+      await showAsk(replyAcc.trim() || null);
+      return;
+    }
+    abortKind = null;
+    // Connection refused / socket torn down while the sidecar restarts →
+    // "Failed to fetch" reads like a crash; translate it.
+    const msg = (err instanceof TypeError) ? t("chatBootError") : (err.message || String(err));
+    await showError(msg);
     setTimeout(() => hideBubble({ fade: true }), 4000);
   }
+  abortKind = null;
 }
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
@@ -1010,6 +1302,14 @@ class Typewriter {
   }
   feed(text) {
     if (!text) return;
+    // typewriterEnabled=false → replies appear instantly: append straight
+    // to the pane (accumulation preserved, char-by-char reveal skipped).
+    // buf stays empty so drain() resolves immediately.
+    if (!typewriterEnabled) {
+      this.target.textContent += text;
+      this.onChange();
+      return;
+    }
     this.buf += text;
     if (!this.timer) this._start();
   }
@@ -1058,24 +1358,22 @@ class Typewriter {
 async function cmdOpen({ side } = {}) {
   if (side) setSide(side);
   // If we were waiting / generating, dismiss it so the user can type.
-  if (abortCtrl) {
-    try { abortCtrl.abort(); } catch {}
-    abortCtrl = null;
-  }
+  stopGeneration("system");
+  abortCtrl = null;
   if (!await ensureBooted()) return;
   await showAsk();
 }
 
 async function cmdDismiss() {
-  if (abortCtrl) {
-    try { abortCtrl.abort(); } catch {}
-    abortCtrl = null;
-  }
+  stopGeneration("system");
+  abortCtrl = null;
   await hideBubble({ fade: true });
 }
 
 async function cmdReset() {
-  history = [];
+  stopGeneration("system");
+  history.length = 0;   // clears the ACTIVE session only, in place
+  scheduleHistorySave();
   thinkingOverride = null;
   if (phase === "ask" && inputEl) inputEl.value = "";
 }
@@ -1145,8 +1443,22 @@ if (window.minicpm) {
   // history wipe so the new persona starts clean.
   if (window.minicpm.onCmdReply) window.minicpm.onCmdReply(async (cmd) => {
     if (!cmd || !cmd.text) return;
-    if (cmd.resetHistory) history = [];
+    if (cmd.resetHistory) {
+      history.length = 0;
+      scheduleHistorySave();
+    }
     await showCommandReply(cmd);
+  });
+  // Crash auto-restart states pushed from main's supervisor. Toast the
+  // transient ones; a final "down" gets a pinned error card.
+  if (window.minicpm.onSidecarState) window.minicpm.onSidecarState(async (p) => {
+    if (p.state === "restarting") {
+      await showToast(t("chatSidecarRestarting", { attempt: p.attempt || 1 }));
+    } else if (p.state === "back") {
+      await showToast(t("chatSidecarBack"));
+    } else if (p.state === "down") {
+      await showError(t("chatSidecarDown"));
+    }
   });
   // Drag-to-position: turn the whole window into a draggable handle
   // and render a sample bubble so the user has something to grab.
@@ -1306,5 +1618,6 @@ refreshUpdateBadge();
 
 // First-render: attempt to open right away (the main process opens us
 // after creating the window, but we also handle the case where we're
-// loaded standalone).
-bootstrapI18n().finally(() => cmdOpen({}));
+// loaded standalone). Assistant prefs resolve in parallel so the first
+// paint already carries the user's theme.
+Promise.all([bootstrapI18n(), bootstrapAssistantPrefs()]).finally(() => cmdOpen({}));

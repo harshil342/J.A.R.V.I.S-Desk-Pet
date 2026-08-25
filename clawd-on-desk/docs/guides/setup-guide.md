@@ -189,7 +189,7 @@ node hooks/openclaw-install.js
 
 ## Windows Notes
 
-- **Installer**: OpenBMB MiniCPM Desk Pet releases provide separate NSIS installers for Windows x64 and Windows ARM64. Use `MiniCPM-Desk-Pet-Setup-<version>-x64.exe` on Intel/AMD Windows, and `MiniCPM-Desk-Pet-Setup-<version>-arm64.exe` on Windows on ARM.
+- **Installer**: Deskpet Assistant releases provide separate NSIS installers for Windows x64 and Windows ARM64. Use `MiniCPM-Desk-Pet-Setup-<version>-x64.exe` on Intel/AMD Windows, and `MiniCPM-Desk-Pet-Setup-<version>-arm64.exe` on Windows on ARM.
 - **Auto-update**: packaged Windows installs use `electron-updater`; updates keep the matching architecture.
 
 ## macOS Notes
@@ -202,6 +202,6 @@ node hooks/openclaw-install.js
 ## Linux Notes
 
 - **From source** (`npm start`): the Electron sandbox is enabled by default. If your Linux dev environment still fails chrome-sandbox initialization, use `CLAWD_DISABLE_SANDBOX=1 npm start` as a temporary workaround.
-- **Packages**: AppImage and `.deb` are available from [OpenBMB MiniCPM Desk Pet Releases](https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases). After deb install, the app icon appears in GNOME's app menu.
+- **Packages**: AppImage and `.deb` are available from the [releases page](https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases). After deb install, the app icon appears in GNOME's app menu.
 - **Terminal focus**: uses `wmctrl` or `xdotool` (whichever is available). Install one for session terminal jumping to work: `sudo apt install wmctrl` or `sudo apt install xdotool`.
 - **Auto-update**: when running from a cloned repo, "Check for Updates" performs `git pull` + `npm install` (if dependencies changed) and restarts the app automatically.

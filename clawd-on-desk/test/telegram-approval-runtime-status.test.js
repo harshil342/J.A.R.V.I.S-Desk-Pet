@@ -275,15 +275,16 @@ test("R3 diagnostic formatter follows the Clawd language setting", () => {
   });
 
   const text = formatTelegramStatusDiagnostic(diagnostic, { lang: "zh" });
-  assert.match(text, /Clawd Telegram 状态/);
-  assert.match(text, /传输: 原生/);
-  assert.match(text, /健康状态: 正常/);
-  assert.match(text, /原生轮询: 运行中/);
-  assert.match(text, /审批: 可用/);
-  assert.match(text, /完成通知: 开启, 输出=完整回答, 裸通知=关闭/);
-  assert.match(text, /待处理审批: 2/);
-  assert.match(text, /最新会话: claude-code #session- 状态=working 标记=running; 最近 hook: PreToolUse 3 秒前/);
-  assert.doesNotMatch(text, /Transport:|Native polling:|Latest session:/);
+  // zh/zh-TW/ja locales are anglicized — every language emits the English table.
+  assert.match(text, /Clawd Telegram status/);
+  assert.match(text, /Transport: native/);
+  assert.match(text, /Health: healthy/);
+  assert.match(text, /Native polling: running/);
+  assert.match(text, /Approval: available/);
+  assert.match(text, /Completion notifications: on, output=full answer, bare fallback=off/);
+  assert.match(text, /Pending approvals: 2/);
+  assert.match(text, /Latest session: claude-code #session- state=working badge=running; last hook: PreToolUse 3s ago/);
+  assert.doesNotMatch(text, /状态|传输|健康状态|待处理审批/);
 });
 
 test("R3 diagnostic formatter localizes status all and falls back to English", () => {
@@ -301,9 +302,10 @@ test("R3 diagnostic formatter localizes status all and falls back to English", (
   };
 
   const ja = formatTelegramStatusDiagnostic(diagnostic, { all: true, lang: "ja" });
-  assert.match(ja, /Clawd Telegram ステータス/);
-  assert.match(ja, /送信方式: オフ/);
-  assert.match(ja, /セッション:\n- なし/);
+  // ja locale is anglicized — same table as English now.
+  assert.match(ja, /Clawd Telegram status/);
+  assert.match(ja, /Transport: off/);
+  assert.match(ja, /Sessions:\n- none/);
 
   const fallback = formatTelegramStatusDiagnostic(diagnostic, { lang: "klingon" });
   assert.match(fallback, /Transport: off/);

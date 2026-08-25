@@ -102,12 +102,57 @@ npx electron-builder --mac --arm64 -c.mac.target=dmg
 cd clawd-on-desk && npm run build:mac:repack
 ```
 
+## Windows 打包（x64，已支持）
+
+一条命令出 NSIS 安装包（自动先打 PyInstaller gateway）：
+
+```powershell
+cd clawd-on-desk
+npm run build:win:mvp
+```
+
+等价于：
+
+```powershell
+# 1. PyInstaller 打 gateway → minicpm-sidecar/bin/win-x64/minicpm-sidecar.exe
+#    （uv sync 会按 pyproject.toml 拉齐依赖，含 winotify）
+powershell -NoProfile -ExecutionPolicy Bypass -File ..\minicpm-sidecar\scripts\build-gateway.ps1
+
+# 2. electron-builder 出 NSIS 安装包
+cd clawd-on-desk && npx electron-builder --win nsis:x64
+```
+
+产物位置：`clawd-on-desk/dist/Deskpet-<版本>-x64.exe`。
+
+打包布局契约（gateway 运行时按自身所在目录找 llama-server，见 `gateway/llama_client.py` 的 frozen 分支）：
+
+- `<安装目录>/resources/sidecar-bin/minicpm-sidecar.exe`
+- `<安装目录>/resources/sidecar-bin/llama-server.exe`（或 `backends/<cpu|vulkan|cuda>/llama-server.exe`）
+
+以上由 package.json 的 `extraResources` 条目 `../minicpm-sidecar/bin/win-x64 → sidecar-bin` 自动完成。
+llama.cpp 二进制用 `minicpm-sidecar/scripts/fetch-llama-release.ps1` 下载到同一 staging 目录。
+
+### Windows 打包验证清单
+
+已在 2026-08 验证过的最小 E2E（对应 plan Phase 2 #7）：
+
+1. 安装后启动：gateway 进程路径必须是 `...\Programs\Deskpet\resources\sidecar-bin\minicpm-sidecar.exe`
+2. 聊天路由：`who is X` → wikipedia 工具命中
+3. 设置同步：`POST /api/config` 到 gateway 生效（返回回显）
+4. 提醒链路：`remind me in N seconds to X` → 到点后 bridge push + winotify 原生 toast（日志无 "native toast failed"）
+5. userData：`%APPDATA%/deskpet/` 下 clawd-prefs.json / minicpm-chat-history.json / onboarding 哨兵文件正常生成
+
+注意：gateway 的依赖必须声明在 `minicpm-sidecar/pyproject.toml` 里 —— `build-gateway.ps1` 每次先 `uv sync`，
+未声明但手动 pip 装的包会被清掉，PyInstaller 就打不进去（winotify 曾踩过这个坑）。
+
 ### 当前打包限制 (MVP)
 
-- 仅 **mac arm64**；Intel / Windows / Linux 暂未支持
+- Windows x64 已支持（NSIS）；Linux 未支持
+- macOS：仅 **arm64**；Intel 暂未支持
 - 如果开发机钥匙串里有 Apple Developer ID 证书，electron-builder 会自动签名 .app（产物级别 `codesign --display` 能看到 Developer ID Authority）；否则保持未签名
 - 即便 .app 签了名，**dmg 本身没签名 + 未公证**：首次启动 Gatekeeper 仍会弹"无法验证开发者"
   - 用户绕开方式：右键 → 打开 → 确认；或终端执行 `xattr -cr /Applications/Clawd\ on\ Desk.app`
+- Windows 产物未做代码签名证书签名（SmartScreen 首次运行会提示），NSIS 为 assisted 安装向导
 - 没接 `electron-updater` 自动更新
 - 模型下载源仅 Hugging Face（ModelScope 备用源待开发）
 
@@ -209,6 +254,35 @@ curl -X POST http://127.0.0.1:18765/api/set-device -H 'content-type: application
 lsof -ti:18765 | xargs -r kill -9   # sidecar
 lsof -ti:23333 | xargs -r kill -9  # clawd HTTP server
 ```
+
+Windows（PowerShell）：
+
+```powershell
+# 看谁占着 gateway / llama-server 端口
+Get-NetTCPConnection -LocalPort 18765,18766 -State Listen |
+  Select-Object LocalPort, OwningProcess,
+    @{n='Process';e={(Get-Process -Id $_.OwningProcess).ProcessName}}
+
+# 一键清场（gateway 二进制是 PyInstaller bootloader，普通 Stop-Process 杀不干净，
+# 必须 taskkill /T 连整棵子进程树一起带走）
+taskkill /F /IM minicpm-sidecar.exe /T
+taskkill /F /IM llama-server.exe /T
+```
+
+dev 模式下 `python -m gateway` 启动时如果 18765 已被占用，会打印上面的 taskkill 提示并以退出码 **78** 退出，而不是抛 EADDRINUSE 栈回溯。
+
+### 工具调用模式（tool_mode）
+
+`POST /api/chat` 的 `tool_mode` 字段控制本地工具如何被触发：
+
+| 值 | 行为 |
+|----|------|
+| `auto`（默认） | 先走关键词正则路由；未命中再让模型走一轮原生 function calling（最多执行 3 个工具后带着结果重新作答） |
+| `regex` | 仅正则路由 + 工具上下文注入 |
+| `native` | 仅原生 function calling |
+| `off` | 纯聊天，不碰任何工具 |
+
+默认值可用环境变量 `MINICPM_TOOL_MODE` 覆盖。若模型 chat template 不支持 tools（如部分 persona LoRA），native 轮会自动降级为普通聊天。gateway 内置 llama-server 崩溃看门狗（指数退避、最多重启 3 次），状态通过 `GET /api/health` 的 `llama_restarts` / `degraded` 暴露；Electron 侧另有进程级自动重启（2s→5s→10s），状态经 `minicpm:sidecar-state` IPC 推给聊天气泡显示"重启中/已恢复/离线"。
 
 ### 完全重置用户数据（小心，会丢失模型和对话历史）
 

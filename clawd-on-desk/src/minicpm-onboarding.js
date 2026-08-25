@@ -159,6 +159,7 @@ module.exports = function initOnboarding(ctx) {
       title: t("onboardingWindowTitle"),
       show: false,
       autoHideMenuBar: true,
+      icon: path.join(__dirname, "..", "assets", "icons", "256x256.png"),
       // Plain top-level window — not a panel — so it behaves like a
       // normal install wizard with proper focus/zorder semantics on mac.
       webPreferences: {

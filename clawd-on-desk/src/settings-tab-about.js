@@ -184,11 +184,11 @@
 
     const logoWrap = document.createElement("div");
     logoWrap.className = "about-logo-wrap";
-    logoWrap.title = "MiniCPM";
+    logoWrap.title = "Deskpet Assistant";
 
     const title = document.createElement("h2");
     title.className = "about-title";
-    title.textContent = "MiniCPM Desk Pet";
+    title.textContent = "Deskpet Assistant";
 
     const tagline = document.createElement("p");
     tagline.className = "about-tagline";

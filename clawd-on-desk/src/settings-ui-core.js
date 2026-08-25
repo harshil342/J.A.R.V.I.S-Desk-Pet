@@ -224,8 +224,9 @@
   }
 
   function t(key) {
-    const dict = STRINGS[getLang()] || STRINGS.en || {};
-    return dict[key] || (STRINGS.en && STRINGS.en[key]) || key;
+    // English-only product: always serve the English block.
+    const dict = STRINGS.en || {};
+    return dict[key] || key;
   }
 
   function escapeHtml(s) {

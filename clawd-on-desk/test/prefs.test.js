@@ -1561,3 +1561,96 @@ describe("prefs.save", () => {
     });
   });
 });
+
+describe("prefs assistant-prefs schema roundtrip", () => {
+  // Mirrors minicpm-sidecar/tests/test_runtime_config.py semantics, with
+  // one deliberate difference: the Electron schema DROPS out-of-range
+  // values to defaults instead of clamping (clamping happens in the
+  // gateway after the POST /api/config patch arrives).
+
+  it("defaults: briefingHour=8 and recapHour=21", () => {
+    const d = prefs.getDefaults();
+    assert.strictEqual(d.briefingHour, 8);
+    assert.strictEqual(d.recapHour, 21);
+    assert.strictEqual(d.reminderChime, true);
+    assert.strictEqual(d.autoMemory, true);
+    assert.strictEqual(d.clarifyStrength, "ambiguous");
+    assert.strictEqual(d.assistantAddress, "sir");
+  });
+
+  it("accepts valid assistant prefs and keeps them verbatim", () => {
+    const validated = prefs.validate({
+      ...prefs.getDefaults(),
+      briefingHour: 6,
+      recapHour: 22,
+      reminderChime: false,
+      autoMemory: false,
+      clarifyStrength: "confirm_all",
+      assistantAddress: "boss",
+    });
+    assert.strictEqual(validated.briefingHour, 6);
+    assert.strictEqual(validated.recapHour, 22);
+    assert.strictEqual(validated.reminderChime, false);
+    assert.strictEqual(validated.autoMemory, false);
+    assert.strictEqual(validated.clarifyStrength, "confirm_all");
+    assert.strictEqual(validated.assistantAddress, "boss");
+  });
+
+  it("drops unknown keys", () => {
+    const validated = prefs.validate({
+      ...prefs.getDefaults(),
+      briefing_hour: 5,
+      recapHourTwice: 5,
+      nope: { nested: true },
+    });
+    assert.strictEqual("briefing_hour" in validated, false);
+    assert.strictEqual("recapHourTwice" in validated, false);
+    assert.strictEqual("nope" in validated, false);
+  });
+
+  it("drops out-of-range / wrong-type hours back to defaults", () => {
+    const validated = prefs.validate({
+      ...prefs.getDefaults(),
+      briefingHour: 24,
+      recapHour: -1,
+    });
+    assert.strictEqual(validated.briefingHour, 8);
+    assert.strictEqual(validated.recapHour, 21);
+
+    const nonInteger = prefs.validate({
+      ...prefs.getDefaults(),
+      briefingHour: "7",
+      recapHour: null,
+    });
+    assert.strictEqual(nonInteger.briefingHour, 8);
+    assert.strictEqual(nonInteger.recapHour, 21);
+  });
+
+  it("drops wrong-type booleans/enums/addresses back to defaults", () => {
+    const validated = prefs.validate({
+      ...prefs.getDefaults(),
+      reminderChime: "yes",
+      autoMemory: 0,
+      clarifyStrength: "shout",
+      assistantAddress: "",
+    });
+    assert.strictEqual(validated.reminderChime, true);
+    assert.strictEqual(validated.autoMemory, true);
+    assert.strictEqual(validated.clarifyStrength, "ambiguous");
+    assert.strictEqual(validated.assistantAddress, "sir");
+  });
+
+  it("roundtrips through save/load without drift", () => {
+    const prefsPath = makeTempPath();
+    prefs.save(prefsPath, {
+      ...prefs.getDefaults(),
+      briefingHour: 7,
+      recapHour: 20,
+      autoMemory: false,
+    });
+    const { snapshot } = prefs.load(prefsPath);
+    assert.strictEqual(snapshot.briefingHour, 7);
+    assert.strictEqual(snapshot.recapHour, 20);
+    assert.strictEqual(snapshot.autoMemory, false);
+  });
+});

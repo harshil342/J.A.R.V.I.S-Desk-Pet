@@ -2,7 +2,10 @@
 
 const path = require("path");
 
-const WINDOWS_APP_USER_MODEL_ID = "com.openbmb.minicpm-desk-pet";
+// New AUMID for the Deskpet Assistant rebrand — also forces Windows to
+// rebuild its icon-cache entry instead of showing the stale pre-rebrand
+// taskbar icon it cached under the old id.
+const WINDOWS_APP_USER_MODEL_ID = "com.deskpet.assistant";
 const SETTINGS_WINDOW_TITLE = "Settings";
 const SETTINGS_WINDOW_LAUNCH_ARG = "--open-settings-window";
 

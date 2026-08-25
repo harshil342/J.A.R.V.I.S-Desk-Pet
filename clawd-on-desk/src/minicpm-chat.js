@@ -56,730 +56,84 @@ const SPEAK_MAX_HEIGHT = 360;
 const MIN_WIDTH = 100;
 const MIN_HEIGHT = 40;
 
-// ── locate sidecar binary / dev sources / Python interpreter ───────────────
-//
-// Two runtime modes, in priority order:
-//   A. Packaged app   → bundled binary at <resourcesPath>/sidecar-bin/
-//                         minicpm-sidecar(.exe)   ← PyInstaller gateway
-//                         llama-server(.exe)      ← llama.cpp build product
-//                       (the only path real users ever hit)
-//   B. Dev with venv  → minicpm-sidecar/.venv/bin/python -m gateway
-//                       (created by `uv sync` inside minicpm-sidecar/)
-//
-// MINICPM_SIDECAR_BIN / MINICPM_SIDECAR_DIR / MINICPM_PYTHON env vars
-// override every mode for local debugging.
 
-function locateSidecarBinary(appRoot) {
-  const override = process.env.MINICPM_SIDECAR_BIN;
-  if (override && fs.existsSync(override)) return path.resolve(override);
-  const ext = process.platform === "win32" ? ".exe" : "";
-  if (app && app.isPackaged) {
-    // electron-builder puts the binary under
-    //   <Contents>/Resources/sidecar-bin/         (macOS .app bundle)
-    //   <install>/resources/sidecar-bin/          (Windows / Linux)
-    const candidates = [
-      path.join(process.resourcesPath, "sidecar-bin", "minicpm-sidecar" + ext),
-      path.join(process.resourcesPath, "sidecar-bin", "minicpm-sidecar", "minicpm-sidecar" + ext),
-    ];
-    for (const c of candidates) {
-      try { if (fs.statSync(c).isFile()) return c; } catch {}
-    }
-  }
-  // Dev convenience: scripts/build-gateway.sh emits binaries under
-  //   <repo>/minicpm-sidecar/bin/<os>-<arch>/minicpm-sidecar
-  // so devs can dogfood the production codepath without rebuilding
-  // electron-builder every time.
-  const triple = triplet();
-  const devBin = path.join(appRoot, "..", "minicpm-sidecar", "bin", triple, "minicpm-sidecar" + ext);
-  try { if (fs.statSync(devBin).isFile()) return devBin; } catch {}
-  return null;
+// Sidecar locating/management and history-store helpers live in their own
+// modules; every name is re-imported so the eval-based tests that bind
+// __internals from this file keep working.
+const {
+  locateSidecarBinary,
+  locateSidecarSourceDir,
+  locatePython,
+  triplet,
+  parseManifestJson,
+  manifestUpsertItem,
+  manifestRemoveItem,
+  adapterMatchesHint,
+  planBundledReconcile,
+  safeDeleteTargetFor,
+  seedAdaptersFromBundle,
+  httpJson,
+  Sidecar,
+} = require("./minicpm-sidecar-manager");
+const {
+  sanitizeHistoryItems,
+  freshHistoryStore,
+  capHistoryStore,
+  normalizeHistoryStore,
+  HISTORY_MAX_MESSAGES,
+  HISTORY_MAX_CONTENT_CHARS,
+  HISTORY_MAX_SESSIONS,
+  HISTORY_DEFAULT_SESSION,
+} = require("./minicpm-history-store");
+
+
+// Assistant prefs consumed by this module + the chat bubble. Defaults
+// mirror the clawd-prefs.json schema (src/prefs.js); the snapshot getter
+// overlays whatever the controller validated so pre-schema snapshots and
+// test stubs still produce a complete projection.
+const ASSISTANT_PREF_DEFAULTS = Object.freeze({
+  assistantAccent: "#8A939B",
+  accentPreset: "custom",
+  bubbleOpacity: 0.94,
+  bubbleBlur: 28,
+  bubbleTextScale: 1,
+  bubbleDensity: "comfortable",
+  typewriterEnabled: true,
+  assistantAddress: "sir",
+  briefingHour: 8,
+  recapHour: 21,
+  reminderChime: true,
+  autoMemory: true,
+  clarifyStrength: "ambiguous",
+});
+
+// Map an assistant-prefs snapshot onto the snake_case body the sidecar
+// gateway expects at POST /api/config (gateway/runtime_config.py).
+function buildAssistantConfigPayload(prefs) {
+  const p = prefs || {};
+  return {
+    assistant_address: p.assistantAddress,
+    clarify_strength: p.clarifyStrength,
+    auto_memory: !!p.autoMemory,
+    briefing_hour: Number.isInteger(p.briefingHour) ? p.briefingHour : ASSISTANT_PREF_DEFAULTS.briefingHour,
+    recap_hour: Number.isInteger(p.recapHour) ? p.recapHour : ASSISTANT_PREF_DEFAULTS.recapHour,
+  };
 }
 
-function locateSidecarSourceDir(appRoot) {
-  const override = process.env.MINICPM_SIDECAR_DIR;
-  if (override) {
-    try {
-      if (fs.statSync(path.join(override, "gateway", "__main__.py")).isFile()) {
-        return path.resolve(override);
-      }
-    } catch {}
-  }
-  const candidates = [];
-  if (app && app.isPackaged) {
-    // Packaged builds ship the source next to the binary so a dev
-    // override at MINICPM_PYTHON still has somewhere to point at.
-    candidates.push(path.join(process.resourcesPath, "minicpm-sidecar"));
-  }
-  candidates.push(path.join(appRoot, "..", "minicpm-sidecar"));
-  for (const c of candidates) {
-    try {
-      if (fs.statSync(path.join(c, "gateway", "__main__.py")).isFile()) {
-        return path.resolve(c);
-      }
-    } catch {}
-  }
-  return null;
+// Deduped POSTer for /api/config. The signature is recorded only after
+// post() resolves, so a failed push is retried on the next trigger.
+function createAssistantConfigSyncer(post) {
+  let lastSentSig = null;
+  return async function sendAssistantConfig(snapshot) {
+    const payload = buildAssistantConfigPayload(snapshot);
+    const sig = JSON.stringify(payload);
+    if (sig === lastSentSig) return false;
+    await post(payload);
+    lastSentSig = sig;
+    return true;
+  };
 }
 
-function locatePython(sidecarDir) {
-  // 1. Explicit override always wins.
-  const explicit = process.env.MINICPM_PYTHON;
-  if (explicit && fs.existsSync(explicit)) return explicit;
-
-  if (!sidecarDir) return null;
-  const venvCandidates = [
-    path.join(sidecarDir, ".venv", "bin", "python"),
-    path.join(sidecarDir, ".venv", "bin", "python3"),
-    path.join(sidecarDir, ".venv", "Scripts", "python.exe"),
-  ];
-  for (const p of venvCandidates) {
-    try { if (fs.statSync(p).isFile()) return p; } catch {}
-  }
-  return null;
-}
-
-function triplet() {
-  // Matches electron-builder's `${os}-${arch}` expansion so extraResources
-  // paths and our dev bin/<triple>/ layout line up.
-  const arch = process.arch === "arm64" ? "arm64" : process.arch === "x64" ? "x64" : process.arch;
-  if (process.platform === "darwin") return "mac-"   + arch;
-  if (process.platform === "win32")  return "win-"   + arch;
-  if (process.platform === "linux")  return "linux-" + arch;
-  return process.platform + "-" + arch;
-}
-
-// ── Adapter manifest pure helpers ──────────────────────────────────────
-//
-// These work on plain JS objects with no IO so they're easy to unit-test
-// without mocking Electron's `app`. The closure-level wrappers inside
-// `initMinicpmChat` do the actual fs reads / writes and call into here.
-
-function parseManifestJson(text) {
-  try {
-    const raw = JSON.parse(text);
-    if (!raw || typeof raw !== "object" || !Array.isArray(raw.items)) {
-      return { version: 1, items: [] };
-    }
-    return {
-      version: Number(raw.version) || 1,
-      items: raw.items.filter((it) => it && typeof it === "object"),
-    };
-  } catch {
-    return { version: 1, items: [] };
-  }
-}
-
-function manifestUpsertItem(items, entry) {
-  if (!entry || !entry.id) return Array.isArray(items) ? items.slice() : [];
-  const out = Array.isArray(items) ? items.slice() : [];
-  const idx = out.findIndex((it) => it && it.id === entry.id);
-  if (idx >= 0) {
-    out[idx] = { ...out[idx], ...entry };
-  } else {
-    out.push({ createdAt: new Date().toISOString(), ...entry });
-  }
-  return out;
-}
-
-function manifestRemoveItem(items, id) {
-  const out = Array.isArray(items) ? items.filter((it) => it && it.id !== id) : [];
-  return out;
-}
-
-// ── Bundled-preset reconcile pure helpers ──────────────────────────────
-//
-// When a shipped bundle replaces a preset adapter with a newer build (a
-// fresh timestamped dir for the same persona), the old copy can linger in
-// <userData>/adapters/ after the new one is seeded in. Both .gguf get the
-// same persona slug from filename hints, so Settings shows the persona
-// twice — and because only one is in the manifest, the other falls back
-// to its raw `adapter_model.f16.gguf` filename. These pure helpers decide
-// what to re-point / delete; the closure wrapper does the fs walk + writes.
-
-// Mirror of findAdapterByHint's match rule: the hint hits when it's a
-// substring of the filename OR its immediate parent dir name (case-
-// insensitive). The parent-dir check matters because the .gguf is usually
-// generically named while the persona lives in the dir name.
-function adapterMatchesHint(filePath, hint) {
-  if (!filePath || !hint) return false;
-  const needle = String(hint).toLowerCase();
-  const lower = path.basename(filePath).toLowerCase();
-  const parent = path.basename(path.dirname(filePath)).toLowerCase();
-  return lower.includes(needle) || parent.includes(needle);
-}
-
-// Per bundled preset, pick the canonical on-disk .gguf and flag older
-// copies as superseded. Pure: caller supplies the scanned file list (with
-// mtime), the presets, and the current manifest items.
-//
-//   scanned       : [{ path, name, mtimeMs }]
-//   presets       : DEFAULT_PRESET_ENTRIES ({ id, filenameHint, ... })
-//   manifestItems : current manifest items
-//
-// Returns { repoint: [{ id, path }], superseded: [filePath] }. A hint-
-// matching file claimed by a *different* manifest entry (e.g. a user
-// `upload:*`) is protected: never a candidate, so never re-pointed away
-// or deleted.
-function planBundledReconcile({ scanned, presets, manifestItems } = {}) {
-  const repoint = [];
-  const superseded = [];
-  const files = Array.isArray(scanned) ? scanned : [];
-  const presetList = Array.isArray(presets) ? presets : [];
-  const items = Array.isArray(manifestItems) ? manifestItems : [];
-  const resolve = (p) => { try { return path.resolve(p); } catch { return p; } };
-
-  for (const preset of presetList) {
-    if (!preset || !preset.id || !preset.filenameHint) continue;
-    const protectedPaths = new Set();
-    for (const it of items) {
-      if (!it || !it.path || it.id === preset.id) continue;
-      protectedPaths.add(resolve(it.path));
-    }
-    const candidates = files.filter(
-      (f) => f && f.path &&
-        adapterMatchesHint(f.path, preset.filenameHint) &&
-        !protectedPaths.has(resolve(f.path)),
-    );
-    if (candidates.length === 0) continue;
-    // Canonical = newest by mtime; tie-broken by greatest path so the
-    // timestamped dir name (…20260524…) wins deterministically.
-    const canonical = candidates.slice().sort((a, b) => {
-      const am = Number(a.mtimeMs) || 0;
-      const bm = Number(b.mtimeMs) || 0;
-      if (am !== bm) return bm - am;
-      return a.path < b.path ? 1 : a.path > b.path ? -1 : 0;
-    })[0];
-    const current = items.find((it) => it && it.id === preset.id);
-    if (current && current.path && resolve(current.path) !== resolve(canonical.path)) {
-      repoint.push({ id: preset.id, path: canonical.path });
-    }
-    for (const c of candidates) {
-      if (resolve(c.path) !== resolve(canonical.path)) superseded.push(c.path);
-    }
-  }
-  return { repoint, superseded };
-}
-
-// Guard for the destructive step: map a superseded .gguf to what may be
-// safely removed. Never returns a target at or above the adapter root.
-//   - file in a proper subdir of adapterDir → delete that subdir
-//   - file directly in adapterDir           → delete just the file
-//   - file == adapterDir / outside it        → skip
-function safeDeleteTargetFor(filePath, adapterDir) {
-  if (!filePath || !adapterDir) return { kind: "skip", target: null };
-  let file, root;
-  try { file = path.resolve(filePath); root = path.resolve(adapterDir); }
-  catch { return { kind: "skip", target: null }; }
-  const parent = path.dirname(file);
-  if (parent === root) return { kind: "file", target: file };
-  if (parent.startsWith(root + path.sep)) return { kind: "dir", target: parent };
-  return { kind: "skip", target: null };
-}
-
-// Recursive copy of bundled LoRA adapters from `srcDir` (where
-// electron-builder dropped them via extraResources) into `dstDir`
-// (the user-writable `<userData>/adapters/` we point the gateway at).
-//
-// Idempotent: skips any file that already exists at the destination so
-// user deletions stick across app restarts. Only copies the file kinds
-// the gateway and Settings UI care about (`.gguf` weights + README /
-// adapter_config metadata), to keep the user dir tidy.
-//
-// Returns `{ copied, skipped, errors }` for log + test introspection.
-// Failures on individual files don't abort the walk — we want best
-// effort, the worst case is the user just doesn't see the default
-// nekoqa preset and has to drop the .gguf in by hand.
-function seedAdaptersFromBundle(srcDir, dstDir, fsImpl = fs, log = () => {}) {
-  const result = { copied: [], skipped: [], errors: [] };
-  if (!srcDir) return result;
-  try { fsImpl.mkdirSync(dstDir, { recursive: true }); } catch {}
-
-  function walk(curSrc, curDst) {
-    let entries;
-    try { entries = fsImpl.readdirSync(curSrc, { withFileTypes: true }); }
-    catch { return; }
-    for (const entry of entries) {
-      const s = path.join(curSrc, entry.name);
-      const d = path.join(curDst, entry.name);
-      if (entry.isDirectory()) {
-        try { fsImpl.mkdirSync(d, { recursive: true }); } catch {}
-        walk(s, d);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      const lower = entry.name.toLowerCase();
-      const isAllowed =
-        lower.endsWith(".gguf") ||
-        lower.endsWith(".md") ||
-        lower === "adapter_config.json";
-      if (!isAllowed) continue;
-      try {
-        if (fsImpl.existsSync(d)) {
-          result.skipped.push(d);
-          continue;
-        }
-        fsImpl.copyFileSync(s, d);
-        result.copied.push(d);
-      } catch (err) {
-        const msg = err && err.message ? err.message : String(err);
-        log(`[minicpm] adapter seed copy failed: ${entry.name} -> ${msg}`);
-        result.errors.push({ path: d, error: msg });
-      }
-    }
-  }
-  try { walk(srcDir, dstDir); }
-  catch (err) {
-    const msg = err && err.message ? err.message : String(err);
-    log(`[minicpm] seedAdaptersFromBundle walk failed: ${msg}`);
-    result.errors.push({ path: dstDir, error: msg });
-  }
-  return result;
-}
-
-// ── HTTP probe helpers ──────────────────────────────────────────────────────
-
-function httpJson(method, urlStr, body, timeoutMs = 4000) {
-  return new Promise((resolve, reject) => {
-    const u = new URL(urlStr);
-    const opts = {
-      hostname: u.hostname,
-      port: u.port || 80,
-      path: u.pathname + (u.search || ""),
-      method,
-      headers: { "content-type": "application/json" },
-      timeout: timeoutMs,
-    };
-    const req = http.request(opts, (res) => {
-      let data = "";
-      res.setEncoding("utf8");
-      res.on("data", (c) => (data += c));
-      res.on("end", () => {
-        try {
-          resolve({ status: res.statusCode || 0, json: data ? JSON.parse(data) : null });
-        } catch {
-          resolve({ status: res.statusCode || 0, json: null, raw: data });
-        }
-      });
-    });
-    req.on("error", reject);
-    req.on("timeout", () => req.destroy(new Error("timeout")));
-    if (body) req.write(JSON.stringify(body));
-    req.end();
-  });
-}
-
-// ── Sidecar manager ─────────────────────────────────────────────────────────
-
-class Sidecar {
-  constructor({ sidecarDir, sidecarBin, appRoot, port, host, log, logFile, adapterDir, modelPresent }) {
-    // Source tree of minicpm-sidecar; used only in dev when no prebuilt
-    // binary is present. Packaged builds ignore it entirely.
-    this.sidecarDir = sidecarDir || null;
-    // Optional prebuilt gateway binary. When set we skip Python lookup.
-    // Populated in packaged builds via electron-builder extraResources →
-    // resources/sidecar-bin/minicpm-sidecar[.exe].
-    this.sidecarBin = sidecarBin || null;
-    this.appRoot = appRoot || null;
-    this.port = port;
-    this.host = host;
-    this.log = log || (() => {});
-    this.proc = null;
-    this.starting = null;
-    this.stderrTail = [];
-    // Where the gateway should scan for *.gguf LoRA adapters. We pass
-    // it via MINICPM_ADAPTER_DIR env at spawn time so /api/adapters and
-    // /api/load-adapter see the same directory Settings → "open adapter
-    // folder" exposes to the user.
-    this.adapterDir = adapterDir || null;
-    // Mutable: which LoRA (if any) the user wants loaded at this
-    // sidecar's startup. We re-read prefs each respawn so a swap done
-    // via Settings persists across an explicit "Restart Sidecar".
-    this.activeAdapterPath = null;
-    // Append-mode file stream where every stdout / stderr line from the
-    // sidecar gets persisted to <userData>/logs/sidecar.log. Critical
-    // for packaged builds where console.log goes nowhere.
-    this.logFile = logFile || null;
-    this._fileStream = null;
-    this._fileSizeBudget = 2 * 1024 * 1024; // 2 MB before rotate
-    this._fileBytesWritten = 0;
-    this.modelPresent = typeof modelPresent === "function" ? modelPresent : (() => false);
-  }
-
-  _openLogStream() {
-    if (!this.logFile) return null;
-    if (this._fileStream) return this._fileStream;
-    try {
-      fs.mkdirSync(path.dirname(this.logFile), { recursive: true });
-      // Pre-rotate if the existing file is already over budget so we
-      // start clean each app launch (or restart of the sidecar).
-      try {
-        const st = fs.statSync(this.logFile);
-        if (st.size > this._fileSizeBudget) {
-          fs.renameSync(this.logFile, this.logFile + ".1");
-        }
-      } catch {}
-      this._fileStream = fs.createWriteStream(this.logFile, { flags: "a" });
-      this._fileBytesWritten = 0;
-      const ts = new Date().toISOString();
-      this._fileStream.write(`\n===== sidecar session ${ts} (host=${this.host} port=${this.port}) =====\n`);
-    } catch (err) {
-      this.log(`[minicpm-chat] open log file failed: ${err && err.message}`);
-    }
-    return this._fileStream;
-  }
-
-  _appendLog(line) {
-    const stream = this._openLogStream();
-    if (!stream) return;
-    try {
-      const chunk = line.endsWith("\n") ? line : line + "\n";
-      stream.write(chunk);
-      this._fileBytesWritten += Buffer.byteLength(chunk);
-      // Soft rotate: when the stream grows past budget, roll over once.
-      // We do this lazily so we don't fsync on every line.
-      if (this._fileBytesWritten > this._fileSizeBudget) {
-        try {
-          stream.end();
-          fs.renameSync(this.logFile, this.logFile + ".1");
-        } catch {}
-        this._fileStream = null;
-        this._fileBytesWritten = 0;
-      }
-    } catch {}
-  }
-
-  // Pull last N stderr chunks (raw) for inclusion in error toasts /
-  // crash dumps.
-  _stderrTailString(maxChars = 1500) {
-    return (this.stderrTail.join("").trim().slice(-maxChars)) || "(no stderr)";
-  }
-
-  baseUrl() { return `http://${this.host}:${this.port}`; }
-
-  async ensureRunning(initialModelDir) {
-    if (await this.isHealthy(initialModelDir)) return { status: "already-running" };
-
-    // Gateway may be running but without a loaded model (alive=false).
-    // Hot-load via /api/load-model instead of spawning a second process
-    // which would fail with EADDRINUSE on the same port.
-    if (this.proc && this.modelPresent(initialModelDir)) {
-      const gguf = this._resolveGgufPath(initialModelDir);
-      if (gguf) {
-        const loaded = await this.loadModel(gguf);
-        if (loaded && loaded.ok) return { status: "model-loaded" };
-      }
-    }
-
-    if (this.starting) return this.starting;
-    this.starting = this._spawnAndWait(initialModelDir).finally(() => {
-      this.starting = null;
-    });
-    return this.starting;
-  }
-
-  _resolveGgufPath(dirOrFile) {
-    try {
-      const st = fs.statSync(dirOrFile);
-      if (st.isFile() && dirOrFile.toLowerCase().endsWith(".gguf")) return dirOrFile;
-      if (st.isDirectory()) {
-        const entries = fs.readdirSync(dirOrFile)
-          .filter((n) => n.toLowerCase().endsWith(".gguf"));
-        if (entries.length) return path.join(dirOrFile, entries[0]);
-      }
-    } catch {}
-    return null;
-  }
-
-  async isHealthy(initialModelDir) {
-    try {
-      const r = await httpJson("GET", `${this.baseUrl()}/api/health`, null, 1500);
-      if (!(r.status === 200 && r.json && r.json.ok === true)) return false;
-      if (this.modelPresent(initialModelDir)) {
-        return r.json.alive === true
-          || !!(r.json.llama_server && r.json.llama_server.status === "ok");
-      }
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async listModels() {
-    try {
-      const r = await httpJson("GET", `${this.baseUrl()}/api/models`, null, 2000);
-      return r.json || null;
-    } catch { return null; }
-  }
-
-  async loadModel(p) {
-    try {
-      const r = await httpJson("POST", `${this.baseUrl()}/api/load-model`, { path: p }, 90000);
-      return r.json || null;
-    } catch (err) { return { error: String(err && err.message || err) }; }
-  }
-
-  async checkUpdate() {
-    try {
-      const r = await httpJson("GET", `${this.baseUrl()}/api/update-check`, null, 4000);
-      return r.json || null;
-    } catch { return null; }
-  }
-
-  async _spawnAndWait(initialModelDir) {
-    // We need either the prebuilt gateway binary or the source tree
-    // (with a Python venv) to spawn.
-    if (!this.sidecarBin && !this.sidecarDir) {
-      const err = new Error("sidecar binary not found");
-      err.minicpmI18nKey = "chatSidecarMissingBin";
-      throw err;
-    }
-
-    // Both the binary and `python -m gateway` accept the same flags;
-    // we treat them uniformly here.
-    const argsCommon = [
-      "--host", this.host,
-      "--port", String(this.port),
-    ];
-    if (initialModelDir) argsCommon.push("--model", initialModelDir);
-
-    const env = {
-      ...process.env,
-      PYTHONUNBUFFERED: "1",
-      // Windows: the gateway's "auto" device resolves to CPU. If a CUDA
-      // llama-server backend ships under bin/<triple>/backends/cuda/ and
-      // the user hasn't pinned a device, default to cuda so NVIDIA
-      // machines get GPU inference out of the box.
-      MINICPM_DEVICE: process.env.MINICPM_DEVICE
-        || (process.platform === "win32" && fs.existsSync(path.join(
-          this.sidecarDir || "", "bin", "win-x64", "backends", "cuda", "llama-server.exe"
-        )) ? "cuda" : "auto"),
-      // Mirror our sidecar.log directory into the gateway so its
-      // RotatingFileHandler drops sidecar-internal.log next to what
-      // Electron captures — easy to grab via Settings → "打开日志目录".
-      MINICPM_LOG_DIR: this.logFile ? path.dirname(this.logFile) : (process.env.MINICPM_LOG_DIR || ""),
-      // Point gateway at the writable user adapter dir so /api/adapters
-      // and /api/load-adapter see exactly what Settings UI shows.
-      MINICPM_ADAPTER_DIR: this.adapterDir || process.env.MINICPM_ADAPTER_DIR || "",
-      // Boot directly into the user's persisted LoRA choice. Empty
-      // string (or unset) means "boot Base, no LoRA loaded" — the
-      // gateway then refrains from passing any --lora flag, keeping
-      // memory minimal for users who never opt in to a persona.
-      MINICPM_ACTIVE_ADAPTER: this.activeAdapterPath || process.env.MINICPM_ACTIVE_ADAPTER || "",
-      // Pin the parent-watchdog inside the gateway to OUR pid (Electron
-      // main), not to whatever ppid the PyInstaller bootloader's Python
-      // re-exec hop ends up with. If Electron crashes or is `kill -9`'d,
-      // the watchdog notices our pid is gone and tears down the
-      // sidecar + llama-server within ~2s, so :18765 / :18766 don't
-      // stay held by an orphan.
-      MINICPM_PARENT_PID: String(process.pid),
-    };
-
-    // Strip proxy environment variables to avoid socksio dependency issues.
-    // The sidecar only makes local HTTP calls (localhost:18766) and downloads
-    // from HuggingFace (which has its own proxy handling via huggingface_hub).
-    const proxyVars = [
-      "http_proxy", "https_proxy", "ftp_proxy", "socks_proxy",
-      "HTTP_PROXY", "HTTPS_PROXY", "FTP_PROXY", "SOCKS_PROXY",
-      "all_proxy", "ALL_PROXY",
-    ];
-    for (const v of proxyVars) {
-      delete env[v];
-    }
-
-    let proc;
-    if (this.sidecarBin) {
-      // Production path: a self-contained gateway binary. No Python
-      // interpreter required on the host. The gateway itself locates
-      // and spawns the llama-server binary sitting next to it.
-      this.log(`[minicpm-chat] spawn binary ${this.sidecarBin} --port ${this.port}`);
-      proc = spawn(this.sidecarBin, argsCommon, {
-        cwd: path.dirname(this.sidecarBin),
-        env,
-      });
-    } else {
-      const python = locatePython(this.sidecarDir);
-      if (!python) {
-        const err = new Error("Python interpreter not found");
-        err.minicpmI18nKey = "chatSidecarMissingPython";
-        throw err;
-      }
-      this.log(`[minicpm-chat] spawn ${python} -m gateway --port ${this.port}`);
-      proc = spawn(python, ["-m", "gateway", ...argsCommon], {
-        cwd: this.sidecarDir,
-        env,
-      });
-    }
-
-    this.proc = proc;
-    this.stderrTail.length = 0;
-
-    // Make sure the log file is open for the new session.
-    this._openLogStream();
-    this._appendLog(`[spawn] ${this.sidecarBin || "python"} (pid=${proc.pid})`);
-
-    proc.stdout.on("data", (b) => {
-      const s = b.toString();
-      this.log(`[sidecar] ${s.trimEnd()}`);
-      this._appendLog(`[stdout] ${s.trimEnd()}`);
-    });
-    proc.stderr.on("data", (b) => {
-      const s = b.toString();
-      this.log(`[sidecar! ] ${s.trimEnd()}`);
-      this._appendLog(`[stderr] ${s.trimEnd()}`);
-      this.stderrTail.push(s);
-      if (this.stderrTail.length > 40) this.stderrTail.shift();
-    });
-    proc.on("exit", (code, signal) => {
-      this.log(`[minicpm-chat] sidecar exited code=${code} signal=${signal}`);
-      this._appendLog(`[exit] code=${code} signal=${signal}`);
-      // If the process died with a non-zero exit (and wasn't a clean
-      // SIGTERM from our own stop()), archive the recent stderr tail as
-      // a standalone crash dump so we can investigate after restart.
-      const crashed = (typeof code === "number" && code !== 0) ||
-                       (signal && signal !== "SIGTERM");
-      if (crashed && this.logFile) {
-        try {
-          const dir = path.dirname(this.logFile);
-          const ts = new Date().toISOString().replace(/[:.]/g, "-");
-          const dump = path.join(dir, `sidecar-crash-${ts}.log`);
-          const header =
-            `# sidecar crash dump\n` +
-            `# at:    ${new Date().toISOString()}\n` +
-            `# code:  ${code}\n` +
-            `# sig:   ${signal}\n` +
-            `# pid:   ${proc.pid}\n` +
-            `# bin:   ${this.sidecarBin || "python"}\n` +
-            `# port:  ${this.port}\n` +
-            `\n----- stderr tail -----\n`;
-          fs.writeFileSync(dump, header + this._stderrTailString(8000), "utf-8");
-          // Prune to the 5 most recent crash dumps.
-          try {
-            const files = fs.readdirSync(dir)
-              .filter((f) => f.startsWith("sidecar-crash-"))
-              .sort()
-              .reverse();
-            for (const old of files.slice(5)) {
-              try { fs.unlinkSync(path.join(dir, old)); } catch {}
-            }
-          } catch {}
-          this.log(`[minicpm-chat] crash dump → ${dump}`);
-        } catch (err) {
-          this.log(`[minicpm-chat] failed to write crash dump: ${err && err.message}`);
-        }
-      }
-      if (this.proc === proc) this.proc = null;
-    });
-
-    const deadline = Date.now() + 90_000;
-    while (Date.now() < deadline) {
-      if (!this.proc) {
-        const err = new Error(`Python process exited prematurely. stderr tail:\n${this._stderrTailString(1500)}`);
-        err.minicpmI18nKey = "chatSidecarPyExited";
-        err.minicpmI18nParams = { tail: this._stderrTailString(1500) };
-        throw err;
-      }
-      const health = await httpJson("GET", `${this.baseUrl()}/api/health`, null, 1500).catch(() => null);
-      if (health && health.status === 200 && health.json && health.json.ok === true) {
-        if (this.modelPresent(initialModelDir)) {
-          if (health.json.startup_error) {
-            this.stop();
-            throw new Error(`llama-server failed to start: ${health.json.startup_error}`);
-          }
-          if (
-            health.json.alive === true ||
-            (health.json.llama_server && health.json.llama_server.status === "ok")
-          ) {
-            return { status: "started" };
-          }
-        } else {
-          return { status: "started" };
-        }
-      }
-      await new Promise((r) => setTimeout(r, 500));
-    }
-    this.stop();
-    const err = new Error("Timed out waiting for Python service (90s)");
-    err.minicpmI18nKey = "chatSidecarTimeout";
-    throw err;
-  }
-
-  stop() {
-    if (!this.proc) return;
-    const proc = this.proc;
-    const pid = proc.pid;
-
-    if (process.platform === "win32" && pid) {
-      // PyInstaller --onefile spawns a bootloader (the pid we get back from
-      // child_process.spawn) which then launches the actual Python process
-      // as a separate child. Windows doesn't put them in the same job
-      // object, so a plain `proc.kill("SIGTERM")` only terminates the
-      // bootloader — the Python child stays alive holding the gateway
-      // socket on :18765, which then blocks every subsequent respawn with
-      // EADDRINUSE / "llama-server not running". Use taskkill /T to walk
-      // the process tree and kill the bootloader + every descendant
-      // (Python, llama-server, ...) in one shot.
-      try {
-        execFile("taskkill", ["/pid", String(pid), "/T", "/F"], { windowsHide: true }, () => {});
-      } catch {
-        try { proc.kill("SIGKILL"); } catch {}
-      }
-      return;
-    }
-
-    try { proc.kill("SIGTERM"); } catch {}
-    setTimeout(() => {
-      if (this.proc === proc) { try { proc.kill("SIGKILL"); } catch {} }
-    }, 2000).unref();
-  }
-
-  async stopAndWait(timeoutMs = 5000) {
-    const proc = this.proc;
-    this.stop();
-
-    const waitForProcExit = async () => {
-      if (!proc || proc.exitCode != null || proc.signalCode != null) return true;
-      return new Promise((resolve) => {
-        let done = false;
-        let timer = null;
-        const finish = (exited) => {
-          if (done) return;
-          done = true;
-          try { proc.removeListener("exit", onExit); } catch {}
-          if (timer) clearTimeout(timer);
-          resolve(exited);
-        };
-        const onExit = () => finish(true);
-        proc.once("exit", onExit);
-        timer = setTimeout(() => finish(false), timeoutMs);
-        if (timer && typeof timer.unref === "function") timer.unref();
-      });
-    };
-
-    const waitForHealthDown = async (deadline) => {
-      let misses = 0;
-      while (Date.now() < deadline) {
-        const r = await httpJson("GET", `${this.baseUrl()}/api/health`, null, 300).catch(() => null);
-        if (r && r.status === 200 && r.json && r.json.ok === true) {
-          misses = 0;
-        } else {
-          misses += 1;
-          if (misses >= 2) return true;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 150));
-      }
-      return false;
-    };
-
-    if (!(await waitForProcExit())) {
-      throw new Error("Timed out waiting for sidecar process to exit");
-    }
-    if (!(await waitForHealthDown(Date.now() + timeoutMs))) {
-      throw new Error("Timed out waiting for sidecar port to close");
-    }
-  }
-}
-
-// ── Bubble positioning ──────────────────────────────────────────────────────
 
 function pickSide(petBounds, workArea, width, height, preferred = "auto") {
   const wb = workArea.x + workArea.width;
@@ -895,6 +249,56 @@ module.exports = function initMinicpmChat(ctx) {
     try { return path.join(app.getPath("userData"), "minicpm-prefs.json"); }
     catch { return path.join(os.tmpdir(), "minicpm-prefs.json"); }
   })();
+
+  // Chat history persistence file. Limits + the sanitizer live at
+  // module scope (sanitizeHistoryItems) so tests can exercise them
+  // without booting the whole factory.
+  const HISTORY_PATH = (() => {
+    try { return path.join(app.getPath("userData"), "minicpm-chat-history.json"); }
+    catch { return path.join(os.tmpdir(), "minicpm-chat-history.json"); }
+  })();
+
+  // ── Assistant prefs projection ────────────────────────────────────────
+  // The settings controller owns clawd-prefs.json; main injects a lazy
+  // snapshot getter (ctx.getAssistantPrefs). We project the keys this
+  // module + the chat bubble consume onto schema defaults so a missing
+  // key can never produce an undefined theme/behavior value.
+  function getAssistantPrefsSnapshot() {
+    const out = { ...ASSISTANT_PREF_DEFAULTS };
+    try {
+      const snap = ctx && typeof ctx.getAssistantPrefs === "function"
+        ? ctx.getAssistantPrefs()
+        : null;
+      if (snap && typeof snap === "object") {
+        for (const key of Object.keys(ASSISTANT_PREF_DEFAULTS)) {
+          if (snap[key] !== undefined && snap[key] !== null) out[key] = snap[key];
+        }
+      }
+    } catch {}
+    return out;
+  }
+
+  // Push address/persona behavior config into the sidecar gateway.
+  // Fire-and-forget: silent catch, deduped against the last successfully
+  // POSTed payload so repeated controller broadcasts don't spam /api/config.
+  const sendAssistantConfig = createAssistantConfigSyncer(
+    (payload) => httpJson("POST", `${sidecar.baseUrl()}/api/config`, payload, 3000)
+  );
+  async function syncAssistantConfig() {
+    try {
+      await sendAssistantConfig(getAssistantPrefsSnapshot());
+    } catch {}
+  }
+
+  // Proactive reminder/briefing narration chime — same asset + player as
+  // every other notification sound (theme "complete" sound via main's
+  // playSound, which also honors mute/DND/cooldown gating).
+  function maybePlayReminderChime() {
+    try {
+      if (getAssistantPrefsSnapshot().reminderChime === false) return;
+      if (typeof ctx.playNotificationSound === "function") ctx.playNotificationSound("complete");
+    } catch {}
+  }
 
   // ── Adapter (LoRA) path resolution ────────────────────────────────────
   // Same shape as the model paths: <userData>/adapters/ in packaged
@@ -1014,8 +418,8 @@ module.exports = function initMinicpmChat(ctx) {
   const DEFAULT_PRESET_ENTRIES = [
     {
       id: "preset:nekoqa",
-      displayName: "猫娘",
-      aliases: ["猫娘", "宝宝", "neko"],
+      displayName: "Neko",
+      aliases: ["neko", "catgirl", "baby"],
       persona: "neko",
       filenameHint: "lora_nekoqa",
     },
@@ -1335,6 +739,64 @@ module.exports = function initMinicpmChat(ctx) {
   // Cached "is there a new model on the remote?" status. Refreshed on
   // launch, after every apply, and whenever the user manually checks.
   let updateStatus = null; // { available, local_revision, remote_revision, ... }
+
+  // ── Sidecar crash auto-restart ────────────────────────────────────────
+  // The gateway is normally stable, but a segfault, OOM kill, or an
+  // external taskkill on :18765 used to leave the pet mute until app
+  // relaunch. On unplanned exit we retry with escalating backoff
+  // (2s → 5s → 10s); each state change is broadcast to the bubble so
+  // the renderer can show "restarting…" / "offline" instead of a hung
+  // request. A successful attempt resets the attempt counter.
+  const SIDECAR_RESTART_DELAYS_MS = [2000, 5000, 10000];
+  let sidecarRestartAttempt = 0;
+  let sidecarRestartTimer = null;
+  let sidecarRestarting = false;
+  let sidecarShuttingDown = false;
+
+  function broadcastSidecarState(state, extra = {}) {
+    try {
+      if (bubble && !bubble.isDestroyed()) {
+        bubble.webContents.send("minicpm:sidecar-state", { state, ...extra });
+      }
+    } catch {}
+  }
+
+  function scheduleSidecarRestart(reason) {
+    if (sidecarShuttingDown || sidecarRestarting) return;
+    if (sidecarRestartAttempt >= SIDECAR_RESTART_DELAYS_MS.length) {
+      log(`[minicpm] sidecar restart gave up after ${sidecarRestartAttempt} attempts (${reason})`);
+      broadcastSidecarState("down", { reason });
+      return;
+    }
+    const delay = SIDECAR_RESTART_DELAYS_MS[sidecarRestartAttempt];
+    sidecarRestartAttempt += 1;
+    log(`[minicpm] scheduling sidecar restart #${sidecarRestartAttempt} in ${delay}ms (${reason})`);
+    broadcastSidecarState("restarting", { attempt: sidecarRestartAttempt });
+    sidecarRestartTimer = setTimeout(() => { void attemptSidecarRestart(reason); }, delay);
+    if (typeof sidecarRestartTimer.unref === "function") sidecarRestartTimer.unref();
+  }
+
+  async function attemptSidecarRestart(reason) {
+    sidecarRestarting = true;
+    try {
+      // Re-read the persisted LoRA choice so a respawn boots into
+      // whatever persona the user had active (same as explicit restarts).
+      refreshActiveAdapterPath();
+      await sidecar.ensureRunning(getEffectiveModelDir());
+      sidecarRestartAttempt = 0;
+      log(`[minicpm] sidecar restarted OK (previous exit: ${reason})`);
+      broadcastSidecarState("back");
+    } catch (err) {
+      log(`[minicpm] sidecar restart attempt #${sidecarRestartAttempt} failed: ${err && err.message}`);
+      scheduleSidecarRestart(reason);
+    } finally {
+      sidecarRestarting = false;
+    }
+  }
+
+  sidecar.onUnexpectedExit = (code, signal) => {
+    scheduleSidecarRestart(`exit code=${code} signal=${signal}`);
+  };
 
   // ── Chat generation parameters ────────────────────────────────────────
   // Persisted to <userData>/minicpm-prefs.json so they survive restart.
@@ -1734,6 +1196,9 @@ module.exports = function initMinicpmChat(ctx) {
       skipTaskbar: true,
       alwaysOnTop: true,
       focusable: true,
+      // Alt-Tab / taskbar previews should carry the product mark, not the
+      // stock Electron icon.
+      icon: path.join(__dirname, "..", "assets", "icons", "256x256.png"),
       ...(isLinux ? { type: LINUX_WINDOW_TYPE } : {}),
       ...(isMac ? { type: "panel" } : {}),
       webPreferences: {
@@ -1852,6 +1317,8 @@ module.exports = function initMinicpmChat(ctx) {
   }
 
   function shutdown() {
+    sidecarShuttingDown = true;
+    if (sidecarRestartTimer) { clearTimeout(sidecarRestartTimer); sidecarRestartTimer = null; }
     sidecar.stop();
     if (bubble && !bubble.isDestroyed()) bubble.destroy();
     bubble = null;
@@ -1889,6 +1356,24 @@ module.exports = function initMinicpmChat(ctx) {
     const sessionId = String(data.session_id || "");
     if (!NARRATE_EVENTS.has(event)) return;
     if (sessionId.startsWith(NARRATE_IGNORE_SESSION_PREFIX)) return;
+
+    // Proactive sidecar lines (reminders, daily briefings) carry their
+    // final text in session_title — show them verbatim instead of
+    // running the narration model.
+    if (sessionId.startsWith("deskpet-proactive")) {
+      const line = typeof data.session_title === "string" ? data.session_title.trim() : "";
+      if (line) {
+        // Native Windows toast first (more visible); bubble narration is
+        // the fallback when the main-process hook is unavailable.
+        if (typeof ctx.showSystemNotification === "function") {
+          maybePlayReminderChime();
+          ctx.showSystemNotification("Deskpet Assistant", line);
+        } else {
+          showNarrationLine(line, event, String(data.agent_id || ""));
+        }
+      }
+      return;
+    }
 
     const now = Date.now();
     // Per-session "already dispatched" gate (5s after final commit).
@@ -2018,7 +1503,7 @@ module.exports = function initMinicpmChat(ctx) {
     // density.
     return {
       system: narration.systemPrompt,
-      user: `事件:${situation}\n回复:`,
+        user: `Event:${situation}\nReply:`,
     };
   }
 
@@ -2042,8 +1527,9 @@ module.exports = function initMinicpmChat(ctx) {
       });
       const r = await httpJson("POST", `${sidecar.baseUrl()}/api/chat`, JSON.parse(body), 30000);
       let text = (r.json && (r.json.content || "")).trim();
-      // Strip "回复：" prefix the few-shot format may leak.
-      text = text.replace(/^(回复[:：]\s*)/, "");
+        // Strip a "Reply:" prefix the few-shot format may leak (the
+        // legacy Chinese-format prefix is still tolerated).
+        text = text.replace(/^(?:回复|Reply)[:：]\s*/i, "");
       // First line only — multi-line responses become "thoughts" we don't
       // want to drop into a small bubble.
       text = text.split(/\r?\n/)[0].trim();
@@ -2059,23 +1545,7 @@ module.exports = function initMinicpmChat(ctx) {
         return;
       }
       log(`[narrator] reply: ${text}`);
-      ensureBubble();
-      reposition();
-      bubble.webContents.send("minicpm:narrate", { text, kind: data.event, agent: data.agent_id });
-      bubble.showInactive();
-      bubbleShown = true;
-      // Drive the dwell + hide from the main process so it doesn't rely on
-      // the renderer's setTimeout (Chromium can throttle timers in hidden
-      // panel windows on macOS, which leaves the bubble pinned).
-      const dwellMs = Math.max(4000, Math.min(9000, 2400 + text.length * 130));
-      setTimeout(() => {
-        if (!bubble || bubble.isDestroyed()) return;
-        try { bubble.hide(); } catch {}
-        bubbleShown = false;
-        log(`[narrator] hidden after dwell=${dwellMs}ms`);
-        // Replay any queued event that arrived while we were narrating.
-        flushQueuedEventIfStale();
-      }, dwellMs + 220);
+      showNarrationLine(text, data.event, data.agent_id);
     } catch (err) {
       log(`[narrator] failed: ${err && err.message || err}`);
     } finally {
@@ -2089,6 +1559,29 @@ module.exports = function initMinicpmChat(ctx) {
         setTimeout(() => onStateEvent(q.data), 1500);
       }
     }
+  }
+
+  function showNarrationLine(text, kind, agent) {
+    if (!text) return;
+    maybePlayReminderChime();
+    ensureBubble();
+    reposition();
+    if (!bubble || bubble.isDestroyed()) return;
+    bubble.webContents.send("minicpm:narrate", { text, kind: kind || "Notification", agent: agent || "" });
+    bubble.showInactive();
+    bubbleShown = true;
+    // Drive the dwell + hide from the main process so it doesn't rely on
+    // the renderer's setTimeout (Chromium can throttle timers in hidden
+    // panel windows on macOS, which leaves the bubble pinned).
+    const dwellMs = Math.max(4000, Math.min(9000, 2400 + text.length * 130));
+    setTimeout(() => {
+      if (!bubble || bubble.isDestroyed()) return;
+      try { bubble.hide(); } catch {}
+      bubbleShown = false;
+      log(`[narrator] hidden after dwell=${dwellMs}ms`);
+      // Replay any queued event that arrived while we were narrating.
+      flushQueuedEventIfStale();
+    }, dwellMs + 220);
   }
 
   function setNarrationEnabled(value) {
@@ -2127,6 +1620,16 @@ module.exports = function initMinicpmChat(ctx) {
       log(`[minicpm-chat] sidecar warmup ${r.status}`);
       void refreshUpdateStatus();
       void refreshPersona();
+      // Boot-time address/behavior config push (deduped inside).
+      void syncAssistantConfig();
+      // Dev UI smoke tests: with the CDP debug port enabled, open the
+      // bubble immediately so tools/verify-bubble-ui.mjs can find its
+      // target without anyone pressing Ctrl+Shift+M.
+      if (process.env.DESKPET_REMOTE_DEBUGGING_PORT) {
+        try { await open(); } catch (err) {
+          log(`[minicpm-chat] dev auto-open bubble failed: ${err && err.message || err}`);
+        }
+      }
     } catch (err) {
       log(`[minicpm-chat] sidecar warmup failed: ${err && err.message || err}`);
     }
@@ -2213,15 +1716,15 @@ module.exports = function initMinicpmChat(ctx) {
         });
       }
     } else {
-      items.push({ label: "(未发现模型)", enabled: false });
+      items.push({ label: "(no models found)", enabled: false });
     }
     items.push({ type: "separator" });
 
     const updLabel = updateStatus
       ? (updateStatus.available
-          ? `● 新版本可用: ${updateStatus.remote_revision} → 立即更新`
-          : `已是最新 (${updateStatus.local_revision || "?"})`)
-      : "检查模型更新";
+          ? `● Update available: ${updateStatus.remote_revision} → Update now`
+          : `Up to date (${updateStatus.local_revision || "?"})`)
+      : "Check for model updates";
     items.push({
       label: updLabel,
       enabled: !(updateStatus && updateStatus.busy),
@@ -2248,18 +1751,18 @@ module.exports = function initMinicpmChat(ctx) {
 
     items.push({ type: "separator" });
     items.push({
-      label: `桌宠旁白 (Stop / 错误时吐槽)`,
+      label: `Pet narration (narrate on Stop / errors)`,
       type: "checkbox",
       checked: narrationEnabled,
       click: (it) => { setNarrationEnabled(!!it.checked); },
     });
     items.push({ type: "separator" });
     items.push({
-      label: "清空对话历史",
+      label: "Clear chat history",
       click: () => { if (bubble && !bubble.isDestroyed()) bubble.webContents.send("minicpm:cmd-reset"); },
     });
     items.push({
-      label: "关闭气泡",
+      label: "Close bubble",
       click: () => dismiss(),
     });
 
@@ -2289,6 +1792,7 @@ module.exports = function initMinicpmChat(ctx) {
       const lang = getLang();
       return minicpmI18n.getMinicpmI18nPayload(lang);
     },
+    "minicpm:get-assistant-prefs": async () => getAssistantPrefsSnapshot(),
     "minicpm:resize": (_evt, { width, height } = {}) => {
       width = Math.max(MIN_WIDTH, Math.min(SPEAK_MAX_WIDTH, Math.round(Number(width) || ASK_WIDTH)));
       height = Math.max(MIN_HEIGHT, Math.min(SPEAK_MAX_HEIGHT, Math.round(Number(height) || ASK_HEIGHT)));
@@ -2372,6 +1876,50 @@ module.exports = function initMinicpmChat(ctx) {
 
   try { ipcMain.removeHandler("minicpm:get-chat-params"); } catch {}
   ipcMain.handle("minicpm:get-chat-params", async () => getChatParams());
+
+  // ── Chat history persistence IPC ──────────────────────────────────────
+  // v2: both directions carry the whole session store — ONE load + ONE
+  // save call, written atomically (temp file + rename).
+  try { ipcMain.removeHandler("minicpm-chat:history-load"); } catch {}
+  ipcMain.handle("minicpm-chat:history-load", async () => {
+    try {
+      if (!fs.existsSync(HISTORY_PATH)) return { ok: true, store: normalizeHistoryStore(null) };
+      const parsed = JSON.parse(fs.readFileSync(HISTORY_PATH, "utf-8"));
+      return { ok: true, store: normalizeHistoryStore(parsed) };
+    } catch (err) {
+      log(`[minicpm] history load failed: ${err && err.message}`);
+      return { ok: false, store: normalizeHistoryStore(null) };
+    }
+  });
+
+  try { ipcMain.removeHandler("minicpm-chat:history-save"); } catch {}
+  ipcMain.handle("minicpm-chat:history-save", async (_e, payload) => {
+    try {
+      const raw = payload && typeof payload === "object" && payload.store !== undefined
+        ? payload.store
+        : payload && payload.history; // legacy renderer payload shape
+      const clean = normalizeHistoryStore(raw);
+      let count = 0;
+      for (const sess of Object.values(clean.sessions)) count += sess.messages.length;
+      const tmp = `${HISTORY_PATH}.tmp`;
+      fs.writeFileSync(
+        tmp,
+        JSON.stringify({
+          version: 2,
+          saved_at: new Date().toISOString(),
+          activeId: clean.activeId,
+          sessions: clean.sessions,
+        }, null, 2),
+        "utf-8"
+      );
+      // Atomic on Windows too: rename replaces an existing destination.
+      fs.renameSync(tmp, HISTORY_PATH);
+      return { ok: true, count, sessions: Object.keys(clean.sessions).length };
+    } catch (err) {
+      log(`[minicpm] history save failed: ${err && err.message}`);
+      return { ok: false };
+    }
+  });
 
   // ── Settings-window facing IPC ────────────────────────────────────────
   // Surface the MiniCPM panel state to the main Settings window.
@@ -2468,9 +2016,9 @@ module.exports = function initMinicpmChat(ctx) {
         const personaName = cur.json.persona && cur.json.persona !== "default" ? cur.json.persona : null;
         const adapterName = (currentAdapter && String(currentAdapter).split("/").pop()) || null;
         let text;
-        if (!currentAdapter) text = "已经是 base 模型了。";
-        else if (personaName) text = `已经在 LoRA · ${personaName} 了。`;
-        else text = `已经加载着 LoRA · ${adapterName || "?"} 了。`;
+        if (!currentAdapter) text = "Already on the base model.";
+        else if (personaName) text = `Already on LoRA · ${personaName}.`;
+        else text = `LoRA · ${adapterName || "?"} is already loaded.`;
         try {
           ensureBubble();
           reposition();
@@ -2511,9 +2059,9 @@ module.exports = function initMinicpmChat(ctx) {
         const personaName = data.persona && data.persona !== "default" ? data.persona : null;
         const adapterName = (data.adapter && String(data.adapter).split("/").pop()) || null;
         let text;
-        if (!data.adapter) text = "已切换回 base 模型，对话历史已清空。";
-        else if (personaName) text = `已切换到 LoRA · ${personaName}，对话历史已清空。`;
-        else text = `已加载 LoRA · ${adapterName || "?"}，对话历史已清空。`;
+        if (!data.adapter) text = "Switched back to the base model; chat history cleared.";
+        else if (personaName) text = `Switched to LoRA · ${personaName}; chat history cleared.`;
+        else text = `Loaded LoRA · ${adapterName || "?"}; chat history cleared.`;
         try {
           ensureBubble();
           reposition();
@@ -2720,10 +2268,10 @@ module.exports = function initMinicpmChat(ctx) {
     "minicpm-settings:upload-adapter": async (_evt, payload) => {
       const { dialog } = require("electron");
       const ret = await dialog.showOpenDialog({
-        title: "选择 LoRA 适配器 (.gguf)",
+        title: "Select LoRA adapter (.gguf)",
         properties: ["openFile"],
         filters: [{ name: "GGUF adapter", extensions: ["gguf"] }],
-        message: "选一个 GGUF 格式的 LoRA 适配器文件；会被复制到本应用的 adapters 目录。",
+        message: "Pick a GGUF-format LoRA adapter file; it will be copied into the app's adapters directory.",
       });
       if (ret.canceled || !ret.filePaths.length) {
         return { ok: false, canceled: true };
@@ -2731,13 +2279,13 @@ module.exports = function initMinicpmChat(ctx) {
       const src = ret.filePaths[0];
       const lower = src.toLowerCase();
       if (!lower.endsWith(".gguf")) {
-        return { ok: false, error: `必须是 .gguf 文件：${src}` };
+        return { ok: false, error: `Not a .gguf file: ${src}` };
       }
       let srcStat;
       try { srcStat = fs.statSync(src); }
-      catch (err) { return { ok: false, error: `读不到所选文件：${err && err.message}` }; }
+      catch (err) { return { ok: false, error: `Cannot read the selected file: ${err && err.message}` }; }
       if (!srcStat.isFile()) {
-        return { ok: false, error: `不是普通文件：${src}` };
+        return { ok: false, error: `Not a regular file: ${src}` };
       }
       const ts = Date.now();
       const safeBasename = path.basename(src).replace(/[^A-Za-z0-9._-]+/g, "_");
@@ -2745,11 +2293,11 @@ module.exports = function initMinicpmChat(ctx) {
       const destName = `${ts}_${safeBasename}`;
       const dest = path.join(uploadsDir, destName);
       try { fs.mkdirSync(uploadsDir, { recursive: true }); }
-      catch (err) { return { ok: false, error: `无法创建 uploads 目录：${err && err.message}` }; }
+      catch (err) { return { ok: false, error: `Cannot create uploads directory: ${err && err.message}` }; }
       try {
         fs.copyFileSync(src, dest);
       } catch (err) {
-        return { ok: false, error: `复制文件失败：${err && err.message}` };
+        return { ok: false, error: `Failed to copy file: ${err && err.message}` };
       }
       const displayName = (payload && typeof payload.displayName === "string" && payload.displayName.trim())
         ? payload.displayName.trim()
@@ -2792,7 +2340,7 @@ module.exports = function initMinicpmChat(ctx) {
       const target = manifest.items.find((it) => it && it.id === payload.id);
       if (!target) return { ok: false, error: `adapter not found: ${payload.id}` };
       if (target.source !== "user-upload") {
-        return { ok: false, error: "只能删除自行上传的 LoRA，预置项请保留。" };
+        return { ok: false, error: "Only LoRAs you uploaded yourself can be deleted; bundled ones stay." };
       }
       // If the user just removed the currently active adapter, unload
       // it on the sidecar side first so llama-server's per-request
@@ -3060,6 +2608,8 @@ module.exports = function initMinicpmChat(ctx) {
     shutdown,
     restartSidecar,
     ensureSidecarReady,
+    syncAssistantConfig,
+    getAssistantPrefsSnapshot,
     sendI18n,
     getSidecarUrl: () => sidecar.baseUrl(),
     getBridgeDir: () => bridgeDir,

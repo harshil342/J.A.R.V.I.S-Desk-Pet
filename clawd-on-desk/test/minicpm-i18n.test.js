@@ -93,17 +93,19 @@ describe("minicpm-i18n", () => {
   });
 
   describe("makeTranslator", () => {
-    it("substitutes placeholders", () => {
+    it("substitutes placeholders and stays English-only regardless of lang", () => {
       let lang = "en";
       const t = minicpm.makeTranslator(() => lang);
       assert.strictEqual(
         t("onboardingDiskAvailable", { free: "10 GB", need: "5 GB" }),
         "10 GB available (need 5 GB)"
       );
+      // English-only product: even when the app language is zh, the
+      // translator serves the English block.
       lang = "zh";
       assert.strictEqual(
         t("onboardingDiskAvailable", { free: "10 GB", need: "5 GB" }),
-        "可用 10 GB（需要 5 GB）"
+        "10 GB available (need 5 GB)"
       );
     });
 
@@ -136,7 +138,7 @@ describe("minicpm-i18n", () => {
     it("bundles strings + serialized patterns + classifier + narration for one lang", () => {
       const payload = minicpm.getMinicpmI18nPayload("zh");
       assert.strictEqual(payload.lang, "zh");
-      assert.strictEqual(payload.strings.menuMinicpmChat, "MiniCPM Chat");
+      assert.strictEqual(payload.strings.menuMinicpmChat, "Deskpet Chat");
       assert.ok(payload.commandPatterns.hints.source, "patterns are serialized");
       assert.ok(typeof payload.classifierPrompt === "string");
       assert.ok(payload.narration.systemPrompt.length > 100);

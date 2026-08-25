@@ -25,6 +25,20 @@
   // doesn't have to re-expand Advanced every time they revisit the tab.
   let advancedExpanded = false;
 
+  // ── Assistant card constants ───────────────────────────────────────────
+  // Prefs-backed chat look & behavior. All commits go through the shared
+  // clawd-prefs pipeline (window.settingsAPI.update → settings-actions
+  // validators → clawd-prefs.json); live preview is intentionally out of
+  // scope here — the chat renderer consumes the prefs on its own.
+  const ASSISTANT_ACCENT_PRESETS = [
+    { preset: "cyan", hex: "#35E8F7", labelKey: "assistantAccentCyan" },
+    { preset: "violet", hex: "#A78BFA", labelKey: "assistantAccentViolet" },
+    { preset: "amber", hex: "#FFB454", labelKey: "assistantAccentAmber" },
+    { preset: "green", hex: "#4ADE80", labelKey: "assistantAccentGreen" },
+  ];
+  const ASSISTANT_TEXT_COMMIT_DEBOUNCE_MS = 600;
+  const ASSISTANT_IDLE_SLEEP_STEP = 15;
+
   // The product surface treats MiniCPM5 0.9B as the canonical bundled
   // model. Showing the actual gguf filename here would create noise once
   // users sideload variants — we still expose that in the path row.
@@ -915,6 +929,378 @@
     return row;
   }
 
+  // ── Assistant (collapsible card) ──────────────────────────────────────
+  //
+  // One collapsible card holding every clawd-prefs-backed assistant pref:
+  // accent color, bubble look & feel, address, briefing, chime, memory,
+  // clarify strength and idle sleep. Built from the same row helpers the
+  // General tab uses (buildSwitchRow / volume-slider markup) so it reads
+  // native; commits reuse window.settingsAPI.update with optimistic paint
+  // + revert-on-failure, matching the bubble-policy seconds inputs.
+
+  function snapPref(key, fallback) {
+    const snap = core && core.state && core.state.snapshot;
+    const value = snap ? snap[key] : undefined;
+    return value === undefined || value === null ? fallback : value;
+  }
+
+  function commitPref(key, value) {
+    return window.settingsAPI.update(key, value).then((result) => {
+      if (result && result.status === "ok") return true;
+      const msg = (result && result.message) || "unknown error";
+      if (ops && typeof ops.showToast === "function") {
+        ops.showToast(t("toastSaveFailed") + msg, { error: true });
+      }
+      return false;
+    }).catch((err) => {
+      if (ops && typeof ops.showToast === "function") {
+        ops.showToast(t("toastSaveFailed") + (err && err.message), { error: true });
+      }
+      return false;
+    });
+  }
+
+  function buildAssistantOptionList(rows) {
+    const list = el("div", { className: "settings-option-list assistant-option-list" });
+    for (const row of rows) {
+      row.classList.add("settings-option-item");
+      list.appendChild(row);
+    }
+    return list;
+  }
+
+  function buildAssistantAccentRow() {
+    const row = el("div", { className: "row" });
+    const text = el("div", { className: "row-text" });
+    text.appendChild(el("span", { className: "row-label" }, t("assistantAccentLabel")));
+    text.appendChild(el("span", { className: "row-desc" }, t("assistantAccentDesc")));
+    row.appendChild(text);
+
+    const control = el("div", { className: "row-control assistant-accent-control" });
+    const swatches = new Map();
+    for (const item of ASSISTANT_ACCENT_PRESETS) {
+      const swatch = el("button", {
+        type: "button",
+        className: "assistant-accent-swatch",
+        title: t(item.labelKey),
+        "aria-label": t(item.labelKey),
+      });
+      swatch.style.background = item.hex;
+      swatch.dataset.preset = item.preset;
+      swatch.dataset.hex = item.hex;
+      swatches.set(item.preset, swatch);
+      control.appendChild(swatch);
+    }
+    const colorInput = el("input", {
+      type: "color",
+      className: "assistant-color-input",
+      title: t("assistantAccentCustom"),
+      "aria-label": t("assistantAccentCustom"),
+    });
+    control.appendChild(colorInput);
+    row.appendChild(control);
+
+    function repaint() {
+      const preset = String(snapPref("accentPreset", "custom"));
+      const accent = String(snapPref("assistantAccent", "#8A939B"));
+      for (const [presetId, swatch] of swatches) {
+        const selected = presetId === preset
+          || (!swatches.has(preset) && swatch.dataset.hex.toLowerCase() === accent.toLowerCase());
+        swatch.classList.toggle("selected", selected);
+      }
+      if (/^#[0-9a-fA-F]{6}$/.test(accent)) colorInput.value = accent.toLowerCase();
+    }
+
+    async function applyAccent(hex, preset) {
+      const accentOk = await commitPref("assistantAccent", hex);
+      if (!accentOk) { repaint(); return; }
+      await commitPref("accentPreset", preset);
+      repaint();
+    }
+
+    for (const [, swatch] of swatches) {
+      swatch.addEventListener("click", () => {
+        void applyAccent(swatch.dataset.hex, swatch.dataset.preset);
+      });
+    }
+    colorInput.addEventListener("change", () => {
+      const hex = String(colorInput.value || "").toUpperCase();
+      if (/^#[0-9a-fA-F]{6}$/.test(hex)) void applyAccent(hex, "custom");
+      else repaint();
+    });
+
+    repaint();
+    return row;
+  }
+
+  function buildAssistantSliderRow({
+    key,
+    labelKey,
+    descKey,
+    min,
+    max,
+    step,
+    fallback,
+    quantize,
+    format,
+  }) {
+    const row = el("div", { className: "row" });
+    const text = el("div", { className: "row-text" });
+    text.appendChild(el("span", { className: "row-label" }, t(labelKey)));
+    if (descKey) text.appendChild(el("span", { className: "row-desc" }, t(descKey)));
+    row.appendChild(text);
+
+    const control = el("div", { className: "row-control volume-control" });
+    const slider = el("input", {
+      type: "range",
+      className: "volume-slider",
+      min: String(min),
+      max: String(max),
+      step: String(step),
+    });
+    const readout = el("span", { className: "volume-readout", "aria-hidden": "true" });
+    control.appendChild(slider);
+    control.appendChild(readout);
+    row.appendChild(control);
+
+    function currentValue() {
+      const stored = Number(snapPref(key, fallback));
+      return Number.isFinite(stored) ? Math.min(max, Math.max(min, stored)) : fallback;
+    }
+    function paint(value) {
+      slider.value = String(value);
+      const fill = ((value - min) / (max - min)) * 100;
+      slider.style.setProperty("--volume-fill", `${fill}%`);
+      readout.textContent = format(value);
+    }
+    paint(currentValue());
+
+    slider.addEventListener("input", () => {
+      paint(Number(slider.value));
+    });
+    slider.addEventListener("change", async () => {
+      const next = quantize(Number(slider.value));
+      if (!Number.isFinite(next)) { paint(currentValue()); return; }
+      paint(next);
+      const ok = await commitPref(key, next);
+      if (!ok) paint(currentValue());
+    });
+    return row;
+  }
+
+  function buildAssistantSelectRow({ key, labelKey, descKey, options, fallback }) {
+    const row = el("div", { className: "row" });
+    const text = el("div", { className: "row-text" });
+    text.appendChild(el("span", { className: "row-label" }, t(labelKey)));
+    if (descKey) text.appendChild(el("span", { className: "row-desc" }, t(descKey)));
+    row.appendChild(text);
+
+    const control = el("div", { className: "row-control" });
+    const select = el("select", { className: "tg-approval-input assistant-select" });
+    for (const option of options) {
+      const opt = el("option", { value: option.value }, option.label);
+      select.appendChild(opt);
+    }
+    select.value = String(snapPref(key, fallback));
+    control.appendChild(select);
+    row.appendChild(control);
+
+    select.addEventListener("change", async () => {
+      const next = select.value;
+      if (next === String(snapPref(key, fallback))) return;
+      const ok = await commitPref(key, next);
+      if (!ok) select.value = String(snapPref(key, fallback));
+    });
+    return row;
+  }
+
+  function buildAssistantAddressRow() {
+    const row = el("div", { className: "row" });
+    const text = el("div", { className: "row-text" });
+    text.appendChild(el("span", { className: "row-label" }, t("assistantAddressLabel")));
+    text.appendChild(el("span", { className: "row-desc" }, t("assistantAddressDesc")));
+    row.appendChild(text);
+
+    const control = el("div", { className: "row-control" });
+    const input = el("input", {
+      type: "text",
+      className: "tg-approval-input assistant-address-input",
+      maxlength: "24",
+      placeholder: t("assistantAddressPlaceholder"),
+    });
+    control.appendChild(input);
+    row.appendChild(control);
+
+    let commitTimer = null;
+
+    function clearCommitTimer() {
+      if (commitTimer) {
+        clearTimeout(commitTimer);
+        commitTimer = null;
+      }
+    }
+    function syncFromSnapshot() {
+      if (document.activeElement === input) return;
+      input.value = String(snapPref("assistantAddress", "sir"));
+    }
+    async function flushCommit() {
+      clearCommitTimer();
+      const next = input.value.trim();
+      if (next === String(snapPref("assistantAddress", "sir"))) return true;
+      const ok = await commitPref("assistantAddress", next);
+      if (!ok) input.value = String(snapPref("assistantAddress", "sir"));
+      return ok;
+    }
+
+    input.value = String(snapPref("assistantAddress", "sir"));
+    input.addEventListener("input", () => {
+      clearCommitTimer();
+      commitTimer = setTimeout(() => {
+        commitTimer = null;
+        void flushCommit();
+      }, ASSISTANT_TEXT_COMMIT_DEBOUNCE_MS);
+    });
+    input.addEventListener("blur", () => { void flushCommit(); });
+    input.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Enter") return;
+      ev.preventDefault();
+      void flushCommit().then(syncFromSnapshot);
+    });
+    return row;
+  }
+
+  function renderAssistantSection(box) {
+    box.innerHTML = "";
+    const section = helpers.buildSection("", []);
+    const rows = section.querySelector(".section-rows");
+
+    rows.appendChild(helpers.buildCollapsibleGroup({
+      id: "minicpm:assistant",
+      title: t("assistantSectionTitle"),
+      desc: t("assistantSectionDesc"),
+      defaultCollapsed: true,
+      className: "assistant-collapsible",
+      children: [buildAssistantOptionList([
+        buildAssistantAccentRow(),
+        buildAssistantSliderRow({
+          key: "bubbleOpacity",
+          labelKey: "assistantOpacityLabel",
+          descKey: "assistantOpacityDesc",
+          min: 0.5,
+          max: 1,
+          step: 0.01,
+          fallback: 0.94,
+          quantize: (v) => Math.round(v * 100) / 100,
+          format: (v) => `${Math.round(v * 100)}%`,
+        }),
+        buildAssistantSliderRow({
+          key: "bubbleBlur",
+          labelKey: "assistantBlurLabel",
+          descKey: "assistantBlurDesc",
+          min: 0,
+          max: 40,
+          step: 1,
+          fallback: 28,
+          quantize: (v) => Math.round(v),
+          format: (v) => `${Math.round(v)}px`,
+        }),
+        buildAssistantSliderRow({
+          key: "bubbleTextScale",
+          labelKey: "assistantTextSizeLabel",
+          descKey: null,
+          min: 0.85,
+          max: 1.3,
+          step: 0.05,
+          fallback: 1,
+          quantize: (v) => Math.round(v * 20) / 20,
+          format: (v) => `${v.toFixed(2)}×`,
+        }),
+        buildAssistantSelectRow({
+          key: "bubbleDensity",
+          labelKey: "assistantDensityLabel",
+          descKey: null,
+          fallback: "comfortable",
+          options: [
+            { value: "comfortable", label: t("assistantDensityComfortable") },
+            { value: "compact", label: t("assistantDensityCompact") },
+          ],
+        }),
+        helpers.buildSwitchRow({
+          key: "typewriterEnabled",
+          labelKey: "assistantTypewriterLabel",
+          descKey: "assistantTypewriterDesc",
+        }),
+        buildAssistantAddressRow(),
+        buildAssistantBriefingHourRow(),
+        buildAssistantRecapHourRow(),
+        helpers.buildSwitchRow({
+          key: "reminderChime",
+          labelKey: "assistantChimeLabel",
+          descKey: "assistantChimeDesc",
+        }),
+        helpers.buildSwitchRow({
+          key: "autoMemory",
+          labelKey: "assistantAutoMemoryLabel",
+          descKey: "assistantAutoMemoryDesc",
+        }),
+        buildAssistantSelectRow({
+          key: "clarifyStrength",
+          labelKey: "assistantClarifyLabel",
+          descKey: null,
+          fallback: "ambiguous",
+          options: [
+            { value: "off", label: t("assistantClarifyOff") },
+            { value: "ambiguous", label: t("assistantClarifyAskWhenAmbiguous") },
+            { value: "confirm_all", label: t("assistantClarifyConfirmEveryAction") },
+          ],
+        }),
+        buildAssistantSliderRow({
+          key: "idleSleepSeconds",
+          labelKey: "assistantIdleSleepLabel",
+          descKey: "assistantIdleSleepDesc",
+          min: 15,
+          max: 300,
+          step: ASSISTANT_IDLE_SLEEP_STEP,
+          fallback: 60,
+          quantize: (v) => Math.round(v / ASSISTANT_IDLE_SLEEP_STEP) * ASSISTANT_IDLE_SLEEP_STEP,
+          format: (v) => `${Math.round(v)}s`,
+        }),
+      ])],
+    }));
+
+    box.appendChild(section);
+
+    box.appendChild(section);
+  }
+
+  function buildAssistantBriefingHourRow() {
+    const options = [];
+    for (let hour = 0; hour <= 23; hour += 1) {
+      options.push({ value: String(hour), label: `${String(hour).padStart(2, "0")}:00` });
+    }
+    return buildAssistantSelectRow({
+      key: "briefingHour",
+      labelKey: "assistantBriefingHourLabel",
+      descKey: "assistantBriefingHourDesc",
+      fallback: 8,
+      options,
+    });
+  }
+
+  function buildAssistantRecapHourRow() {
+    const options = [];
+    for (let hour = 0; hour <= 23; hour += 1) {
+      options.push({ value: String(hour), label: `${String(hour).padStart(2, "0")}:00` });
+    }
+    return buildAssistantSelectRow({
+      key: "recapHour",
+      labelKey: "assistantRecapHourLabel",
+      descKey: "assistantRecapHourDesc",
+      fallback: 21,
+      options,
+    });
+  }
+
   // ── Refresh + polling ─────────────────────────────────────────────────
 
   async function refreshAll(ctx) {
@@ -966,6 +1352,7 @@
     const ctx = {
       headerBox: el("div", {}),
       behaviorBox: el("div", { className: "minicpm-section-box" }),
+      assistantBox: el("div", { className: "minicpm-section-box" }),
       modelBox: el("div", { className: "minicpm-section-box" }),
       adapterBox: el("div", { className: "minicpm-section-box" }),
       advancedBox: el("div", { className: "minicpm-section-box" }),
@@ -1000,6 +1387,11 @@
 
     parent.appendChild(ctx.headerBox);
     parent.appendChild(ctx.behaviorBox);
+    // Assistant card is prefs-backed only (no sidecar dependency), so it is
+    // rendered eagerly once per mount and left out of the health refresh
+    // cycle — rebuilding it would interrupt slider drags and text input.
+    renderAssistantSection(ctx.assistantBox);
+    parent.appendChild(ctx.assistantBox);
     parent.appendChild(ctx.modelBox);
     parent.appendChild(ctx.adapterBox);
     parent.appendChild(ctx.advancedBox);

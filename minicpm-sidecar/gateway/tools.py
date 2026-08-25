@@ -13,6 +13,7 @@ degrades into a text note in the context, never a crashed chat.
 from __future__ import annotations
 
 import ast
+import json
 import math as _math
 import os
 import platform
@@ -22,12 +23,17 @@ import subprocess
 import threading
 import time
 import traceback
+import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 from urllib.parse import quote
 
 import httpx
+
+from .log_setup import get_logger
+
+log = get_logger("tools")
 
 # ── Pet bridge (reminders push a notification state when they fire) ─────────
 
@@ -178,6 +184,17 @@ def web_search(query: str) -> str:
             if txt:
                 parts.append(txt)
     if not parts:
+        # DDG instant-answer miss — fall back to Wikipedia before giving
+        # up, so "search for X" gets a real answer instead of "rephrase
+        # or be more specific". _wiki_topic_lookup strips interrogative
+        # framing and trims progressively; wikipedia_summary now resolves
+        # misses via relevance-ranked search. Returned without the
+        # "Web search:" prefix so canned_reply relays wiki prose verbatim.
+        wiki = _wiki_topic_lookup(query) or (
+            wikipedia_summary(query.strip()) if len(query.split()) == 1 else None
+        )
+        if wiki:
+            return wiki
         return f"No instant answer found for '{query}'. Rephrase or be more specific."
     return "Web search: " + " | ".join(parts)[:1200]
 
@@ -553,10 +570,39 @@ _DOC_KEYWORDS = [
     ("changelog", "changelog"), ("change log", "changelog"),
     ("to-do list", "todo_list"), ("todo list", "todo_list"),
     ("email", "email"), ("e-mail", "email"),
+    # Generic catch-all LAST — "write a document" with no type still routes.
+    ("document", "document"), ("doc", "document"),
 ]
 
 
+@_doc_template("document")
+def _tpl_document(topic: str, stamp: str) -> str:
+    return f"""# {topic or "Untitled Document"}
+
+> {stamp} · drafted by DeskPet Jarvis
+
+## Summary
+
+(One-paragraph overview of {topic or "the topic"}.)
+
+## Details
+
+-
+
+## Next Steps
+
+-
+"""
+
+
 def create_document(doc_type: str, topic: str) -> str:
+    topic = (topic or "").strip()
+    if not topic:
+        # Tool-level guard: catches BOTH the regex-router path and a native
+        # model call — never silently create a file named after a placeholder.
+        kind_label = (doc_type or "document").replace("_", " ")
+        return (f"Certainly, sir — what should the {kind_label} cover? "
+                "Give me the topic and I shall draft it at once.")
     kind = doc_type if doc_type in _DOC_TEMPLATES else "meeting_notes"
     stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     body = _DOC_TEMPLATES[kind](topic, stamp)
@@ -573,22 +619,149 @@ def create_document(doc_type: str, topic: str) -> str:
 def set_reminder(minutes: float, message: str) -> str:
     seconds = max(1.0, minutes * 60.0)
     msg = (message or "your reminder").strip()
-
-    def fire():
-        when = datetime.now().strftime("%H:%M")
-        if _bridge is not None:
-            try:
-                _bridge.post("notification", event="Notification",
-                             title=f"⏰ Reminder: {msg}")
-            except Exception:
-                pass
-        print(f"[tools] reminder fired at {when}: {msg}")
-
-    timer = threading.Timer(seconds, fire)
-    timer.daemon = True  # never block interpreter / server shutdown
-    timer.start()
+    entry = {
+        "id": uuid.uuid4().hex[:10],
+        "fire_at": round(time.time() + seconds, 3),
+        "message": msg,
+    }
+    with _REMINDERS_LOCK:
+        items = _load_reminders_unlocked()
+        items.append(entry)
+        _save_reminders_unlocked(items)
+    _arm_reminder(entry, seconds)
     human = f"{minutes:g} minute(s)" if minutes < 60 else f"{minutes / 60:g} hour(s)"
     return f"Reminder set for {human} from now: '{msg}'. I will ping you."
+
+
+# ── Durable reminder store ───────────────────────────────────────────────────
+#
+# Reminders used to live only in a daemon thread: a gateway restart or
+# app close silently ate them. Each pending timer is now persisted to
+# pending-reminders.json; restore_reminders() re-arms future entries at
+# boot and fires overdue ones immediately with an "Overdue" marker.
+
+_REMINDERS_LOCK = threading.Lock()
+
+
+def _reminders_file() -> Path:
+    return docs_dir() / "pending-reminders.json"
+
+
+def _load_reminders_unlocked() -> list:
+    f = _reminders_file()
+    if not f.exists():
+        return []
+    try:
+        data = json.loads(f.read_text(encoding="utf-8"))
+    except Exception as exc:
+        log.warning("could not read %s: %s", f.name, exc)
+        return []
+    if not isinstance(data, list):
+        return []
+    return [
+        r for r in data
+        if isinstance(r, dict) and r.get("id") and r.get("fire_at") and r.get("message")
+    ]
+
+
+def _save_reminders_unlocked(items: list) -> None:
+    f = _reminders_file()
+    try:
+        f.parent.mkdir(parents=True, exist_ok=True)
+        tmp = f.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
+        tmp.replace(f)
+    except Exception as exc:
+        log.warning("could not persist reminders to %s: %s", f.name, exc)
+
+
+def _native_toast(title: str) -> None:
+    """OS-level Windows toast (winotify), independent of the pet UI.
+
+    The bridge path only narrates in-bubble; if Electron is busy/hidden
+    the user misses the reminder. winotify fires a real Action Center
+    toast from this process. Lazy import: missing lib must never break
+    reminder delivery.
+    """
+    try:
+        from winotify import Notification, audio
+
+        n = Notification(app_id="DeskPet", title="DeskPet", msg=title)
+        n.set_audio(audio.Silent, loop=False)  # chime handled by the pet
+        n.show()
+    except Exception as exc:
+        log.warning("native toast failed for %r: %s", title, exc)
+
+
+def _push_reminder(entry: dict, *, overdue: bool = False) -> None:
+    msg = str(entry.get("message") or "your reminder")
+    when = datetime.now().strftime("%H:%M")
+    title = f"⏰ {'Overdue reminder' if overdue else 'Reminder'}: {msg}"
+    _native_toast(title)
+    if _bridge is None:
+        log.warning("reminder fired but no pet bridge bound: %s", msg)
+        return
+    try:
+        _bridge.post("notification", event="Notification", title=title)
+        log.info(
+            "reminder fired at %s and pushed to pet: %s%s",
+            when, msg, " (overdue)" if overdue else "",
+        )
+    except Exception as exc:
+        log.warning("reminder push failed for %r: %s", msg, exc)
+
+
+def _arm_reminder(entry: dict, delay_s: float, *, overdue: bool = False) -> None:
+    rid = str(entry.get("id"))
+
+    def fire():
+        # Remove from the store first so a crash right after the push
+        # never double-fires the same reminder.
+        with _REMINDERS_LOCK:
+            items = [r for r in _load_reminders_unlocked() if str(r.get("id")) != rid]
+            _save_reminders_unlocked(items)
+        _push_reminder(entry, overdue=overdue)
+
+    timer = threading.Timer(max(0.5, delay_s), fire)
+    timer.daemon = True  # never block interpreter / server shutdown
+    timer.start()
+
+
+def restore_reminders(now: Optional[float] = None) -> dict:
+    """Boot-time recovery: re-arm future reminders, fire overdue ones.
+
+    `now` lets tests inject a clock. Returns counters for logging.
+    """
+    now_ts = time.time() if now is None else float(now)
+    fired = rearmed = dropped = 0
+    with _REMINDERS_LOCK:
+        for entry in _load_reminders_unlocked():
+            try:
+                fire_at = float(entry["fire_at"])
+            except (KeyError, TypeError, ValueError):
+                dropped += 1
+                continue
+            if fire_at <= now_ts:
+                # Stagger pushes slightly so several overdue reminders
+                # don't collide into one toast burst.
+                _arm_reminder(entry, 0.5 + fired * 1.0, overdue=True)
+                fired += 1
+            else:
+                _arm_reminder(entry, fire_at - now_ts)
+                rearmed += 1
+    if dropped:
+        log.warning("dropped %d malformed reminder entries", dropped)
+    return {"fired": fired, "rearmed": rearmed}
+
+
+def cancel_reminders() -> str:
+    with _REMINDERS_LOCK:
+        items = _load_reminders_unlocked()
+        n = len(items)
+        _save_reminders_unlocked([])
+    if n == 0:
+        return "No pending reminders to cancel, sir."
+    return f"Cancelled {n} pending reminder(s), sir."
 
 
 # ── Tool 7: todo capture (todo.md) ───────────────────────────────────────────
@@ -628,9 +801,58 @@ def todo_list() -> str:
     return "\n".join(out)
 
 
+def compose_daily_briefing() -> str:
+    """One-line proactive briefing: greeting + open to-dos.
+
+    ponytail: todos only — reminders/schedule woven in when there is a
+    real source for them (dispatcher tasks are one-shot timers, not a day
+    plan).
+    """
+    hour = datetime.now().hour
+    greet = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
+    ok, out = safe_tool_call(todo_list)
+    items: list[str] = []
+    if ok:
+        items = [_item_body(ln) for ln in str(out).splitlines() if ln.startswith("- [ ]")]
+    if not items:
+        return f"{greet}, sir. Your to-do list is clear."
+    tail = f" Top of the list: {items[0]}." if items[0] else ""
+    more = f" ({len(items) - 1} more)" if len(items) > 1 else ""
+    return f"{greet}, sir. {len(items)} open to-do item(s).{tail}{more}"
+
+
 def _item_body(line: str) -> str:
     """Strip the checkbox prefix and the _(added ...)_ suffix from an item."""
     return line[6:].split("_(")[0].strip()
+
+
+def compose_evening_recap() -> str:
+    """Evening wind-down line: what got checked off, what's still open.
+
+    ponytail: "- [x]" lines carry no completion timestamp, so the
+    done-count is a today-proxy over the whole todo.md file.
+    """
+    lines: list[str] = []
+    try:
+        f = _todo_file()
+        if f.exists():
+            lines = [ln.rstrip() for ln in f.read_text(encoding="utf-8").splitlines()]
+    except Exception:
+        lines = []
+    done = [ln for ln in lines if ln.startswith("- [x]")]
+    open_items = [ln for ln in lines if ln.startswith("- [ ]")]
+    parts = ["Good evening, sir."]
+    if done:
+        parts.append(f"You wrapped up {len(done)} task(s) today.")
+    else:
+        parts.append("No tasks checked off today.")
+    if open_items:
+        parts.append(f"{len(open_items)} task(s) still open.")
+        first = _item_body(open_items[0])
+        if first:
+            parts.append(f"Still open: {first}.")
+    parts.append("Rest well, sir.")
+    return " ".join(parts)
 
 
 def _norm_item(s: str) -> str:
@@ -935,17 +1157,23 @@ def wikipedia_summary(term: str) -> Optional[str]:
             timeout=8, headers={"User-Agent": "DeskPet-Jarvis/1.0"},
         )
         if r.status_code == 404:
+            # Relevance-ranked full-text search beats opensearch here:
+            # opensearch fuzzy-matches near-miss titles ('nikola tesla
+            # die' → 'Nikola Tesla in popular culture') or misses
+            # multi-word phrases entirely; list=search ranks the right
+            # article first ('Nikola Tesla', 'Fuzzy set', ...).
             s = httpx.get(
                 "https://en.wikipedia.org/w/api.php",
-                params={"action": "opensearch", "search": term, "limit": 1,
-                        "format": "json"},
+                params={"action": "query", "list": "search", "srsearch": term,
+                        "srlimit": 1, "format": "json"},
                 timeout=8, headers={"User-Agent": "DeskPet-Jarvis/1.0"},
             )
-            hits = (s.json() or [None, []])[1]
+            hits = ((s.json() or {}).get("query") or {}).get("search") or []
             if not hits:
                 return None
             r = httpx.get(
-                "https://en.wikipedia.org/api/rest_v1/page/summary/" + quote(hits[0]),
+                "https://en.wikipedia.org/api/rest_v1/page/summary/"
+                + quote(hits[0].get("title") or ""),
                 timeout=8, headers={"User-Agent": "DeskPet-Jarvis/1.0"},
             )
         if r.status_code != 200:
@@ -967,8 +1195,10 @@ def _notes_file() -> Path:
     return docs_dir() / "notes.md"
 
 
-def remember_fact(text: str) -> str:
-    text = (text or "").strip(" .!?")
+def remember_fact(text: str = "", fact: str = "", note: str = "", **_alt) -> str:
+    # 1B models hallucinate argument names ("fact", "note", "information");
+    # accept common synonyms instead of crashing the call.
+    text = (text or fact or note or next(iter(_alt.values()), "") or "").strip(" .!?")
     if not text:
         return "Nothing to remember — tell me the fact."
     f = _notes_file()
@@ -976,11 +1206,26 @@ def remember_fact(text: str) -> str:
         f.write_text("# DeskPet Memory\n\n", encoding="utf-8")
     with f.open("a", encoding="utf-8") as fh:
         fh.write(f"- {text}  _(saved {datetime.now():%Y-%m-%d %H:%M})_\n")
+    try:
+        from .semantic_memory import default_memory_store
+        default_memory_store.add(text)
+    except Exception:
+        pass
     return f"remembered: {text}"
 
 
-def recall_fact(query: str) -> str:
-    query = (query or "").strip().lower()
+def recall_fact(query: str = "", key: str = "", topic: str = "", term: str = "", **_alt) -> str:
+    # Same tolerance: models emit "key"/"topic"/"term" instead of "query".
+    query = (query or key or topic or term or next(iter(_alt.values()), "") or "").strip().lower()
+    try:
+        from .semantic_memory import default_memory_store
+        matches = default_memory_store.search(query, limit=5)
+        if matches:
+            lines = [f"- {item.text}" for item, _ in matches]
+            return "From my memory:\n" + "\n".join(lines)
+    except Exception:
+        pass
+
     f = _notes_file()
     if not f.exists():
         return "I have nothing saved in my memory yet, sir."
@@ -1068,10 +1313,21 @@ def lock_workstation() -> str:
 
 # ── Keyword router (F2 Phase A) ──────────────────────────────────────────────
 
-_RE_REMIND = re.compile(
-    r"\b(?:remind me|set (?:a )?timer|timer)\b\s*"
-    r"(?:in\s+)?(\d+(?:\.\d+)?)?\s*(minutes?|mins?|hours?|hrs?|seconds?|secs?)?",
+_RE_REMIND = re.compile(r"\b(?:remind(?:\s*me)?|reminder|timer)\b", re.IGNORECASE)
+_RE_REMIND_CANCEL = re.compile(
+    r"\b(?:cancel|clear|remove|delete|stop)\b[^.?!]{0,30}\b(?:reminder|timer)s?\b"
+    r"|\b(?:reminder|timer)s?\b[^.?!]{0,20}\b(?:cancel|off)\b",
     re.IGNORECASE,
+)
+
+# Asked when the user clearly wants a reminder but left out the details.
+REMINDER_ASK = (
+    "Certainly, sir — what shall I remind you about, and in how many minutes?"
+)
+
+# Asked when weather intent has no usable city.
+WEATHER_ASK = (
+    "Certainly, sir — which city shall I check the weather for?"
 )
 _RE_TODO_LIST = re.compile(
     r"\b(?:show|list|read)\b.*\b(?:my\s+)?(?:todo|todos|to-dos|tasks?)\b|"
@@ -1107,7 +1363,7 @@ _RE_TODO_ADD = re.compile(
 _RE_DOC = re.compile(
     r"\b(?:write|draft|create|make|prepare)\b(?:\s+(?:me\s+)?(?:a|an|some|the))?"
     r"\s*([a-z\- ]*?(?:meeting\s+notes?|read\s*me|readme|video\s+script|script|outline|"
-    r"changelog|change\s+log|to-do\s+list|todo\s+list|e?-?mail)(?:\s+draft)?)",
+    r"changelog|change\s+log|to-do\s+list|todo\s+list|e?-?mail|documents?)(?:\s+draft)?)",
     re.IGNORECASE,
 )
 _RE_TOPIC = re.compile(r"\b(?:about|on|for|regarding)\s+(.+?)(?:\?|!|\.|$)", re.IGNORECASE)
@@ -1130,7 +1386,10 @@ _RE_TIME = re.compile(
 )
 _RE_STATUS = re.compile(
     r"\b(?:system\s+status|pc\s+status|computer\s+status|how(?:'s| is) my (?:pc|computer|laptop)|"
-    r"cpu\s+usage|ram\s+usage|memory\s+usage|battery\s+(?:status|level)|disk\s+space)\b",
+    r"cpu\s+usage|ram\s+usage|memory\s+usage|battery\s+(?:status|level)|disk\s+space|"
+    r"(?:system|pc|computer)\s+(?:check|health|report|diagnostics?)|"
+    r"check\s+(?:the\s+|my\s+)?(?:system|pc|computer)\b|"
+    r"run\s+an?\s*(?:system|full)\s+(?:check|diagnostics?))\b",
     re.IGNORECASE,
 )
 _RE_CLIP = re.compile(r"\bclipboard\b", re.IGNORECASE)
@@ -1206,6 +1465,25 @@ _RE_DESTRUCTIVE = re.compile(
     r"\bformat\s+(?:my\s+)?(?:pc|computer|disk|drive)\b",
     re.IGNORECASE)
 
+_RE_ACTIVE_WIN = re.compile(
+    r"\b(?:what (?:app|application|window|file) am i (?:on|in|using|editing)|"
+    r"what(?:'s| is) (?:my |the )?(?:active|current) (?:window|app|application|file)|"
+    r"active window|current window|active app|current app)\b",
+    re.IGNORECASE,
+)
+_RE_SCREEN_INSPECT = re.compile(
+    r"\b(?:what(?:'s| is) on my screen|look at my screen|read my screen|"
+    r"read (?:the )?screen|inspect (?:my |the )?screen|"
+    r"what (?:error|stack trace|bug) is on (?:my )?screen|"
+    r"explain (?:the |this )?(?:error|code|message) on (?:my )?screen|"
+    r"what does (?:my |the )?screen say)\b",
+    re.IGNORECASE,
+)
+_RE_RUNNING_APPS = re.compile(
+    r"\b(?:what (?:apps|applications) are (?:open|running)|"
+    r"running (?:apps|applications)|list (?:open|running) (?:apps|applications))\b",
+    re.IGNORECASE,
+)
 _LAUNCH_STOPLIST = {
     "chat", "the chat", "bubble", "the bubble", "settings", "a file", "files",
     "my todo", "my todos", "todo", "todos", "a document", "document", "documents",
@@ -1240,24 +1518,104 @@ def _parse_currency(text: str) -> Optional[Tuple[float, str, str]]:
     return amount, base, target
 
 
-def _parse_reminder(text: str) -> Optional[Tuple[float, str]]:
-    m = _RE_REMIND.search(text)
-    if not m:
+def _wiki_topic_lookup(term: str) -> Optional[str]:
+    """Wikipedia summary for a topic phrase, ignoring interrogative
+    framing ('how did nikola tesla die' → 'nikola tesla')."""
+    stop_lead = {
+        "who", "what", "when", "where", "why", "how", "which",
+        "did", "do", "does", "is", "was", "are", "were",
+        "tell", "me", "please",
+    }
+    words = [w.strip(".,?!'\"") for w in term.split() if w.strip(".,?!'\"")]
+    while words and words[0].lower() in stop_lead:
+        words.pop(0)
+    while len(words) >= 2:
+        res_text = wikipedia_summary(" ".join(words))
+        if res_text:
+            globals()["_LAST_TOPIC"] = " ".join(w.lower() for w in words)
+            return res_text
+        words.pop()
+    return None
+
+
+def _wiki_fulltext_sentences(title: str) -> Optional[str]:
+    """Up to 2 article-body sentences matching an intent word, or None."""
+    try:
+        s = httpx.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={"action": "query", "prop": "extracts", "explaintext": 1,
+                    "redirects": 1, "titles": title, "format": "json"},
+            timeout=8, headers={"User-Agent": "DeskPet-Jarvis/1.0"},
+        )
+        pages = ((s.json() or {}).get("query") or {}).get("pages") or {}
+        extract = next(iter(pages.values()), {}).get("extract") or ""
+        hits = [
+            sn.strip() for sn in re.split(r"(?<=[.!?])\s+", extract)
+            if _RE_INTENT.search(sn) and 30 < len(sn.strip()) < 400
+        ]
+        return " ".join(hits[:2]) or None
+    except Exception:
         return None
-    num = m.group(1)
-    unit = (m.group(2) or "minutes").lower()
-    if num is None:
-        return None  # "remind me" without a duration → ignore
-    value = float(num)
-    if unit.startswith("hour") or unit.startswith("hr"):
-        minutes = value * 60
-    elif unit.startswith("sec"):
-        minutes = max(value / 60, 0.05)
+
+
+# Death/birth-style intents the short intro summary usually cannot answer.
+_RE_INTENT = re.compile(
+    r"\b(?:die|died|dies|dying|death|deaths|dead|killed|kill|murder|"
+    r"born|birth)\b",
+    re.IGNORECASE,
+)
+
+
+def _wiki_intent_lookup(q: str) -> Optional[str]:
+    """Topic lookup that digs into the article body when the question asks
+    something the intro summary does not cover ('how did tesla die')."""
+    res_text = _wiki_topic_lookup(q)
+    m = re.search(r"^From Wikipedia on '([^']+)':\s*(.*)$", res_text or "")
+    if not (res_text and m):
+        return res_text
+    if not _RE_INTENT.search(q) or _RE_INTENT.search(m.group(2)):
+        return res_text
+    extra = _wiki_fulltext_sentences(m.group(1))
+    if not extra:
+        return res_text
+    return f"From Wikipedia on '{m.group(1)}': {extra}"
+
+
+def _parse_reminder(text: str) -> Optional[Tuple[float, str]]:
+    """Extract (minutes, task) from reminder/timer intent.
+
+    The duration may sit anywhere in the sentence and may be a word
+    amount — 'set a timer for two minutes to stretch' parses exactly
+    like 'remind me in 5 mins to hydrate'. Returns None when the intent
+    is present but no usable duration is found (caller asks once).
+    """
+    if not _RE_REMIND.search(text or ""):
+        return None
+    dur = _RE_LENIENT_DURATION.search(text)
+    if not dur:
+        return None
+    if dur.group(1) is not None:
+        value = float(dur.group(1))
+    else:
+        head = dur.group(0).split()[0].lower().strip(".,")
+        head = head.removesuffix("s") if head not in ("half",) else head
+        value = _WORD_NUMBERS.get(head)
+        if value is None:
+            return None
+    unit = (dur.group(2) or "minutes").lower()
+    if unit.startswith("h"):
+        minutes = value * 60.0
+    elif unit.startswith("s"):
+        minutes = max(value / 60.0, 0.05)
     else:
         minutes = value
-    msg = text[m.end():]
-    msg = re.sub(r"^\s*(?:to|about|that|for)\s+", "", msg, flags=re.IGNORECASE)
-    return minutes, _clean(msg) or "your reminder"
+    msg = text[: dur.start()] + " " + text[dur.end():]
+    msg = re.sub(
+        r"\b(?:please|jarvis|hey|ok(?:ay)?|set|start|a|an|the|timer|reminder|"
+        r"remind\s+me|remind|for|in|to)\b",
+        " ", msg, flags=re.IGNORECASE,
+    )
+    return minutes, _clean(re.sub(r"\s+", " ", msg)) or "your reminder"
 
 
 def _parse_math(text: str) -> Optional[str]:
@@ -1321,27 +1679,208 @@ def _parse_units(text: str) -> Optional[str]:
     return convert_units(amount, u1, u2)
 
 
-def route_tools(text: str) -> List[Tuple[str, str]]:
+_RE_AFFIRM = re.compile(
+    r"^\s*(?:yes|yeah|yep|yup|ok|okay|sure|proceed|go ahead|go on|do it|"
+    r"confirm|please do|affirmative|sounds good)\b",
+    re.IGNORECASE,
+)
+_RE_DECLINE = re.compile(
+    r"^\s*(?:no\b|nope|nah\b|cancel|stop\b|don't|do not|never ?mind|negative)",
+    re.IGNORECASE,
+)
+
+# Pending action awaiting user confirmation under clarify="confirm_all".
+# Single-user desktop app: one slot is enough.
+_PENDING_CONFIRM: dict | None = None
+
+# Set right after a REMINDER_ASK so the NEXT message ("two minutes to
+# stretch") is interpreted as the missing duration/task instead of
+# falling through unmatched. Single-shot: cleared on the next turn.
+_REMIND_PENDING: bool = False
+
+# Same pattern for the weather ask: next bare place name completes it.
+_WEATHER_PENDING: bool = False
+
+# Last entity a knowledge lookup succeeded on ('who is nikola tesla' →
+# 'nikola tesla'). Pronoun follow-ups ('how did he die') substitute it;
+# without this the router has no subject to act on and the model freewheels.
+_LAST_TOPIC: Optional[str] = None
+
+# Chit-chat / command words that disqualify a phrase from being treated
+# as an encyclopedic topic lookup. Question words are deliberately NOT
+# here ("how did nikola tesla die" is a knowledge request); first/second
+# person pronouns, greetings and imperatives are.
+_RE_TOPIC_BLOCKLIST = re.compile(
+    r"\b(?:hi|hello|hey|good|morning|evening|night|thanks|thank|"
+    r"sorry|please|yes|no|ok(?:ay)?|jarvis|i|you|we|my|your|me|us|"
+    r"this|that|it|they|he|she|them|his|her|their|"
+    r"write|draft|create|read|delete|remove|clear|add|mark|done|"
+    r"summar\w+|translate|rewrite|convert|calculat\w+|comput\w+|"
+    r"search|find|check|remember|recall|note|take|capture|lock|"
+    r"mute|unmute|increase|decrease|turn|send|schedule|list)\b",
+    re.IGNORECASE,
+)
+
+_WORD_NUMBERS = {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+    "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11,
+    "twelve": 12, "fifteen": 15, "twenty": 20, "thirty": 30,
+    "forty-five": 45, "half": 0.5,
+}
+_RE_LENIENT_DURATION = re.compile(
+    r"\b(?:(\d+(?:\.\d+)?)|one|two|three|four|five|six|seven|eight|nine|ten|"
+    r"eleven|twelve|fifteen|twenty|thirty|forty[ -]?five|an? half|half)"
+    r"\s*(?:an?\s+)?"
+    r"(seconds?|secs?|minutes?|mins?|hours?|hrs?)\b",
+    re.IGNORECASE,
+)
+_RE_LENIENT_FILLER = re.compile(
+    r"^(?:please|jarvis|hey|hi|ok(?:ay)?|set|start|a|an|the|timer|reminder|"
+    r"remind\s+me|for|in|to)\b[\s,:-]*",
+    re.IGNORECASE,
+)
+
+
+def _parse_lenient_reminder(text: str) -> tuple[float, str] | None:
+    """Best-effort (minutes, task) from a follow-up like 'two minutes to
+    stretch'. Returns None when no usable duration is present."""
+    m = _RE_LENIENT_DURATION.search(text or "")
+    if not m:
+        return None
+    amount = m.group(1)
+    if amount is not None:
+        value = float(amount)
+    else:
+        word = (m.group(0).split() or [""])[0].lower().replace(" ", "-")
+        word = word.removesuffix("s")
+        value = _WORD_NUMBERS.get(word, _WORD_NUMBERS.get(m.group(0).strip().lower(), None))
+        if value is None:
+            return None
+    unit = m.group(2).lower()
+    if unit.startswith("h"):
+        minutes = value * 60.0
+    elif unit.startswith("s"):
+        minutes = value / 60.0
+    else:
+        minutes = value
+    task = (text[: m.start()] + " " + text[m.end():]).strip()
+    while True:
+        stripped = _RE_LENIENT_FILLER.sub("", task).strip(" ,.-")
+        if stripped == task:
+            break
+        task = stripped
+    return (minutes, task or "your reminder")
+
+
+def route_tools(
+    text: str,
+    prior_turns: int = 0,
+    clarify: str = "ambiguous",
+) -> List[Tuple[str, str]]:
     """Scan the user's latest message, run matched tools, return
     (label, result) pairs for the gateway to relay or speak canned.
 
     Pure keyword routing (F2 Phase A). Deterministic, fast, and honest —
     the 1B model then composes the spoken reply from real tool output.
+
+    `prior_turns` is the number of messages before this one in the live
+    conversation. When > 0 the router grows conservative: broad
+    "who is / what is" lookups are skipped entirely (they are usually
+    follow-ups whose subject lives in history), and the gateway reserves
+    canned replies for opening turns so follow-up answers always flow
+    through the model WITH conversation context.
+
+    `clarify` is the runtime-config confirmation strength:
+      - "off"         — never emit ("clarify", ...) hits; under-specified
+                        requests fall through to the model instead.
+      - "ambiguous"   — default behaviour: ask only when key details are
+                        missing (no reminder duration, no document topic).
+      - "confirm_all" — ask "Shall I proceed with: ...?" BEFORE running
+                        any state-changing branch (set_reminder,
+                        todo_add, create_document, launch_app) and return
+                        without executing it.
     """
     text = _clean(text or "")
     if not text:
         return []
     results: List[Tuple[str, str]] = []
 
+    global _PENDING_CONFIRM, _REMIND_PENDING, _WEATHER_PENDING
+    had_remind_pending = _REMIND_PENDING
+    _REMIND_PENDING = False
+    had_weather_pending = _WEATHER_PENDING
+    _WEATHER_PENDING = False
+
     def run(func, *args, label: str):
         ok, out = safe_tool_call(func, *args)
         results.append((label, out))
 
+    # 0 — resolve a pending confirm_all action from the previous turn.
+    if _PENDING_CONFIRM is not None:
+        pending = _PENDING_CONFIRM
+        if _RE_DECLINE.match(text):
+            _PENDING_CONFIRM = None
+            results.append(("confirm_cancel", "Very good, sir - cancelled."))
+            return results
+        if _RE_AFFIRM.match(text):
+            _PENDING_CONFIRM = None
+            run(pending["func"], *pending["args"], label=pending["label"])
+            return results
+        # Anything else reads as a new topic; abandon the stale action.
+        _PENDING_CONFIRM = None
+
     # 1 — reminders (checked first: "remind me in 1 minute to X")
+    if _RE_REMIND_CANCEL.search(text):
+        run(cancel_reminders, label="cancel_reminders")
+        return results
     rem = _parse_reminder(text)
     if rem:
+        if clarify == "confirm_all":
+            _PENDING_CONFIRM = {
+                "label": "set_reminder", "func": set_reminder,
+                "args": (rem[0], rem[1]),
+            }
+            results.append(("clarify",
+                f"Shall I proceed with: a reminder in {rem[0]:g} minute(s) "
+                f"for '{rem[1]}', sir?"))
+            return results
         run(set_reminder, rem[0], rem[1], label="set_reminder")
         return results
+    # Follow-up to a previous "what shall I remind you about?" ask:
+    # "two minutes to stretch" now completes the reminder instead of
+    # falling through unmatched (which made the assistant ask twice).
+    if had_remind_pending and clarify != "confirm_all":
+        lenient = _parse_lenient_reminder(text)
+        if lenient is not None:
+            run(set_reminder, lenient[0], lenient[1], label="set_reminder")
+            return results
+    # Follow-up to a previous weather ask: a bare place name ("Mumbai")
+    # completes the request instead of re-asking forever.
+    if had_weather_pending and clarify != "confirm_all":
+        guess = re.sub(
+            r"\b(?:weather|temperature|forecast|the|in|at|for|today|now|please)\b",
+            " ", text, flags=re.IGNORECASE,
+        ).strip(" ,.?!")
+        if (
+            guess
+            and 1 <= len(guess.split()) <= 3
+            and not re.search(
+                r"\b(?:hi|hello|hey|thanks|thank|yes|no|ok(?:ay)?|"
+                r"never\s*mind|cancel|forget|stop|nothing)\b",
+                guess, re.IGNORECASE,
+            )
+        ):
+            run(get_weather, guess.title(), label="get_weather")
+            return results
+    if _RE_REMIND.search(text):
+        # Intent without a usable duration/task → ask instead of guessing.
+        # ("remind me to stretch" must not silently become a 5-minute timer.)
+        # clarify="off" skips the canned ask — the message falls through to
+        # the model instead.
+        if clarify != "off":
+            _REMIND_PENDING = True
+            results.append(("clarify", REMINDER_ASK))
+            return results
 
     # 2 — todo family: clear → remove → done → list → add
     if _RE_TODO_CLEAR.search(text):
@@ -1360,7 +1899,15 @@ def route_tools(text: str) -> List[Tuple[str, str]]:
         return results
     m = _RE_TODO_ADD.search(text)
     if m:
-        run(todo_add, m.group(1) or m.group(2), label="todo_add")
+        item = m.group(1) or m.group(2)
+        if clarify == "confirm_all":
+            _PENDING_CONFIRM = {
+                "label": "todo_add", "func": todo_add, "args": (item,),
+            }
+            results.append(("clarify",
+                f"Shall I proceed with: adding '{item}' to your to-do list, sir?"))
+            return results
+        run(todo_add, item, label="todo_add")
         return results
 
     # 2b — destructive requests: refuse firmly, run nothing
@@ -1392,8 +1939,25 @@ def route_tools(text: str) -> List[Tuple[str, str]]:
                 break
         topic_m = _RE_TOPIC.search(text)
         topic = _clean(topic_m.group(1)) if topic_m else ""
-        run(create_document, kind, topic, label="create_document")
-        return results
+        if not topic:
+            # Missing subject → ask rather than create a file named
+            # after a generic placeholder. clarify="off" lets the model
+            # handle the under-specified request instead.
+            if clarify != "off":
+                results.append(("clarify", f"Certainly, sir — what should the {kind} cover?"))
+                return results
+        elif clarify == "confirm_all":
+            _PENDING_CONFIRM = {
+                "label": "create_document", "func": create_document,
+                "args": (kind, topic),
+            }
+            results.append(("clarify",
+                f"Shall I proceed with: drafting a {kind.replace('_', ' ')} "
+                f"document about '{topic}', sir?"))
+            return results
+        else:
+            run(create_document, kind, topic, label="create_document")
+            return results
 
     # 3b — currency conversion ("convert 1 usd to inr")
     cur = _parse_currency(text)
@@ -1419,10 +1983,17 @@ def route_tools(text: str) -> List[Tuple[str, str]]:
     if _RE_WEATHER.search(text):
         cm = _RE_CITY.search(text)
         city = _clean(cm.group(1)) if cm else None
-        if city and city.lower() in ("the", "a", "it", "this"):
+        if city and city.lower() in ("the", "a", "it", "this", "my", "here"):
             city = None
-        run(get_weather, city, label="get_weather")
-        return results
+        if city is None:
+            if clarify != "off":
+                # Ask once; the next bare place name completes the request.
+                _WEATHER_PENDING = True
+                results.append(("clarify", WEATHER_ASK))
+                return results
+        else:
+            run(get_weather, city, label="get_weather")
+            return results
 
     # 5 — time / date
     if _RE_TIME.search(text):
@@ -1480,6 +2051,24 @@ def route_tools(text: str) -> List[Tuple[str, str]]:
         run(open_url, m.group(1) or m.group(2), label="open_url")
         return results
 
+    # 7f — screen & active window perception
+    if _RE_ACTIVE_WIN.search(text):
+        from . import screen_context
+        run(screen_context.get_active_window, label="active_window")
+        return results
+
+    if _RE_SCREEN_INSPECT.search(text):
+        from . import screen_context
+        run(screen_context.inspect_screen, label="inspect_screen")
+        return results
+
+    if _RE_RUNNING_APPS.search(text):
+        from . import screen_context
+        run(screen_context.get_running_apps_summary, label="running_apps")
+        return results
+
+    # 7g — vocalize / speak aloud — TTS removed from the project
+
     # 8 — launch app
     m = _RE_LAUNCH.search(text)
     if m:
@@ -1488,22 +2077,90 @@ def route_tools(text: str) -> List[Tuple[str, str]]:
             if name.endswith(tail):
                 name = name[: -len(tail)].strip()
         if name and name.lower() not in _LAUNCH_STOPLIST and len(name.split()) <= 3:
+            if clarify == "confirm_all":
+                _PENDING_CONFIRM = {
+                    "label": "launch_app", "func": launch_app, "args": (name,),
+                }
+                results.append(("clarify",
+                    f"Shall I proceed with: launching {name}, sir?"))
+                return results
             run(launch_app, name, label="launch_app")
             return results
 
-    # 9 — who/what questions: try Wikipedia first, then web search
+    # 9 — who/what questions: try Wikipedia first, then web search.
+    # Referential mid-chat forms ("what is it / who is he") still skip —
+    # Wikipedia-ing a literal pronoun is exactly how follow-ups used to
+    # break. Named subjects route regardless of turn position, so
+    # follow-ups like "who was Nikola Tesla's rival" get real answers
+    # instead of native-round rambling.
     m = _RE_WHOIS.search(text)
     if m:
-        res = wikipedia_summary(_clean(m.group(1)))
-        if res:
-            results.append(("wikipedia", res))
-            return results
+        subject = _clean(m.group(1))
+        if subject and not re.match(
+            r"^(?:he|she|it|they|that|this|his|her|their|them)\b", subject,
+            re.IGNORECASE,
+        ):
+            res = wikipedia_summary(subject)
+            if res:
+                globals()["_LAST_TOPIC"] = subject.lower()
+                results.append(("wikipedia", res))
+                return results
 
     m = _RE_SEARCH.search(text)
     if m:
-        query = _clean(m.group(1)) or text
-        run(web_search, query, label="web_search")
-        return results
+        # "search for X" / "look up X" are explicit commands — always route.
+        implicit_whois = re.match(r"^\s*who\s+(?:is|was)\b", text, re.IGNORECASE)
+        subject_after = text[implicit_whois.end():].strip() if implicit_whois else ""
+        referential = bool(re.match(
+            r"^(?:he|she|it|they|that|this|his|her|their|them)\b",
+            subject_after, re.IGNORECASE,
+        ))
+        if not referential:
+            query = _clean(m.group(1)) or text
+            run(web_search, query, label="web_search")
+            return results
+
+    # 9a — pronoun follow-ups ("how did he die", "what happened to her").
+    # The subject is referential and the topic blocklist rightly rejects a
+    # literal pronoun, so resolve against the last topic a knowledge lookup
+    # succeeded on. Without this the text routes nowhere and the armed-tools
+    # native round freewheels refusals + fabrications.
+    if re.search(r"\b(?:he|she|him|her)\b", text, re.IGNORECASE) and _LAST_TOPIC:
+        words = [
+            w for w in re.findall(r"[a-z']+", text.lower())
+            if w not in {
+                "how", "what", "when", "where", "why", "which", "who", "whom",
+                "did", "do", "does", "was", "were", "is", "are",
+                "he", "she", "him", "her", "his", "hers", "their",
+                "the", "a", "an", "to", "of", "in", "at", "on",
+            } and len(w) > 1
+        ]
+        # Bare referentials ("who is he?") carry nothing new — the model
+        # answers from history. Only questions with real content route.
+        if words:
+            q = _LAST_TOPIC + " " + " ".join(words)
+            res_text = _wiki_intent_lookup(q)
+            if res_text:
+                results.append(("wikipedia", res_text))
+                return results
+            run(web_search, q, label="web_search")
+            return results
+
+    # 9b — knowledge lookup: bare topics AND open questions that name a
+    # thing ("nikola tesla death", "how did nikola tesla die"). These are
+    # requests for facts, not chat — Wikipedia (progressively trimmed)
+    # then web search, instead of letting the armed-tools native round
+    # freewheel refusals.
+    m = re.match(r"^([A-Za-z][A-Za-z'.]*(?:\s+[A-Za-z][A-Za-z'.]*){1,5})[?.!]*$", text)
+    if m:
+        low = " " + m.group(1).lower() + " "
+        if not re.search(_RE_TOPIC_BLOCKLIST, low):
+            res_text = _wiki_intent_lookup(_clean(m.group(1)))
+            if res_text:
+                results.append(("wikipedia", res_text))
+                return results
+            run(web_search, _clean(m.group(1)), label="web_search")
+            return results
 
     return results
 
@@ -1525,6 +2182,29 @@ _CANNED_REMIND = re.compile(r"Reminder set for (.+) from now: '(.+)'")
 
 def canned_reply(label: str, result: str) -> Optional[str]:
     """Fixed Jarvis-voice line for a tool result, or None → model composes."""
+    if label == "cancel_reminders":
+        result = (result or "").strip()
+        return result if result.startswith(("Cancelled", "No pending")) else None
+    if label == "get_weather":
+        # Ready-made factual line ("Mumbai, India: 26.9°C, light drizzle
+        # (...)"). Relay verbatim — the 1B sometimes "honestly" claims it
+        # cannot access weather even when handed the reading.
+        if result and not re.match(r"^(?:no |could not|weather unavailable)", result, re.I):
+            return result.strip()
+        return None
+    if label == "wikipedia":
+        # Ready-made prose — relay verbatim. The 1B model sometimes
+        # "honestly" claims it lacks access even when handed a full
+        # summary; Wikipedia text needs no shaping anyway.
+        if result and "No Wikipedia article" not in result:
+            return result.strip()
+        return None
+    if label == "web_search":
+        # Wiki-backed fallback results are ready-made prose — relay them
+        # like wikipedia hits. Genuine DDG snippets stay model-composed.
+        if result and result.startswith("From Wikipedia"):
+            return result.strip()
+        return None
     if label == "todo_clear":
         if "already empty" in result:
             return "Your to-do list is already empty, sir — nothing to clear."
@@ -1585,4 +2265,10 @@ def canned_reply(label: str, result: str) -> Optional[str]:
         return result
     if label == "safety_refusal":
         return result
+    if label == "active_window":
+        return f"You are currently working in {result}, sir."
+    if label == "running_apps":
+        return f"{result}, sir."
+    if label == "speak":
+        return "Spoken aloud, sir."
     return None

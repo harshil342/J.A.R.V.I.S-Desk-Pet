@@ -36,6 +36,12 @@ adapters/**/*.gguf
 # Local scratch dir for one-off assets/exports
 temp/
 
+# Agent-generated one-off project folders — kept on disk, never committed
+scratch-video/
+saas-explainer-video/
+theme-build/
+.kimchi/
+
 # Planning / agent working files
 task_plan.md
 findings.md
@@ -58,3 +64,6 @@ adapters/.manifest.json
 
 # uv lock — keep
 # (don't ignore uv.lock; it's needed for reproducible installs)
+
+# Loose one-off screenshots/logos at repo root
+/*.png

@@ -173,7 +173,7 @@ node hooks/openclaw-install.js
 
 ## Windows 说明
 
-- **安装包**：OpenBMB MiniCPM Desk Pet Releases 提供独立的 Windows x64 和 Windows ARM64 NSIS 安装包。Intel / AMD Windows 设备下载 `MiniCPM-Desk-Pet-Setup-<version>-x64.exe`，Windows on ARM 设备下载 `MiniCPM-Desk-Pet-Setup-<version>-arm64.exe`。
+- **安装包**：Deskpet Assistant Releases 提供独立的 Windows x64 和 Windows ARM64 NSIS 安装包。Intel / AMD Windows 设备下载 `MiniCPM-Desk-Pet-Setup-<version>-x64.exe`，Windows on ARM 设备下载 `MiniCPM-Desk-Pet-Setup-<version>-arm64.exe`。
 - **自动更新**：Windows 安装包使用 `electron-updater`，更新时会保持当前匹配的架构。
 
 ## macOS 说明
@@ -186,6 +186,6 @@ node hooks/openclaw-install.js
 ## Linux 说明
 
 - **源码运行**（`npm start`）：默认启用 Electron sandbox。如果你的 Linux 开发环境仍然遇到 chrome-sandbox 初始化失败，可临时使用 `CLAWD_DISABLE_SANDBOX=1 npm start` 作为兼容方案。
-- **安装包**：AppImage 和 `.deb` 可从 [OpenBMB MiniCPM Desk Pet Releases](https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases) 下载。deb 安装后应用图标会出现在 GNOME 应用菜单。
+- **安装包**：AppImage 和 `.deb` 可从 [Releases 页面](https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases) 下载。deb 安装后应用图标会出现在 GNOME 应用菜单。
 - **终端聚焦**：依赖 `wmctrl` 或 `xdotool`（有一个就行）。安装：`sudo apt install wmctrl` 或 `sudo apt install xdotool`。
 - **自动更新**：源码运行时，"检查更新"会执行 `git pull` + `npm install`（依赖有变化时）并自动重启。

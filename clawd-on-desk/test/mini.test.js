@@ -135,7 +135,7 @@ describe("mini mode entry timing", () => {
     assert.equal(mini.getMiniMode(), true);
   });
 
-  it("via-menu mini handoff preloads mini-enter offscreen before revealing the pet", () => {
+  it("via-menu entry flies straight to the dock position, then plays mini-enter", () => {
     loader = loadMiniWithElectron({
       getAllDisplays() {
         return [{ bounds: { x: 0, y: 0, width: 800, height: 600 }, workArea: { x: 0, y: 0, width: 800, height: 600 } }];
@@ -143,21 +143,27 @@ describe("mini mode entry timing", () => {
     });
     const stateLog = [];
     const theme = cloneTheme(_defaultTheme);
-    const ctx = makeCtx(theme, stateLog, 710);
+    const ctx = makeCtx(theme, stateLog, 600);
     const mini = loader.initMini(ctx);
 
     mini.enterMiniMode({ x: 0, y: 0, width: 800, height: 600 }, true, "right");
-    mock.timers.tick(360);
 
-    assert.deepStrictEqual(stateLog, ["mini-enter"]);
+    // Mid-flight: window is travelling toward the dock, no state applied yet.
+    mock.timers.tick(120);
+    assert.deepStrictEqual(stateLog, []);
     assert.notEqual(ctx.getBoundsSnapshot().x, mini.getCurrentMiniX());
     assert.equal(mini.getMiniTransitioning(), true);
 
-    mock.timers.tick(300);
+    // Landed (350ms parabola): mini-enter applied at the dock position —
+    // the window never leaves screen bounds.
+    mock.timers.tick(260);
+    assert.deepStrictEqual(stateLog, ["mini-enter"]);
     assert.equal(ctx.getBoundsSnapshot().x, mini.getCurrentMiniX());
 
-    mock.timers.tick(1020);
-
+    // Preload window (300ms) then enter animation settle (1000ms) — chained
+    // mock timers need one tick per link.
+    mock.timers.tick(400);
+    mock.timers.tick(1100);
     assert.deepStrictEqual(stateLog, ["mini-enter", "mini-idle"]);
     assert.equal(mini.getMiniTransitioning(), false);
     assert.equal(mini.getMiniMode(), true);
@@ -187,6 +193,35 @@ describe("mini mode entry timing", () => {
     ]);
     assert.equal(mini.getMiniMode(), false);
     assert.equal(mini.getMiniTransitioning(), true);
+  });
+
+  it("pref miniDockSide=left targets the left edge from menu entry even when the pet sits nearer right", () => {
+    loader = loadMiniWithElectron({
+      getAllDisplays() {
+        return [{ bounds: { x: 0, y: 0, width: 800, height: 600 }, workArea: { x: 0, y: 0, width: 800, height: 600 } }];
+      },
+    });
+    const stateLog = [];
+    const rendererEvents = [];
+    const theme = cloneTheme(_defaultTheme);
+    // x=710 puts the pet's center well into the right half of the work area.
+    const ctx = makeCtx(theme, stateLog, 710);
+    ctx.getMiniDockSidePref = () => "left";
+    let persistedEdge = null;
+    ctx.setMiniDockSidePref = (edge) => { persistedEdge = edge; };
+    ctx.sendToRenderer = (...args) => rendererEvents.push(args);
+    const mini = loader.initMini(ctx);
+
+    mini.enterMiniViaMenu();
+
+    assert.deepStrictEqual(rendererEvents[0], [
+      "mini-mode-change",
+      true,
+      "left",
+      { preEntry: true },
+    ]);
+    assert.equal(mini.getMiniEdge(), "left");
+    assert.equal(persistedEdge, null, "menu entry must not rewrite the pref");
   });
 
   it("drag-snap still plays full mini-enter even when the cursor is over the pet", () => {

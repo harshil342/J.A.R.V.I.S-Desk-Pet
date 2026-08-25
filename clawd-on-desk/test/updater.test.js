@@ -635,7 +635,7 @@ describe("updater visual flow", () => {
     assert.deepStrictEqual(bubbles.map((bubble) => bubble.mode), ["checking", "available", "ready"]);
     assert.match(bubbles[1].title, /ARM64/);
     assert.match(bubbles[1].message, /native Windows ARM64 installer/i);
-    assert.match(bubbles[1].message, /MiniCPM Desk Pet v0\.6\.1/);
+    assert.match(bubbles[1].message, /Deskpet Assistant v0\.6\.1/);
     assert.doesNotMatch(bubbles[1].message, /vv0\.6\.1/);
     assert.strictEqual(openedUrls[0], "https://example.invalid/arm64.exe");
     assert.strictEqual(autoUpdateChecks, 0);

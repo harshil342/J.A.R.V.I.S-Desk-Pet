@@ -75,6 +75,14 @@ function refreshTheme() {
 
 refreshTheme();
 
+function getMouseSleepTimeoutMs() {
+  if (typeof ctx.getIdleSleepMs === "function") {
+    const ms = Number(ctx.getIdleSleepMs());
+    if (Number.isFinite(ms) && ms > 0) return ms;
+  }
+  return MOUSE_SLEEP_TIMEOUT;
+}
+
 // ── Unified main tick (cursor polling for eye tracking + sleep + mini peek) ──
 // Input routing is handled by hitWin — no setIgnoreMouseEvents toggling here.
 function startMainTick() {
@@ -292,7 +300,7 @@ function runMainTickOnce() {
       }
 
       // 60s no mouse movement → yawning → dozing
-      if (!hasTriggeredYawn && elapsed >= MOUSE_SLEEP_TIMEOUT) {
+      if (!hasTriggeredYawn && elapsed >= getMouseSleepTimeoutMs()) {
         hasTriggeredYawn = true;
         if (!isMouseIdle && !shouldSuppressPassiveIpc()) ctx.sendToRenderer("eye-move", 0, 0);
         if (SLEEP_MODE === "direct") {

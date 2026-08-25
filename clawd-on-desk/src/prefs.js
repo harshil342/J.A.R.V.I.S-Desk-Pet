@@ -45,7 +45,7 @@ const {
 } = require("./text-scale");
 const { DEFAULT_THEME_ID } = require("./default-theme");
 
-const CURRENT_VERSION = 11;
+const CURRENT_VERSION = 12;
 const DEFAULT_INTEGRATION_INSTALLED_IDS = Object.freeze(["claude-code", "codex"]);
 const DEFAULT_INTEGRATION_INSTALLED_SET = new Set(DEFAULT_INTEGRATION_INSTALLED_IDS);
 
@@ -367,6 +367,76 @@ const SCHEMA = {
     defaultFactory: () => ({}),
     normalize: normalizeDismissedUpdateVersions,
   },
+  // ── Assistant section (Settings → Deskpet Assistant → Assistant) ──
+  // Look & feel of the chat bubbles plus assistant behavior toggles. Pure
+  // data prefs: reactive projection lives in the chat renderer, which reads
+  // these on its own schedule.
+  assistantAccent: {
+    type: "string",
+    default: "#8A939B",
+    validate: (v) => /^#[0-9a-fA-F]{6}$/.test(v),
+  },
+  // Which swatch the accent came from ("custom" = user picked their own via
+  // the color input). Kept beside assistantAccent so the UI can re-highlight
+  // the right preset button without reverse-matching hex values.
+  accentPreset: {
+    type: "string",
+    default: "custom",
+    enum: ["cyan", "violet", "amber", "green", "custom"],
+  },
+  bubbleOpacity: {
+    type: "number",
+    default: 0.94,
+    validate: (v) => Number.isFinite(v) && v >= 0.5 && v <= 1,
+  },
+  bubbleBlur: {
+    type: "number",
+    default: 28,
+    validate: (v) => Number.isFinite(v) && v >= 0 && v <= 40,
+  },
+  bubbleTextScale: {
+    type: "number",
+    default: 1,
+    validate: (v) => Number.isFinite(v) && v >= 0.85 && v <= 1.3,
+  },
+  bubbleDensity: {
+    type: "string",
+    default: "comfortable",
+    enum: ["comfortable", "compact"],
+  },
+  typewriterEnabled: { type: "boolean", default: true },
+  // What the assistant calls the user in conversation. Trimmed, non-empty,
+  // capped at 24 chars so it fits one bubble line.
+  assistantAddress: {
+    type: "string",
+    default: "sir",
+    validate: (v) => typeof v === "string" && v.trim().length > 0 && v.length <= 24,
+  },
+  briefingHour: {
+    type: "number",
+    default: 8,
+    validate: (v) => Number.isInteger(v) && v >= 0 && v <= 23,
+  },
+  recapHour: {
+    type: "number",
+    default: 21,
+    validate: (v) => Number.isInteger(v) && v >= 0 && v <= 23,
+  },
+  reminderChime: { type: "boolean", default: true },
+  autoMemory: { type: "boolean", default: true },
+  clarifyStrength: {
+    type: "string",
+    default: "ambiguous",
+    enum: ["off", "ambiguous", "confirm_all"],
+  },
+  idleSleepSeconds: {
+    type: "number",
+    default: 60,
+    validate: (v) => Number.isInteger(v) && v >= 15 && v <= 300,
+  },
+  // Mini-mode dock side override for the assistant avatar. Empty string =
+  // follow the runtime miniEdge value; otherwise pins left/right.
+  miniDockSide: { type: "string", default: "", enum: ["", "left", "right"] },
 };
 
 const SCHEMA_KEYS = Object.freeze(Object.keys(SCHEMA));
@@ -593,6 +663,14 @@ function migrate(raw) {
   // Settings before Clawd manages its hooks/plugins again.
   if (out.version < 11) {
     out.version = 11;
+  }
+  // v11 -> v12: introduce the Assistant settings section (accent color,
+  // bubble look & feel, briefing hour, clarify strength, idle sleep, mini
+  // dock side). No data conversion needed — new keys fill in from schema
+  // defaults via validate(); the version bump just records that the schema
+  // grew.
+  if (out.version < 12) {
+    out.version = 12;
   }
   if ((typeof out.version === "number" ? out.version : 0) < CURRENT_VERSION) {
     out.version = CURRENT_VERSION;

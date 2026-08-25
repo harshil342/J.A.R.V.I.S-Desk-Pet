@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="assets/tray-icon.png" width="128" alt="MiniCPM Desk Pet">
+  <img src="assets/tray-icon.png" width="128" alt="Deskpet Assistant">
 </p>
-<h1 align="center">MiniCPM Desk Pet</h1>
+<h1 align="center">Deskpet Assistant</h1>
 <p align="center">
   <a href="README.zh-CN.md">简体中文</a>
   ·
@@ -18,15 +18,18 @@
   <img src="https://img.shields.io/badge/license-AGPL--3.0--only-green" alt="License">
 </p>
 
-MiniCPM Desk Pet is a local-first desktop pet powered by MiniCPM. It brings a lightweight desktop companion, a local MiniCPM chat bubble, first-launch model onboarding, and coding-agent state reactions into one app.
+Deskpet Assistant is a local-first desktop assistant powered by the MiniCPM model. It combines a desktop pet companion, a J.A.R.V.I.S.-style local chat bubble with real tools, first-launch model onboarding, and coding-agent state reactions into one app.
 
-This fork keeps the MiniCPM product identity, default themes, model onboarding, packaged sidecar resources, and adapter paths. The v0.8 to v0.10 upstream feature migration is integrated around the Electron app, settings, hooks, state management, packaging, and tests; inframodel inference code is intentionally left untouched.
+This fork keeps the MiniCPM model identity, default themes, model onboarding, packaged sidecar resources, and adapter paths under the Deskpet Assistant product name. The v0.8 to v0.10 upstream feature migration is integrated around the Electron app, settings, hooks, state management, packaging, and tests; inframodel inference code is intentionally left untouched.
 
 ## Highlights
 
 - **Local MiniCPM chat**: first-launch environment checks, MiniCPM5-1B-GGUF model download, warm-up, chat bubble, and local model status.
+- **J.A.R.V.I.S. assistant brain**: 29 built-in tools (weather, web search, app launcher, documents, reminders, todos, system status, clipboard, screenshots, unit/currency conversion, memory) with conversation continuity — follow-up questions keep their context — and a clarify-before-acting policy for ambiguous actions.
+- **Proactive behavior**: spoken reminder bubbles ("⏰ Reminder: …"), a daily morning briefing with your open to-dos (`DESKPET_BRIEF_HOUR`, default 8), and automatic saving of durable facts you mention in passing.
+- **Mini mode**: drag the pet to any screen edge and it docks as a compact, fully-visible companion; menu entry walks it flush to the edge without leaving screen bounds.
 - **Model management**: Hugging Face / ModelScope download flow, local model path selection, backend restart, and log access.
-- **Persona adapters**: LoRA adapters are managed from `Settings...` -> `MiniCPM` without changing the base model used for pet narration.
+- **Persona adapters**: LoRA adapters are managed from `Settings...` -> `Deskpet` without changing the base model used for pet narration.
 - **Desktop pet reactions**: the pet reacts to supported coding-agent sessions, tool activity, permissions, completion, idle, sleep, and mini-mode states.
 - **On-demand agent integrations**: fresh installs manage Claude Code and Codex by default; other migrated agents are installed explicitly from Settings.
 - **Remote features migrated but off**: Telegram approval/native bot, completion notification, Direct Send, mobile PWA, Hardware Buddy, and auto-pilot are present for later validation but disabled by default.
@@ -51,7 +54,7 @@ Before any of these are enabled in a release configuration, they need dedicated 
 
 ## Quick Start
 
-Download prebuilt packages from [OpenBMB MiniCPM Desk Pet Releases](https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases).
+Download prebuilt packages from the [releases page](https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases).
 
 - **macOS**: `MiniCPM-Desk-Pet-<version>-<arch>.dmg`
 - **Windows**: `MiniCPM-Desk-Pet-Setup-<version>-<arch>.exe`
@@ -83,4 +86,4 @@ npm start
 
 ## Acknowledgments
 
-MiniCPM Desk Pet uses OpenBMB MiniCPM model resources and keeps attribution for the upstream desktop-pet UI foundation in [NOTICE.md](NOTICE.md). Model weights and third-party assets remain governed by their own licenses.
+Deskpet Assistant uses MiniCPM model resources and keeps attribution for the upstream desktop-pet UI foundation in [NOTICE.md](NOTICE.md). Model weights and third-party assets remain governed by their own licenses.

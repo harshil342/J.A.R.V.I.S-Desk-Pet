@@ -13,6 +13,15 @@ const electron = require("electron");
 const { buildElectronLaunchConfig } = require("./hooks/shared-process");
 
 const forwardedArgs = process.argv.slice(2);
+// Dev UI smoke tests: expose Chrome DevTools Protocol so playwright-core /
+// raw CDP clients can drive the real windows (no bundled browser needed).
+if (process.env.DESKPET_REMOTE_DEBUGGING_PORT) {
+  forwardedArgs.push(`--remote-debugging-port=${process.env.DESKPET_REMOTE_DEBUGGING_PORT}`);
+  // Keep the typewriter painting while the bubble is occluded during
+  // automated checks — Chrome otherwise pauses rAF for hidden windows.
+  forwardedArgs.push("--disable-renderer-backgrounding");
+  forwardedArgs.push("--disable-backgrounding-occluded-windows");
+}
 const launchConfig = buildElectronLaunchConfig(__dirname, { forwardedArgs });
 const child = spawn(electron, launchConfig.args, {
   stdio: "inherit",

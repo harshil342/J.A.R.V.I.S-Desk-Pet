@@ -525,7 +525,7 @@ test("settings IPC imports MiniCPM Desk Pet user theme zip packages", async () =
     });
     assert.deepStrictEqual(dialogParent, { id: "parent", sender: "sender-web-contents" });
     assert.deepStrictEqual(dialogOptions.properties, ["openFile"]);
-    assert.deepStrictEqual(dialogOptions.filters, [{ name: "MiniCPM Desk Pet theme zip", extensions: ["zip"] }]);
+    assert.deepStrictEqual(dialogOptions.filters, [{ name: "Deskpet Assistant theme zip", extensions: ["zip"] }]);
     assert.strictEqual(
       fs.readFileSync(path.join(userThemesDir, "pixel-cat", "theme.json"), "utf8"),
       JSON.stringify(themeJson)
@@ -673,7 +673,7 @@ test("settings IPC serves agent/about/update/external and remove-theme dialog he
       repoUrl: "https://github.com/OpenBMB/MiniCPM-Desk-Pet",
       modelRepoUrl: "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF",
       license: "AGPL-3.0-only",
-      copyright: "\u00a9 2026 OpenBMB",
+      copyright: "\u00a9 2026 Deskpet Assistant",
       upstreamRepoUrl: "https://github.com/rullerzhou-afk/clawd-on-desk",
       upstreamLabel: "clawd-on-desk",
       heroSvgContent: "<svg id=\"hero\"></svg>",

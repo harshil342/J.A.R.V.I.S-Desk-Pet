@@ -28,7 +28,8 @@
 
   function makeTranslator(getLang, dictMap) {
     return function t(key, params) {
-      const lang = (typeof getLang === "function" ? getLang() : getLang) || "en";
+      // English-only product: always serve the English block.
+      const lang = "en";
       const dict = pickDict(dictMap || STRINGS, lang);
       const raw = dict[key];
       const value = typeof raw === "string" ? raw : key;
@@ -136,14 +137,14 @@
   // ── EN strings ──
   const EN_STRINGS = {
     // Menu / shared
-    menuMinicpmChat: "MiniCPM Chat",
+    menuMinicpmChat: "Deskpet Chat",
     // Onboarding window + steps
-    onboardingWindowTitle: "MiniCPM Desk Pet — First Launch",
+    onboardingWindowTitle: "Deskpet Assistant — First Launch",
     onboardingStepEnvCheck: "Environment",
     onboardingStepModel: "Model",
     onboardingStepReady: "Ready",
     // Step 1: env-check
-    onboardingEnvWelcome: "Welcome to MiniCPM Desk Pet",
+    onboardingEnvWelcome: "Welcome to Deskpet Assistant",
     onboardingEnvCheckDisk: "Disk space",
     onboardingEnvCheckChip: "Chip",
     onboardingDetecting: "Detecting…",
@@ -185,7 +186,7 @@
     onboardingHotkeyToggleChat: "toggle chat bubble",
     onboardingHotkeyToggleThinking: "toggle thinking mode",
     onboardingHotkeyEscClose: "close the bubble when input is focused",
-    onboardingMoreHint: "Want to swap models, see resource usage, or restart the sidecar? Open the right-click menu's Settings → MiniCPM.",
+    onboardingMoreHint: "Want to swap models, see resource usage, or restart the sidecar? Open the right-click menu's Settings → Deskpet Assistant.",
     onboardingFinish: "Let the pet appear",
     // File picker dialog
     onboardingPickerDialogTitle: "Choose a local MiniCPM model (a .gguf file or a directory containing one)",
@@ -241,6 +242,27 @@
     chatThinkingOff: "Thinking mode: off",
     chatEditModeHint: "Drag me where you want me, then hit Save in Settings.",
     chatEditModeHintShort: "Drag me where you want me",
+    // Chat: tools, stop/regenerate, crash-restart states
+    chatToolRunning: "Running {name}…",
+    chatStop: "Stop",
+    chatRegenerate: "Regenerate",
+    chatStopped: "Stopped.",
+    // Chat: named sessions
+    chatSessionsNew: "New chat",
+    chatSessionsMenu: "Chats",
+    chatSessionsDelete: "Delete chat",
+    chatSessionsEmpty: "No messages yet",
+    // Chat: quick-customize popover
+    bubbleCustomizeTitle: "Customize",
+    bubbleCustomizeAccent: "Accent",
+    bubbleCustomizeOpacity: "Opacity",
+    bubbleCustomizeBlur: "Blur",
+    bubbleCustomizeTextSize: "Text size",
+    bubbleCustomizeDensity: "Density",
+    bubbleCustomizeTypewriter: "Typewriter",
+    chatSidecarRestarting: "Brain hiccup — restarting ({attempt}/3)…",
+    chatSidecarBack: "Back online",
+    chatSidecarDown: "The model engine stopped and couldn't be restarted. Restart the app (logs: Settings → open log folder).",
   };
   const EN_PATTERNS = {
     status: /\b(what|which|current|now)\b.{0,30}\b(model|persona|adapter|lora)\b/i,
@@ -301,12 +323,12 @@
   };
   // ── ZH strings ──
   const ZH_STRINGS = {
-    menuMinicpmChat: "MiniCPM Chat",
-    onboardingWindowTitle: "MiniCPM 桌宠 — 首次启动",
+    menuMinicpmChat: "Deskpet Chat",
+    onboardingWindowTitle: "Deskpet 助手 — 首次启动",
     onboardingStepEnvCheck: "环境检查",
     onboardingStepModel: "准备模型",
     onboardingStepReady: "就绪",
-    onboardingEnvWelcome: "欢迎使用 MiniCPM 桌宠",
+    onboardingEnvWelcome: "欢迎使用 Deskpet 助手",
     onboardingEnvCheckDisk: "磁盘空间",
     onboardingEnvCheckChip: "芯片",
     onboardingDetecting: "检测中…",
@@ -346,7 +368,7 @@
     onboardingHotkeyToggleChat: "开关聊天气泡",
     onboardingHotkeyToggleThinking: "切换思考模式",
     onboardingHotkeyEscClose: "在气泡内焦点时关闭气泡",
-    onboardingMoreHint: "想换模型、查看资源占用、重启 sidecar？打开右键菜单的 Settings → MiniCPM。",
+    onboardingMoreHint: "想换模型、查看资源占用、重启 sidecar？打开右键菜单的 Settings → Deskpet Assistant。",
     onboardingFinish: "让桌宠登场",
     onboardingPickerDialogTitle: "选择本地 MiniCPM 模型 (.gguf 文件或包含 .gguf 的目录)",
     onboardingPickerDialogMessage: "可以是单个 .gguf 文件，或包含 .gguf 的目录",
@@ -396,6 +418,27 @@
     chatThinkingOff: "思考已关闭",
     chatEditModeHint: "把我拖到喜欢的位置 🐾\n然后回到设置点「保存」",
     chatEditModeHintShort: "把我拖到喜欢的位置 🐾",
+    // Chat: tools, stop/regenerate, crash-restart states
+    chatToolRunning: "正在调用 {name}…",
+    chatStop: "停止",
+    chatRegenerate: "重新生成",
+    chatStopped: "已停止。",
+    // Chat: named sessions
+    chatSessionsNew: "新对话",
+    chatSessionsMenu: "聊天记录",
+    chatSessionsDelete: "删除对话",
+    chatSessionsEmpty: "还没有消息",
+    // Chat: quick-customize popover
+    bubbleCustomizeTitle: "自定义",
+    bubbleCustomizeAccent: "强调色",
+    bubbleCustomizeOpacity: "不透明度",
+    bubbleCustomizeBlur: "模糊",
+    bubbleCustomizeTextSize: "文字大小",
+    bubbleCustomizeDensity: "密度",
+    bubbleCustomizeTypewriter: "打字机效果",
+    chatSidecarRestarting: "大脑打了个盹 — 正在重启（{attempt}/3）…",
+    chatSidecarBack: "已恢复在线",
+    chatSidecarDown: "模型引擎已停止且无法自动恢复，请重启应用（日志见 设置 → 打开日志目录）。",
   };
   const ZH_PATTERNS = {
     status: /(你现在|当前|目前|现在).{0,4}(是什么|是啥|用的什么|用啥|什么模型|什么人格|哪个模型|哪个人格|是哪个)/,
@@ -455,12 +498,12 @@
   };
   // ── ZH-TW strings ──
   const ZH_TW_STRINGS = {
-    menuMinicpmChat: "MiniCPM Chat",
-    onboardingWindowTitle: "MiniCPM 桌寵 — 首次啟動",
+    menuMinicpmChat: "Deskpet Chat",
+    onboardingWindowTitle: "Deskpet 助手 — 首次啟動",
     onboardingStepEnvCheck: "環境檢查",
     onboardingStepModel: "準備模型",
     onboardingStepReady: "就緒",
-    onboardingEnvWelcome: "歡迎使用 MiniCPM 桌寵",
+    onboardingEnvWelcome: "歡迎使用 Deskpet 助手",
     onboardingEnvCheckDisk: "磁碟空間",
     onboardingEnvCheckChip: "晶片",
     onboardingDetecting: "偵測中…",
@@ -500,7 +543,7 @@
     onboardingHotkeyToggleChat: "開關聊天對話框",
     onboardingHotkeyToggleThinking: "切換思考模式",
     onboardingHotkeyEscClose: "在對話框輸入時關閉對話框",
-    onboardingMoreHint: "想換模型、查看資源占用、重啟 sidecar？開啟右鍵選單的 Settings → MiniCPM。",
+    onboardingMoreHint: "想換模型、查看資源占用、重啟 sidecar？開啟右鍵選單的 Settings → Deskpet Assistant。",
     onboardingFinish: "讓桌寵登場",
     onboardingPickerDialogTitle: "選擇本機 MiniCPM 模型 (.gguf 檔案或包含 .gguf 的目錄)",
     onboardingPickerDialogMessage: "可以是單一 .gguf 檔案，或包含 .gguf 的目錄",
@@ -550,6 +593,27 @@
     chatThinkingOff: "思考已關閉",
     chatEditModeHint: "把我拖到喜歡的位置 🐾\n然後回到設定點「儲存」",
     chatEditModeHintShort: "把我拖到喜歡的位置 🐾",
+    // Chat: tools, stop/regenerate, crash-restart states
+    chatToolRunning: "正在呼叫 {name}…",
+    chatStop: "停止",
+    chatRegenerate: "重新產生",
+    chatStopped: "已停止。",
+    // Chat: named sessions
+    chatSessionsNew: "新對話",
+    chatSessionsMenu: "聊天紀錄",
+    chatSessionsDelete: "刪除對話",
+    chatSessionsEmpty: "還沒有訊息",
+    // Chat: quick-customize popover
+    bubbleCustomizeTitle: "自訂",
+    bubbleCustomizeAccent: "強調色",
+    bubbleCustomizeOpacity: "不透明度",
+    bubbleCustomizeBlur: "模糊",
+    bubbleCustomizeTextSize: "文字大小",
+    bubbleCustomizeDensity: "密度",
+    bubbleCustomizeTypewriter: "打字機效果",
+    chatSidecarRestarting: "腦袋打了個盹 — 正在重啟（{attempt}/3）…",
+    chatSidecarBack: "已恢復線上",
+    chatSidecarDown: "模型引擎已停止且無法自動恢復，請重新啟動應用程式（日誌見 設定 → 開啟日誌目錄）。",
   };
   const ZH_TW_PATTERNS = {
     status: /(你現在|目前|現在).{0,4}(是什麼|是啥|用的什麼|什麼模型|什麼人格|哪個模型|哪個人格|是哪個)/,
@@ -609,12 +673,12 @@
   };
   // ── KO strings ──
   const KO_STRINGS = {
-    menuMinicpmChat: "MiniCPM Chat",
-    onboardingWindowTitle: "MiniCPM 데스크 펫 — 첫 실행",
+    menuMinicpmChat: "Deskpet Chat",
+    onboardingWindowTitle: "Deskpet Assistant — 첫 실행",
     onboardingStepEnvCheck: "환경 검사",
     onboardingStepModel: "모델 준비",
     onboardingStepReady: "준비 완료",
-    onboardingEnvWelcome: "MiniCPM 데스크 펫에 오신 것을 환영합니다",
+    onboardingEnvWelcome: "Deskpet Assistant에 오신 것을 환영합니다",
     onboardingEnvCheckDisk: "디스크 공간",
     onboardingEnvCheckChip: "칩",
     onboardingDetecting: "확인 중…",
@@ -654,7 +718,7 @@
     onboardingHotkeyToggleChat: "채팅 말풍선 토글",
     onboardingHotkeyToggleThinking: "생각 모드 토글",
     onboardingHotkeyEscClose: "입력에 포커스가 있을 때 말풍선 닫기",
-    onboardingMoreHint: "모델 변경, 리소스 사용량 확인, sidecar 재시작? 우클릭 메뉴의 Settings → MiniCPM에서 가능합니다.",
+    onboardingMoreHint: "모델 변경, 리소스 사용량 확인, sidecar 재시작? 우클릭 메뉴의 Settings → Deskpet Assistant에서 가능합니다.",
     onboardingFinish: "펫 등장",
     onboardingPickerDialogTitle: "로컬 MiniCPM 모델 선택 (.gguf 파일 또는 .gguf가 포함된 디렉터리)",
     onboardingPickerDialogMessage: "단일 .gguf 파일이거나 .gguf가 포함된 디렉터리여야 합니다",
@@ -704,6 +768,27 @@
     chatThinkingOff: "생각 모드: 끔",
     chatEditModeHint: "원하는 곳으로 드래그해 주세요 🐾\n다 되면 설정에서 \"저장\"을 눌러 주세요",
     chatEditModeHintShort: "원하는 곳으로 드래그해 주세요 🐾",
+    // Chat: tools, stop/regenerate, crash-restart states
+    chatToolRunning: "{name} 실행 중…",
+    chatStop: "중지",
+    chatRegenerate: "다시 생성",
+    chatStopped: "중지되었습니다.",
+    // Chat: named sessions
+    chatSessionsNew: "새 대화",
+    chatSessionsMenu: "대화 목록",
+    chatSessionsDelete: "대화 삭제",
+    chatSessionsEmpty: "아직 메시지가 없어요",
+    // Chat: quick-customize popover
+    bubbleCustomizeTitle: "사용자 지정",
+    bubbleCustomizeAccent: "강조 색",
+    bubbleCustomizeOpacity: "불투명도",
+    bubbleCustomizeBlur: "흐림",
+    bubbleCustomizeTextSize: "글자 크기",
+    bubbleCustomizeDensity: "밀도",
+    bubbleCustomizeTypewriter: "타이프라이터",
+    chatSidecarRestarting: "잠깐 멈췄어요 — 재시작 중({attempt}/3)…",
+    chatSidecarBack: "다시 온라인",
+    chatSidecarDown: "모델 엔진이 중지되어 자동 복구에 실패했어요. 앱을 다시 시작해 주세요.",
   };
   const KO_PATTERNS = {
     status: /(지금|현재|어떤).{0,12}(모델|페르소나|어댑터|lora)/i,
@@ -763,12 +848,12 @@
   };
   // ── JA strings ──
   const JA_STRINGS = {
-    menuMinicpmChat: "MiniCPM Chat",
-    onboardingWindowTitle: "MiniCPM デスクペット — 初回起動",
+    menuMinicpmChat: "Deskpet Chat",
+    onboardingWindowTitle: "Deskpet Assistant — 初回起動",
     onboardingStepEnvCheck: "環境チェック",
     onboardingStepModel: "モデル準備",
     onboardingStepReady: "準備完了",
-    onboardingEnvWelcome: "MiniCPM デスクペットへようこそ",
+    onboardingEnvWelcome: "Deskpet Assistant へようこそ",
     onboardingEnvCheckDisk: "ディスク容量",
     onboardingEnvCheckChip: "チップ",
     onboardingDetecting: "確認中…",
@@ -808,7 +893,7 @@
     onboardingHotkeyToggleChat: "チャット吹き出しの切替",
     onboardingHotkeyToggleThinking: "思考モードの切替",
     onboardingHotkeyEscClose: "入力にフォーカスがある時に吹き出しを閉じる",
-    onboardingMoreHint: "モデル変更、リソース確認、sidecar の再起動は右クリックメニューの Settings → MiniCPM から。",
+    onboardingMoreHint: "モデル変更、リソース確認、sidecar の再起動は右クリックメニューの Settings → Deskpet Assistant から。",
     onboardingFinish: "ペットを登場させる",
     onboardingPickerDialogTitle: "ローカルの MiniCPM モデルを選択 (.gguf ファイル、または .gguf を含むディレクトリ)",
     onboardingPickerDialogMessage: "単一の .gguf ファイル、または .gguf を含むディレクトリを選んでください",
@@ -858,6 +943,27 @@
     chatThinkingOff: "思考モード：オフ",
     chatEditModeHint: "好きな場所までドラッグしてね 🐾\n終わったら設定で「保存」を押してね",
     chatEditModeHintShort: "好きな場所までドラッグしてね 🐾",
+    // Chat: tools, stop/regenerate, crash-restart states
+    chatToolRunning: "{name} を実行中…",
+    chatStop: "停止",
+    chatRegenerate: "再生成",
+    chatStopped: "停止しました。",
+    // Chat: named sessions
+    chatSessionsNew: "新しいチャット",
+    chatSessionsMenu: "チャット一覧",
+    chatSessionsDelete: "チャットを削除",
+    chatSessionsEmpty: "まだメッセージはありません",
+    // Chat: quick-customize popover
+    bubbleCustomizeTitle: "カスタマイズ",
+    bubbleCustomizeAccent: "アクセント",
+    bubbleCustomizeOpacity: "不透明度",
+    bubbleCustomizeBlur: "ぼかし",
+    bubbleCustomizeTextSize: "文字サイズ",
+    bubbleCustomizeDensity: "密度",
+    bubbleCustomizeTypewriter: "タイプライター",
+    chatSidecarRestarting: "ひと眠りしていました — 再起動中（{attempt}/3）…",
+    chatSidecarBack: "復帰しました",
+    chatSidecarDown: "モデルエンジンが停止し、自動復旧できませんでした。アプリを再起動してください。",
   };
   const JA_PATTERNS = {
     status: /(今|現在|どの).{0,12}(モデル|人格|アダプタ|lora)/i,

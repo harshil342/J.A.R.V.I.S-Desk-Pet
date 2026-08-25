@@ -357,7 +357,7 @@ function registerSettingsIpc(options = {}) {
     try {
       result = await dialog.showOpenDialog(getDialogParent(event), {
         properties: ["openFile"],
-        filters: [{ name: "MiniCPM Desk Pet theme zip", extensions: ["zip"] }],
+        filters: [{ name: "Deskpet Assistant theme zip", extensions: ["zip"] }],
       });
     } catch (err) {
       return { status: "error", message: `theme zip picker failed: ${err && err.message}` };

@@ -51,6 +51,7 @@ def app_with_stub_llama(adapter_dir, model_path):
         instance = MockLlama.return_value
         instance.start = AsyncMock()
         instance.stop = AsyncMock()
+        instance.shutdown = AsyncMock()
         instance.health = AsyncMock(return_value={"ok": True})
         instance.complete_once = AsyncMock(return_value={})
         instance.model_path = model_path

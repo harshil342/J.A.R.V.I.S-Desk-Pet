@@ -20,17 +20,17 @@ function parseGitHubRepo(url) {
 }
 
 function extractCopyrightShort(copyright) {
-  if (!copyright) return "\u00a9 2026 OpenBMB";
+  if (!copyright) return "\u00a9 2026 Deskpet Assistant";
   const match = String(copyright).match(/Copyright\s*\u00a9?\s*(\d{4})\s+([^.\n]+)/i);
   if (match) return `\u00a9 ${match[1]} ${match[2].trim()}`;
-  return "\u00a9 2026 OpenBMB";
+  return "\u00a9 2026 Deskpet Assistant";
 }
 
 const repoUrl = normalizeRepoUrl(pkg.homepage) || normalizeRepoUrl(pkg.repository && pkg.repository.url);
 const githubRepo = parseGitHubRepo(repoUrl);
 const upstreamRepoUrl = normalizeRepoUrl(pkg.upstreamRepository) || DEFAULT_UPSTREAM_URL;
 const upstreamMatch = parseGitHubRepo(upstreamRepoUrl);
-const productName = (pkg.build && pkg.build.productName) || "MiniCPM Desk Pet";
+const productName = (pkg.build && pkg.build.productName) || "Deskpet Assistant";
 const userAgent = productName.replace(/\s+/g, "-");
 
 module.exports = {

@@ -64,9 +64,17 @@ class ClawdBridge:
     def post(self, state: str, *, event: Optional[str] = None, title: Optional[str] = None) -> None:
         if not self.enabled:
             return
+        # Proactive pushes (reminders, daily briefings) carry user-facing
+        # text under a dedicated session prefix so the desktop pet's
+        # narrator speaks them VERBATIM instead of ignoring them as
+        # self-generated chat noise (it skips "minicpm-*").
+        if state == "notification":
+            session_id = f"deskpet-proactive-{uuid.uuid4().hex[:8]}"
+        else:
+            session_id = self._session_id
         body = {
             "state": state,
-            "session_id": self._session_id,
+            "session_id": session_id,
             "agent_id": AGENT_ID,
             "event": event or _default_event_for(state),
             "cwd": self._cwd,

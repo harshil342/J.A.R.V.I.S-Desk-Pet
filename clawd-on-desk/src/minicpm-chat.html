@@ -7,20 +7,26 @@
 <title>Deskpet</title>
 <style>
   :root {
-    --bg: rgba(22, 26, 34, 0.92);
-    --text: #e6e8ee;
-    --muted: #9aa3b6;
-    --accent: #6A70E5;
-    --border: rgba(255, 255, 255, 0.06);
-    --inner-edge: rgba(255, 255, 255, 0.04);
+    /* --bubble-alpha is driven from the bubbleOpacity pref (renderer sets it
+       on :root); --bg-rgb stays per-scheme so both schemes share one alpha. */
+    --bg-rgb: 0, 0, 0;  /* pure black bubble */
+    --bg: rgba(var(--bg-rgb), var(--bubble-alpha, 0.94));
+    --text: #DFF7FC;
+    --muted: #7FA8B8;
+    --accent: #8A939B;
+    --accent-rgb: 138, 147, 155;
+    --border: rgba(var(--accent-rgb), 0.25);
+    --inner-edge: rgba(var(--accent-rgb), 0.18);
   }
   @media (prefers-color-scheme: light) {
     :root {
-      --bg: rgba(255, 255, 255, 0.94);
+      --bg-rgb: 255, 255, 255;
+      --bg: rgba(var(--bg-rgb), var(--bubble-alpha, 0.94));
       --text: #1c1c20;
       --muted: #6c7180;
-      --accent: #373ED8;
-      --border: rgba(0, 0, 0, 0.05);
+      --accent: #5B646B;
+      --accent-rgb: 91, 100, 107;
+      --border: rgba(var(--accent-rgb), 0.25);
       --inner-edge: rgba(255, 255, 255, 0.6);
     }
   }
@@ -28,7 +34,7 @@
   html, body {
     height: 100%; background: transparent; color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-    font-size: 13px; line-height: 1.5; overflow: hidden;
+    font-size: calc(13px * var(--bubble-text-scale, 1)); line-height: 1.5; overflow: hidden;
     user-select: none;
     -webkit-font-smoothing: antialiased;
   }
@@ -45,14 +51,14 @@
     position: relative;
     width: 100%; max-width: 100%;
     background: var(--bg);
-    backdrop-filter: blur(28px) saturate(150%);
-    -webkit-backdrop-filter: blur(28px) saturate(150%);
+    backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(150%);
+    -webkit-backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(150%);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 7px 12px;
     /* A faint inner highlight gives the edge a glassy fade rather than a
        hard 1-pixel line — looks softer at any size. */
-    box-shadow: inset 0 1px 0 var(--inner-edge);
+    box-shadow: inset 0 1px 0 var(--inner-edge), 0 0 24px rgba(var(--accent-rgb), 0.12);
     opacity: 0; transform: translateY(2px) scale(0.99);
     transition: opacity 160ms ease, transform 160ms ease;
     pointer-events: none;
@@ -70,8 +76,8 @@
     border: 1px solid var(--border);
     transform: rotate(45deg);
     border-radius: 3px;
-    backdrop-filter: blur(28px) saturate(150%);
-    -webkit-backdrop-filter: blur(28px) saturate(150%);
+    backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(150%);
+    -webkit-backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(150%);
   }
   .bubble[data-side="right"] .tail { left: -6px; top: 50%; margin-top: -6px;
     border-right: none; border-top: none; }
@@ -86,14 +92,14 @@
   body.edit-mode { -webkit-app-region: drag; cursor: grab; }
   body.edit-mode .bubble {
     cursor: grab;
-    outline: 2px dashed rgba(107, 86, 255, 0.55);
+    outline: 2px dashed rgba(var(--accent-rgb), 0.55);
     outline-offset: 4px;
     animation: editPulse 1.4s ease-in-out infinite;
   }
   body.edit-mode:active, body.edit-mode .bubble:active { cursor: grabbing; }
   @keyframes editPulse {
-    0%, 100% { outline-color: rgba(107, 86, 255, 0.55); }
-    50%      { outline-color: rgba(107, 86, 255, 0.20); }
+    0%, 100% { outline-color: rgba(var(--accent-rgb), 0.55); }
+    50%      { outline-color: rgba(var(--accent-rgb), 0.20); }
   }
 
   /* — STATE: ask (input prompt) — */
@@ -114,6 +120,10 @@
     display: flex; flex-direction: column;
     gap: 4px;
   }
+  /* Density pref (clawd-prefs.json → bubbleDensity). The renderer toggles
+     body[data-density] from prefs; "compact" tightens padding + row gap. */
+  body[data-density="compact"] .bubble { padding: 4px 9px; }
+  body[data-density="compact"] .chat-pane { gap: 2px; }
   /* Top region: previous reply, max ~120px then internal scroll. */
   .last-reply-region {
     flex: 0 1 auto;
@@ -260,8 +270,8 @@
     z-index: 10;
     font-size: 10px;
     color: var(--accent);
-    background: rgba(155,140,255,0.10);
-    border: 1px solid rgba(155,140,255,0.35);
+    background: rgba(var(--accent-rgb), 0.10);
+    border: 1px solid rgba(var(--accent-rgb), 0.40);
     padding: 2px 7px;
     border-radius: 999px;
     cursor: pointer;
@@ -278,7 +288,7 @@
     font-size: 8px;
     animation: thinkBlink 1.4s ease-in-out infinite;
   }
-  .upd-pill:hover { background: rgba(155,140,255,0.18); }
+  .upd-pill:hover { background: rgba(var(--accent-rgb), 0.20); }
   /* Inline progress shown inside the bubble while updating. */
   .upd-progress {
     font-size: 12px;
@@ -289,7 +299,7 @@
   .upd-progress .bar {
     margin-top: 7px;
     height: 4px;
-    background: rgba(155,140,255,0.15);
+    background: rgba(var(--accent-rgb), 0.15);
     border-radius: 2px;
     overflow: hidden;
   }
@@ -310,6 +320,46 @@
   }
   @media (prefers-color-scheme: light) {
     .err-text pre { background: rgba(0,0,0,0.04); }
+  }
+
+  /* ── J.A.R.V.I.S. ask-state polish ──────────────────────────────────── */
+  textarea::placeholder {
+    color: rgba(var(--accent-rgb), 0.55);
+    letter-spacing: 0.02em;
+  }
+  .ask-input-wrap textarea {
+    border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
+    padding-bottom: 4px;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .ask-input-wrap textarea:focus {
+    outline: none;
+    border-bottom-color: rgba(var(--accent-rgb), 0.75);
+    box-shadow: 0 1px 0 rgba(var(--accent-rgb), 0.35);
+  }
+
+  /* ── New-chat button (continuous-chat mode) ──────────────────────────
+     Single compact "+" pill in the slim row above the input. Same
+     rgba-accent pill language as .upd-pill. */
+  .sessions-row {
+    display: flex; align-items: center; gap: 6px;
+    -webkit-app-region: no-drag;
+  }
+  .sessions-add {
+    all: unset;
+    cursor: pointer; user-select: none;
+    font-size: 10.5px; line-height: 1.2;
+    color: var(--muted);
+    background: rgba(var(--accent-rgb), 0.10);
+    border: 1px solid rgba(var(--accent-rgb), 0.28);
+    border-radius: 999px;
+    padding: 2px 8px;
+    -webkit-app-region: no-drag;
+    transition: background 140ms ease, color 140ms ease;
+  }
+  .sessions-add:hover {
+    background: rgba(var(--accent-rgb), 0.20);
+    color: var(--accent);
   }
 </style>
 </head>

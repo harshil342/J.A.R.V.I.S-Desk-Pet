@@ -87,6 +87,26 @@ def _resolve_parent_pid() -> int:
     return os.getppid()
 
 
+def _port_bindable(host: str, port: int) -> bool:
+    """True when we can claim host:port right now. Used to fail fast with
+    an actionable message instead of uvicorn's bare EADDRINUSE traceback —
+    a stale sidecar from a previous crashed session is the single most
+    common boot failure on Windows."""
+    import socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((host, port))
+        return True
+    except OSError:
+        return False
+    finally:
+        try:
+            sock.close()
+        except OSError:
+            pass
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(list(sys.argv[1:] if argv is None else argv))
     init_logging()
@@ -98,6 +118,20 @@ def main(argv: list[str] | None = None) -> int:
     # the next sidecar boot with a half-initialised gateway.
     parent_pid = _resolve_parent_pid()
     ParentWatchdog(parent_pid).start()
+
+    if not _port_bindable(args.host, args.port):
+        print(
+            f"FATAL: port {args.port} is already in use — another MiniCPM "
+            "sidecar (or a leftover from a crashed session) is still running.\n"
+            + (
+                f"  Fix it:   taskkill /F /IM minicpm-sidecar.exe /T\n"
+                f"            netstat -ano | findstr :{args.port}   # then taskkill /PID <pid> /F"
+                if os.name == "nt"
+                else f"  Fix it:   lsof -ti:{args.port} | xargs kill -9"
+            ),
+            file=sys.stderr,
+        )
+        return 78  # EX_CONFIG-style distinct exit code for the host to log
 
     model_path = _resolve_model_arg(args.model)
 

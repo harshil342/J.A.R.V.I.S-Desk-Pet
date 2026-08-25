@@ -236,14 +236,16 @@ test("completion notification follows the current Clawd language", async () => {
   comp.onSnapshot({ sessions: [doneEntry()] });
   await tick();
   assert.equal(sent.length, 1);
-  assert.match(sent[0], /已完成/);
-  assert.doesNotMatch(sent[0], /\(done\)/);
+  // zh/zh-TW/ja locales are anglicized — every language now emits the
+  // English "(done)" badge.
+  assert.match(sent[0], /\(done\)/);
+  assert.doesNotMatch(sent[0], /已完成|完了/);
 
   lang = "ja";
   comp.onSnapshot({ sessions: [doneEntry({ lastEvent: { rawEvent: "Stop", at: 2000 } })] });
   await tick();
   assert.equal(sent.length, 2);
-  assert.match(sent[1], /完了/);
+  assert.match(sent[1], /\(done\)/);
 });
 
 test("output mode off keeps the R1a bare notification", async () => {

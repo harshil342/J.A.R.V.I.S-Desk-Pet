@@ -48,7 +48,7 @@ function linuxSetOpenAtLogin(enable, { execCmd } = {}) {
       [
         "[Desktop Entry]",
         "Type=Application",
-        "Name=MiniCPM Desk Pet",
+        "Name=Deskpet Assistant",
         `Exec=${execCmd}`,
         "Hidden=false",
         "NoDisplay=false",

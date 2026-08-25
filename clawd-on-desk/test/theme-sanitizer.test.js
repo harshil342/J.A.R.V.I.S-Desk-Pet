@@ -36,6 +36,14 @@ test("sanitizeSvg strips unsafe script, href, and CSS URL surfaces", () => {
   assert.ok(sanitized.includes("background:url(nested/sheet.png)"));
 });
 
+test("sanitizeSvg drops XML declarations instead of emitting malformed PIs", () => {
+  const svg = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"1\" height=\"1\"/></svg>";
+  const sanitized = sanitizeSvg(svg);
+  assert.ok(!sanitized.includes("<?xml"), "declaration must not survive round-trip");
+  assert.ok(sanitized.includes("<svg"));
+  assert.ok(sanitized.includes("<rect"));
+});
+
 test("collectSafeRasterRefs collects only safe relative png and webp dependencies", () => {
   const sourceAssetsDir = path.join(__dirname, "fixtures", "theme-assets");
   const svg = [

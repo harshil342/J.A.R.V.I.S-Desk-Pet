@@ -1,4 +1,4 @@
-const { app, BrowserWindow, screen, ipcMain, globalShortcut, nativeTheme, dialog, shell, nativeImage, powerSaveBlocker, powerMonitor, clipboard } = require("electron");
+const { app, BrowserWindow, screen, ipcMain, globalShortcut, nativeTheme, dialog, shell, nativeImage, powerSaveBlocker, powerMonitor, clipboard, Notification } = require("electron");
 // ── Linux/Wayland: relaunch under XWayland so the pet is draggable (issue #441) ──
 // Native Wayland ignores client-side window positioning and blocks global cursor
 // queries, so the pet spawns centered, can't be dragged, and has no tracking;
@@ -1583,6 +1583,10 @@ const _tickCtx = {
   getHitRectScreen,
   getAssetPointerPayload,
   get roam() { return _roam; },
+  getIdleSleepMs: () => {
+    const seconds = Number(_settingsController.get("idleSleepSeconds"));
+    return Math.min(300, Math.max(15, Number.isFinite(seconds) ? seconds : 60)) * 1000;
+  },
 };
 const _tick = require("./tick")(_tickCtx);
 requestFastTick = (maxDelay) => _tick.scheduleSoon(maxDelay);
@@ -1694,6 +1698,97 @@ _minicpmChat = require("./minicpm-chat")({
   },
   getNearestWorkArea,
   getLang: () => lang,
+  // Validated clawd-prefs.json snapshot (controller is the only writer).
+  // Consumed by the chat bubble for live look/feel prefs and by the
+  // sidecar /api/config sync. Lazy — the controller exists by the time
+  // these are invoked.
+  getAssistantPrefs: () => _settingsController.getSnapshot(),
+  // Same notification chime the pet plays on task completion (theme sound
+  // overrides + mute/DND/cooldown gating all apply). Used for proactive
+  // reminder/briefing narration when reminderChime is enabled.
+  playNotificationSound: (name) => {
+    try { playSound(typeof name === "string" && name ? name : "complete"); } catch {}
+  },
+  // Native Windows toast for proactive pushes (reminders, briefings,
+  // evening recap) - far more visible than the in-bubble narration.
+  showSystemNotification: (title, body) => {
+    const t = String(title || "Deskpet Assistant");
+    const b = String(body || "");
+    try {
+      const n = new Notification({
+        title: t,
+        body: b,
+        icon: path.join(__dirname, "..", "assets", "icons", "256x256.png"),
+        silent: false,
+      });
+      n.show();
+      if (app.isPackaged) return;
+    } catch {}
+    // Dev fallback: unpackaged Electron apps have no registered
+    // AppUserModelID shortcut, so Windows silently drops their toasts.
+    // Firing the toast under PowerShell's own AUMID always lands it in
+    // the Action Center.
+    try {
+      const esc = (s) => s.replace(/'/g, "''");
+      const ps = [
+        "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null",
+        "$x = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)",
+        "$tx = $x.GetElementsByTagName('text')",
+        "$tx.Item(0).AppendChild($x.CreateTextNode('" + esc(t) + "')) | Out-Null",
+        "$tx.Item(1).AppendChild($x.CreateTextNode('" + esc(b) + "')) | Out-Null",
+        "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe').Show([Windows.UI.Notifications.ToastNotification]::new($x))",
+      ].join("; ");
+      require("child_process")
+        .spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", ps], {
+          detached: true, windowsHide: true, stdio: "ignore",
+        })
+        .unref();
+    } catch {}
+  },
+});
+
+// Live prefs → chat: re-push assistant address/behavior config whenever
+// any setting changes. syncAssistantConfig dedupes against the last sent
+// payload, so unrelated changes are a cheap no-op.
+try {
+  _settingsController.subscribe(() => {
+    try { _minicpmChat.syncAssistantConfig(); } catch {}
+  });
+} catch {}
+
+// Chat bubble quick-customize popover → write path. Each whitelisted key is
+// committed through the settings controller's applyUpdate pipeline
+// (validator → effect → persist → settings-changed broadcast), exactly like
+// Settings tab commits, so the popover can never write an unvalidated value.
+const ASSISTANT_PREF_WRITE_KEYS = new Set([
+  "assistantAccent",
+  "accentPreset",
+  "bubbleOpacity",
+  "bubbleBlur",
+  "bubbleTextScale",
+  "bubbleDensity",
+  "typewriterEnabled",
+]);
+try { ipcMain.removeHandler("minicpm:set-assistant-prefs"); } catch {}
+ipcMain.handle("minicpm:set-assistant-prefs", async (_evt, payload) => {
+  const patch = payload && typeof payload === "object" && !Array.isArray(payload)
+    ? payload.patch
+    : null;
+  if (!patch || typeof patch !== "object") {
+    return { status: "error", message: "setAssistantPrefs: patch object required" };
+  }
+  try {
+    for (const [key, value] of Object.entries(patch)) {
+      if (!ASSISTANT_PREF_WRITE_KEYS.has(key)) {
+        return { status: "error", message: `setAssistantPrefs: key not allowed: ${key}` };
+      }
+      const result = await _settingsController.applyUpdate(key, value);
+      if (result && result.status === "error") return result;
+    }
+    return { status: "ok" };
+  } catch (err) {
+    return { status: "error", message: String((err && err.message) || err) };
+  }
 });
 
 function openMinicpmChat() {
@@ -3586,6 +3681,13 @@ const _miniCtx = {
   repositionSessionHud: () => repositionSessionHud(),
   buildContextMenu: () => buildContextMenu(),
   buildTrayMenu: () => buildTrayMenu(),
+  getMiniDockSidePref: () => {
+    const v = _settingsController.get("miniDockSide");
+    return v === "left" || v === "right" ? v : "";
+  },
+  setMiniDockSidePref: (edge) => {
+    try { _settingsController.applyUpdate("miniDockSide", edge); } catch {}
+  },
   getAnimationAssetCycleMs: (file) => {
     if (!file) return null;
     const probe = animationOverridesMain && typeof animationOverridesMain.buildAnimationAssetProbe === "function"

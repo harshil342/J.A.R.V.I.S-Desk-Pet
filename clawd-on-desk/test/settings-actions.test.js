@@ -2281,3 +2281,58 @@ describe("version validator", () => {
     assert.strictEqual(updateRegistry.version("1", deps).status, "error");
   });
 });
+
+describe("assistant prefs validators", () => {
+  const snapshot = prefs.getDefaults();
+  const deps = { snapshot };
+
+  it("assistantAddress requires a non-empty string of at most 24 chars", () => {
+    assert.strictEqual(updateRegistry.assistantAddress("sir", deps).status, "ok");
+    assert.strictEqual(updateRegistry.assistantAddress("  boss  ", deps).status, "ok");
+    assert.strictEqual(updateRegistry.assistantAddress("", deps).status, "error");
+    assert.strictEqual(updateRegistry.assistantAddress("   ", deps).status, "error");
+    assert.strictEqual(updateRegistry.assistantAddress("x".repeat(25), deps).status, "error");
+    assert.strictEqual(updateRegistry.assistantAddress(42, deps).status, "error");
+    assert.strictEqual(updateRegistry.assistantAddress(null, deps).status, "error");
+  });
+
+  it("briefingHour requires an integer between 0 and 23", () => {
+    assert.strictEqual(updateRegistry.briefingHour(0, deps).status, "ok");
+    assert.strictEqual(updateRegistry.briefingHour(23, deps).status, "ok");
+    assert.strictEqual(updateRegistry.briefingHour(-1, deps).status, "error");
+    assert.strictEqual(updateRegistry.briefingHour(24, deps).status, "error");
+    assert.strictEqual(updateRegistry.briefingHour(7.5, deps).status, "error");
+    assert.strictEqual(updateRegistry.briefingHour("8", deps).status, "error");
+    assert.strictEqual(updateRegistry.briefingHour(undefined, deps).status, "error");
+  });
+
+  it("recapHour requires an integer between 0 and 23", () => {
+    assert.strictEqual(typeof updateRegistry.recapHour, "function");
+    assert.strictEqual(updateRegistry.recapHour(0, deps).status, "ok");
+    assert.strictEqual(updateRegistry.recapHour(21, deps).status, "ok");
+    assert.strictEqual(updateRegistry.recapHour(-1, deps).status, "error");
+    assert.strictEqual(updateRegistry.recapHour(24, deps).status, "error");
+    assert.strictEqual(updateRegistry.recapHour(21.5, deps).status, "error");
+    assert.strictEqual(updateRegistry.recapHour("21", deps).status, "error");
+    assert.strictEqual(updateRegistry.recapHour(undefined, deps).status, "error");
+  });
+
+  it("reminderChime and autoMemory require booleans", () => {
+    for (const key of ["reminderChime", "autoMemory"]) {
+      assert.strictEqual(updateRegistry[key](true, deps).status, "ok", key);
+      assert.strictEqual(updateRegistry[key](false, deps).status, "ok", key);
+      assert.strictEqual(updateRegistry[key]("true", deps).status, "error", key);
+      assert.strictEqual(updateRegistry[key](1, deps).status, "error", key);
+      assert.strictEqual(updateRegistry[key](null, deps).status, "error", key);
+    }
+  });
+
+  it("clarifyStrength accepts only the known enum values", () => {
+    for (const v of ["off", "ambiguous", "confirm_all"]) {
+      assert.strictEqual(updateRegistry.clarifyStrength(v, deps).status, "ok");
+    }
+    assert.strictEqual(updateRegistry.clarifyStrength("always", deps).status, "error");
+    assert.strictEqual(updateRegistry.clarifyStrength("", deps).status, "error");
+    assert.strictEqual(updateRegistry.clarifyStrength(null, deps).status, "error");
+  });
+});

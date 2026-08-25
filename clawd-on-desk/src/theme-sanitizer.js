@@ -30,7 +30,12 @@ function sanitizeSvg(svgContent) {
   const { parseDocument } = require("htmlparser2");
   const render = require("dom-serializer");
 
-  const doc = parseDocument(svgContent, { xmlMode: true });
+  // dom-serializer re-emits XML declaration nodes as malformed processing
+  // instructions ("<?xml ... >" — missing the closing "?"), which makes
+  // Chromium reject the entire document. The declaration is optional for
+  // SVG rendered via <img>, so drop it up front instead of corrupting it.
+  const withoutDecl = svgContent.replace(/^\s*<\?xml[^>]*\?>\s*/i, "");
+  const doc = parseDocument(withoutDecl, { xmlMode: true });
   sanitizeNode(doc);
   return render.default(doc, { xmlMode: true });
 }

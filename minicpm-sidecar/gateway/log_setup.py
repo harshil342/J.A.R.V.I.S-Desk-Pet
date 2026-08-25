@@ -80,8 +80,11 @@ def init_logging(level: int = logging.INFO) -> logging.Logger:
     return log
 
 
-def get_logger() -> logging.Logger:
-    return logging.getLogger(_LOGGER_NAME) if _logger_initialized else init_logging()
+def get_logger(name: Optional[str] = None) -> logging.Logger:
+    base = logging.getLogger(_LOGGER_NAME) if _logger_initialized else init_logging()
+    if name:
+        return logging.getLogger(f"{_LOGGER_NAME}.{name}")
+    return base
 
 
 def install_broken_pipe_guard() -> None:

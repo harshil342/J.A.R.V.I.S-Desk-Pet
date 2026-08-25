@@ -140,9 +140,169 @@ def test_canned_replies_cover_mechanical_tools():
         "1 USD = 95.53 INR (live rate: 1 USD = 95.5300 INR, updated recently).",
     )
     assert r is not None and "live rate" in r
+    # Weather lines are ready-made prose — relayed verbatim now; failure
+    # text stays model-composed so it can be explained politely.
+    assert tools.canned_reply("get_weather", "Mumbai, India: 27°C, sunny.") == "Mumbai, India: 27°C, sunny."
+    assert tools.canned_reply("get_weather", "No weather data available.") is None
     # Tools needing free-form shaping stay model-composed.
-    assert tools.canned_reply("get_weather", "sunny") is None
     assert tools.canned_reply("web_search", "x") is None
+
+def test_canned_reply_relays_wiki_backed_search_results():
+    wiki = "From Wikipedia on 'Nikola Tesla': Serbian-American inventor."
+    assert tools.canned_reply("web_search", wiki) == wiki
+    # Genuine DDG snippets and misses remain model-composed.
+    assert tools.canned_reply("web_search", "Web search: some ddg snippet") is None
+    assert tools.canned_reply("web_search", "No instant answer found for 'x'.") is None
+
+
+@pytest.fixture()
+def _fresh_last_topic():
+    old = tools._LAST_TOPIC
+    yield
+    tools._LAST_TOPIC = old
+
+
+def test_pronoun_followup_resolves_last_topic(monkeypatch, _fresh_last_topic):
+    monkeypatch.setattr(tools, "_LAST_TOPIC", "nikola tesla")
+    seen = {}
+    monkeypatch.setattr(
+        tools, "_wiki_topic_lookup",
+        lambda q: seen.update(q=q)
+        or f"From Wikipedia on 'Nikola Tesla': died January 1943.",
+    )
+    hits = tools.route_tools("how did he die")
+    assert hits and hits[0][0] == "wikipedia"
+    assert seen["q"].startswith("nikola tesla")
+
+
+def test_pronoun_followup_without_last_topic_stays_unrouted(_fresh_last_topic):
+    tools._LAST_TOPIC = None
+    assert tools.route_tools("how did he die") == []
+
+
+def test_wiki_lookup_success_records_last_topic(monkeypatch, _fresh_last_topic):
+    def fake_summary(term):
+        return f"From Wikipedia on '{term}': bio." if term == "marie curie" else None
+
+    monkeypatch.setattr(tools, "wikipedia_summary", fake_summary)
+    hits = tools.route_tools("marie curie")
+    assert hits and hits[0][0] == "wikipedia"
+    assert tools._LAST_TOPIC == "marie curie"
+
+
+def test_bare_who_is_he_stays_unrouted(monkeypatch, _fresh_last_topic):
+    monkeypatch.setattr(tools, "_LAST_TOPIC", "nikola tesla")
+    monkeypatch.setattr(
+        tools, "_wiki_topic_lookup",
+        lambda q: pytest.fail("should not look up a bare referential"),
+    )
+    assert tools.route_tools("who is he", prior_turns=4) == []
+    assert tools.route_tools("what is it", prior_turns=4) == []
+
+
+def test_pronoun_followup_enriches_with_article_intent(monkeypatch, _fresh_last_topic):
+    monkeypatch.setattr(tools, "_LAST_TOPIC", "nikola tesla")
+    monkeypatch.setattr(
+        tools, "_wiki_topic_lookup",
+        lambda q: "From Wikipedia on 'Nikola Tesla': Serbian-American inventor.",
+    )
+    # Intro lacks the intent → article body is mined for death sentences.
+    monkeypatch.setattr(
+        tools, "_wiki_fulltext_sentences",
+        lambda title: "Tesla died of coronary thrombosis on 7 January 1943 in New York.",
+    )
+    hits = tools.route_tools("how did he die")
+    assert hits and hits[0][0] == "wikipedia"
+    assert "coronary thrombosis" in hits[0][1]
+
+
+def test_intent_lookup_passthrough_when_summary_answers(monkeypatch):
+    summary = "From Wikipedia on 'Nikola Tesla': he died alone in New Yorker hotel."
+    monkeypatch.setattr(tools, "_wiki_topic_lookup", lambda q: summary)
+    monkeypatch.setattr(
+        tools, "_wiki_fulltext_sentences",
+        lambda t: pytest.fail("article mining not needed"),
+    )
+    assert tools._wiki_intent_lookup("how did nikola tesla die") == summary
+
+
+def test_intent_lookup_passthrough_without_intent(monkeypatch):
+    bio = "From Wikipedia on 'Nikola Tesla': Serbian-American inventor."
+    monkeypatch.setattr(tools, "_wiki_topic_lookup", lambda q: bio)
+    assert tools._wiki_intent_lookup("nikola tesla") == bio
+
+
+def test_web_search_falls_back_to_wikipedia_on_ddg_miss(monkeypatch):
+    class _Resp:
+        status_code = 200
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"AbstractText": "", "Answer": "", "RelatedTopics": []}
+
+    monkeypatch.setattr(tools.httpx, "get", lambda *a, **k: _Resp())
+    wiki = "From Wikipedia on 'Pawlak': Polish mathematician."
+    order = []
+    monkeypatch.setattr(
+        tools, "_wiki_topic_lookup",
+        lambda q: order.append("topic") or wiki,
+    )
+    assert tools.web_search("zdzislaw pawlak") == wiki
+    assert order == ["topic"]
+
+    # Topic lookup declining → single-word queries try the summary direct.
+    direct = "From Wikipedia on 'tesla': disambiguation page."
+    monkeypatch.setattr(tools, "_wiki_topic_lookup", lambda q: None)
+    monkeypatch.setattr(tools, "wikipedia_summary", lambda q: direct)
+    assert tools.web_search("tesla") == direct
+
+    # All sources miss → honest give-up line, unchanged.
+    monkeypatch.setattr(tools, "wikipedia_summary", lambda q: None)
+    assert "No instant answer" in tools.web_search("xylophone jazz")
+
+
+def test_wikipedia_summary_resolves_misses_via_fulltext_search(monkeypatch):
+    captured = []
+
+    class _Resp:
+        def __init__(self, payload, status=200):
+            self._payload = payload
+            self.status_code = status
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, params=None, timeout=None, headers=None):
+        captured.append((url, params or {}))
+        if "/page/summary/" in url.lower():
+            return _Resp({}, status=404) if len(captured) == 1 else _Resp(
+                {"title": "Nikola Tesla", "extract": "Inventor."}
+            )
+        if params and params.get("action") == "query":
+            assert params["srsearch"] == "nikola tesla"
+            assert params["list"] == "search"
+            return _Resp({"query": {"search": [{"title": "Nikola Tesla"}]}})
+        raise AssertionError(f"unexpected url {url}")
+
+    monkeypatch.setattr(tools.httpx, "get", fake_get)
+    out = tools.wikipedia_summary("nikola tesla")
+    assert out == "From Wikipedia on 'Nikola Tesla': Inventor."
+    assert any(p.get("list") == "search" for _, p in captured)
+    assert not any(p.get("action") == "opensearch" for _, p in captured)
+
+    # Search finding nothing → honest None (no crash, no wrong article).
+    def no_hits(url, params=None, timeout=None, headers=None):
+        if "page/summary/" in url:
+            return _Resp({}, status=404)
+        return _Resp({"query": {"search": []}})
+
+    monkeypatch.setattr(tools.httpx, "get", no_hits)
+    assert tools.wikipedia_summary("gibberish xyz") is None
 
 
 # ── Batch 2: calculator, units, memory, safety ─────────────────────────
@@ -241,3 +401,105 @@ def test_new_router_triggers_match():
     assert m and m.group(2) == "github.com"
     m = tools._RE_URL.search("read https://example.com/page for me")
     assert m and m.group(1) == "https://example.com/page"
+
+    # Screen & active window triggers
+    assert tools._RE_ACTIVE_WIN.search("what app am i using")
+    assert tools._RE_ACTIVE_WIN.search("what is my active window")
+    assert tools._RE_SCREEN_INSPECT.search("what is on my screen")
+    assert tools._RE_SCREEN_INSPECT.search("explain this error on my screen")
+    assert tools._RE_RUNNING_APPS.search("what apps are running")
+    assert tools._RE_RUNNING_APPS.search("list open applications")
+
+
+def test_reminder_without_details_asks_instead_of_guessing(monkeypatch):
+    monkeypatch.setattr(tools, "set_reminder", lambda m, msg: "ok")
+    hits = tools.route_tools("remind me to stretch")
+    assert hits and hits[0][0] == "clarify"
+    assert "how many minutes" in hits[0][1]
+    # With a duration it still schedules normally.
+    hits = tools.route_tools("remind me in 5 minutes to stretch")
+    assert hits and hits[0][0] == "set_reminder"
+
+
+def test_followup_whois_skipped_when_history_exists(monkeypatch):
+    monkeypatch.setattr(tools, "wikipedia_summary", lambda term: f"summary of {term}")
+    # Opening turn: who-question hits Wikipedia.
+    hits = tools.route_tools("who is Nikola Tesla", prior_turns=0)
+    assert hits and hits[0][0] == "wikipedia"
+    # Follow-up ("who is he?" after talking about Tesla): no route —
+    # the model answers from conversation history instead.
+    hits = tools.route_tools("who is he", prior_turns=4)
+    assert hits == []
+
+
+def test_document_without_topic_asks():
+    hits = tools.route_tools("write a meeting notes document")
+    assert hits and hits[0][0] == "clarify"
+    assert "what should the" in hits[0][1]
+
+
+def test_daily_briefing_composes_from_todos(tmp_path, monkeypatch):
+    monkeypatch.setenv("DESKPET_DOCS_DIR", str(tmp_path))
+    # Empty list → clear-list line.
+    assert "to-do list is clear" in tools.compose_daily_briefing()
+    tools.todo_add("buy milk")
+    tools.todo_add("file taxes")
+    text = tools.compose_daily_briefing()
+    assert "2 open to-do item(s)" in text
+    assert "Top of the list: buy milk" in text
+    assert "(1 more)" in text
+
+
+def test_evening_recap_zero_done(tmp_path, monkeypatch):
+    monkeypatch.setenv("DESKPET_DOCS_DIR", str(tmp_path))
+    assert tools.compose_evening_recap() == (
+        "Good evening, sir. No tasks checked off today. Rest well, sir."
+    )
+
+
+def test_evening_recap_counts_done_and_top_open(tmp_path, monkeypatch):
+    monkeypatch.setenv("DESKPET_DOCS_DIR", str(tmp_path))
+    tools.todo_add("buy milk")
+    tools.todo_add("call mum")
+    tools.todo_done("buy milk")
+    assert tools.compose_evening_recap() == (
+        "Good evening, sir. You wrapped up 1 task(s) today. "
+        "1 task(s) still open. Still open: call mum. Rest well, sir."
+    )
+
+
+def test_pending_confirm_affirm_executes(monkeypatch):
+    monkeypatch.setattr(tools, "launch_app", lambda name: f"Launched {name}.")
+    hits = tools.route_tools("launch notepad", clarify="confirm_all")
+    assert hits and hits[0][0] == "clarify" and "notepad" in hits[0][1]
+    # User affirms -> stashed action runs now.
+    hits = tools.route_tools("yes", clarify="confirm_all")
+    assert hits and hits[0][0] == "launch_app"
+    assert "Launched notepad." in hits[0][1]
+    # Slot cleared.
+    assert tools.route_tools("thanks", clarify="confirm_all") == []
+
+
+def test_pending_confirm_decline_cancels(monkeypatch):
+    calls = []
+    monkeypatch.setattr(tools, "set_reminder", lambda m, msg: calls.append((m, msg)) or "ok")
+    tools.route_tools("remind me in 5 minutes to stretch", clarify="confirm_all")
+    hits = tools.route_tools("no", clarify="confirm_all")
+    assert hits and hits[0][0] == "confirm_cancel"
+    assert calls == []  # never executed
+
+
+def test_pending_confirm_new_topic_abandons(monkeypatch):
+    monkeypatch.setattr(tools, "launch_app", lambda name: "Launched.")
+    tools.route_tools("launch notepad", clarify="confirm_all")
+    # Unrelated next message abandons the stale action silently.
+    assert tools.route_tools("what time is it", clarify="confirm_all")[0][0] == "get_time"
+
+
+def test_recall_fact_without_args_returns_recent(monkeypatch, tmp_path):
+    monkeypatch.setenv("DESKPET_DOCS_DIR", str(tmp_path))
+    tools.remember_fact("my codename is Blue Falcon")
+    out = tools.recall_fact()  # no args - must not raise TypeError
+    assert "Blue Falcon" in out
+    out = tools.recall_fact(query="codename")
+    assert "Blue Falcon" in out

@@ -1,0 +1,3974 @@
+{
+  "clawd-on-desk/agents/antigravity-cli.js": {
+    "mtime": 1784373289.3432665,
+    "seen": 1787494094.7316663,
+    "ast_hash": "89384fd855b70344022dc11ce44d516c",
+    "semantic_hash": "89384fd855b70344022dc11ce44d516c"
+  },
+  "clawd-on-desk/agents/claude-code.js": {
+    "mtime": 1784373289.3432665,
+    "seen": 1787494094.731671,
+    "ast_hash": "cdb9dbef301c02e57955ea02bbda3fb9",
+    "semantic_hash": "cdb9dbef301c02e57955ea02bbda3fb9"
+  },
+  "clawd-on-desk/agents/codebuddy.js": {
+    "mtime": 1784373289.3437743,
+    "seen": 1787494094.7316728,
+    "ast_hash": "8097cf6a0610bcf5f109ed1879a76bc0",
+    "semantic_hash": "8097cf6a0610bcf5f109ed1879a76bc0"
+  },
+  "clawd-on-desk/agents/codewhale.js": {
+    "mtime": 1784373289.3437743,
+    "seen": 1787494094.7316737,
+    "ast_hash": "b69df0ab1324b8b8e383952c6393f7c1",
+    "semantic_hash": "b69df0ab1324b8b8e383952c6393f7c1"
+  },
+  "clawd-on-desk/agents/codex-log-monitor.js": {
+    "mtime": 1784373289.3437743,
+    "seen": 1787494094.7316747,
+    "ast_hash": "2dcc81cc34ce4eb880c70c37b18c4a13",
+    "semantic_hash": "2dcc81cc34ce4eb880c70c37b18c4a13"
+  },
+  "clawd-on-desk/agents/codex-subagent-classifier.js": {
+    "mtime": 1784373289.3447773,
+    "seen": 1787494094.7316754,
+    "ast_hash": "6f34d819e016941b4ea1f8a8ffa525bd",
+    "semantic_hash": "6f34d819e016941b4ea1f8a8ffa525bd"
+  },
+  "clawd-on-desk/agents/codex.js": {
+    "mtime": 1784373289.3452814,
+    "seen": 1787494094.7316763,
+    "ast_hash": "cac1b1111a8eb350e51d51a2c54a499f",
+    "semantic_hash": "cac1b1111a8eb350e51d51a2c54a499f"
+  },
+  "clawd-on-desk/agents/copilot-cli.js": {
+    "mtime": 1784373289.3452814,
+    "seen": 1787494094.7316773,
+    "ast_hash": "29260b94fa6638528bc235e497f94338",
+    "semantic_hash": "29260b94fa6638528bc235e497f94338"
+  },
+  "clawd-on-desk/agents/cursor-agent.js": {
+    "mtime": 1784373289.3452814,
+    "seen": 1787494094.731678,
+    "ast_hash": "29ea6944170bfecd0105840abb57f80b",
+    "semantic_hash": "29ea6944170bfecd0105840abb57f80b"
+  },
+  "clawd-on-desk/agents/gemini-cli.js": {
+    "mtime": 1784373289.3452814,
+    "seen": 1787494094.7316787,
+    "ast_hash": "4b0a45cbb3a8e0d3e82656f1b717819c",
+    "semantic_hash": "4b0a45cbb3a8e0d3e82656f1b717819c"
+  },
+  "clawd-on-desk/agents/gemini-log-monitor.js": {
+    "mtime": 1784373289.346284,
+    "seen": 1787494094.7316794,
+    "ast_hash": "68a42b77fc1ae6832af4e6bf54329d79",
+    "semantic_hash": "68a42b77fc1ae6832af4e6bf54329d79"
+  },
+  "clawd-on-desk/agents/hermes.js": {
+    "mtime": 1784373289.3467975,
+    "seen": 1787494094.7316804,
+    "ast_hash": "ec839e9d864f7b3eeb4402baf7c308f9",
+    "semantic_hash": "ec839e9d864f7b3eeb4402baf7c308f9"
+  },
+  "clawd-on-desk/agents/kimi-cli.js": {
+    "mtime": 1784373289.3467975,
+    "seen": 1787494094.7316813,
+    "ast_hash": "0ce932f268687f6babb6d41c039088cb",
+    "semantic_hash": "0ce932f268687f6babb6d41c039088cb"
+  },
+  "clawd-on-desk/agents/kimi-log-monitor.js": {
+    "mtime": 1784373289.3467975,
+    "seen": 1787494094.7316818,
+    "ast_hash": "9726a7b8b6affae088a6c5be7e3b7113",
+    "semantic_hash": "9726a7b8b6affae088a6c5be7e3b7113"
+  },
+  "clawd-on-desk/agents/kiro-cli.js": {
+    "mtime": 1784373289.3467975,
+    "seen": 1787494094.7316825,
+    "ast_hash": "703626b90a2934f7fbd0e114cc00a363",
+    "semantic_hash": "703626b90a2934f7fbd0e114cc00a363"
+  },
+  "clawd-on-desk/agents/openclaw.js": {
+    "mtime": 1784373289.3478081,
+    "seen": 1787494094.7316833,
+    "ast_hash": "9450f799db1d9121e5c4f6127854e568",
+    "semantic_hash": "9450f799db1d9121e5c4f6127854e568"
+  },
+  "clawd-on-desk/agents/opencode.js": {
+    "mtime": 1784373289.3478081,
+    "seen": 1787494094.7316842,
+    "ast_hash": "43f2657ca4be92ef30c495102a3aa476",
+    "semantic_hash": "43f2657ca4be92ef30c495102a3aa476"
+  },
+  "clawd-on-desk/agents/pi.js": {
+    "mtime": 1784373289.3478081,
+    "seen": 1787494094.731685,
+    "ast_hash": "a7129e5f34d5d6e52e0ac5dc2593225a",
+    "semantic_hash": "a7129e5f34d5d6e52e0ac5dc2593225a"
+  },
+  "clawd-on-desk/agents/qoder.js": {
+    "mtime": 1784373289.3478081,
+    "seen": 1787494094.7316856,
+    "ast_hash": "16700925434194f6a5dd152953317b94",
+    "semantic_hash": "16700925434194f6a5dd152953317b94"
+  },
+  "clawd-on-desk/agents/qwen-code.js": {
+    "mtime": 1784373289.348801,
+    "seen": 1787494094.7316864,
+    "ast_hash": "a54a0a52748cc9970e5961661759c397",
+    "semantic_hash": "a54a0a52748cc9970e5961661759c397"
+  },
+  "clawd-on-desk/agents/reasonix.js": {
+    "mtime": 1784373289.348801,
+    "seen": 1787494094.7316868,
+    "ast_hash": "e1bf7d867439a945112fcda383630f86",
+    "semantic_hash": "e1bf7d867439a945112fcda383630f86"
+  },
+  "clawd-on-desk/agents/registry.js": {
+    "mtime": 1784373289.348801,
+    "seen": 1787494094.7316878,
+    "ast_hash": "c26ef19268c9deb619134cce790510cf",
+    "semantic_hash": "c26ef19268c9deb619134cce790510cf"
+  },
+  "clawd-on-desk/ci/wayland-smoke.sh": {
+    "mtime": 1784373289.5363777,
+    "seen": 1787494094.7316892,
+    "ast_hash": "867c95413a4972f75f5e8761010de1c2",
+    "semantic_hash": "867c95413a4972f75f5e8761010de1c2"
+  },
+  "clawd-on-desk/extensions/vscode/extension.js": {
+    "mtime": 1784373289.5489137,
+    "seen": 1787494094.73169,
+    "ast_hash": "895de22d3920b8e0bcb40369a32393a9",
+    "semantic_hash": "895de22d3920b8e0bcb40369a32393a9"
+  },
+  "clawd-on-desk/extensions/vscode/package.json": {
+    "mtime": 1784373289.5489137,
+    "seen": 1787494094.7316904,
+    "ast_hash": "f1b3c6e9e2a537591b945ec2c52b4eac",
+    "semantic_hash": "f1b3c6e9e2a537591b945ec2c52b4eac"
+  },
+  "clawd-on-desk/hooks/antigravity-hook.js": {
+    "mtime": 1784373289.549921,
+    "seen": 1787494094.7316914,
+    "ast_hash": "d401f6f48c803b90cc8444208ab8810e",
+    "semantic_hash": "d401f6f48c803b90cc8444208ab8810e"
+  },
+  "clawd-on-desk/hooks/antigravity-install.js": {
+    "mtime": 1784373289.549921,
+    "seen": 1787494094.731692,
+    "ast_hash": "6deff4cd154fe7c51d22d1847e8bed9d",
+    "semantic_hash": "6deff4cd154fe7c51d22d1847e8bed9d"
+  },
+  "clawd-on-desk/hooks/antigravity-stdout.js": {
+    "mtime": 1784373289.549921,
+    "seen": 1787494094.7316928,
+    "ast_hash": "b635b17e9956406717ae17eb8f79fb81",
+    "semantic_hash": "b635b17e9956406717ae17eb8f79fb81"
+  },
+  "clawd-on-desk/hooks/auto-start.js": {
+    "mtime": 1784373289.5509138,
+    "seen": 1787494094.7316935,
+    "ast_hash": "18c1b6c2cbddbd6179982f700c5f7226",
+    "semantic_hash": "18c1b6c2cbddbd6179982f700c5f7226"
+  },
+  "clawd-on-desk/hooks/clawd-hook.js": {
+    "mtime": 1784373289.5509138,
+    "seen": 1787494094.7316942,
+    "ast_hash": "76457678597b11b30701e5c9682d680c",
+    "semantic_hash": "76457678597b11b30701e5c9682d680c"
+  },
+  "clawd-on-desk/hooks/cleanup-integrations.js": {
+    "mtime": 1784373289.5509138,
+    "seen": 1787494094.7316952,
+    "ast_hash": "1a7db07a3ecef9dd4f18dabfcbfe4ce0",
+    "semantic_hash": "1a7db07a3ecef9dd4f18dabfcbfe4ce0"
+  },
+  "clawd-on-desk/hooks/codebuddy-hook.js": {
+    "mtime": 1784373289.5519133,
+    "seen": 1787494094.7316957,
+    "ast_hash": "808ee14056d8106f760c6e277d42e521",
+    "semantic_hash": "808ee14056d8106f760c6e277d42e521"
+  },
+  "clawd-on-desk/hooks/codebuddy-install.js": {
+    "mtime": 1784373289.5524173,
+    "seen": 1787494094.7316961,
+    "ast_hash": "017b3e214968414715194adcb3797c78",
+    "semantic_hash": "017b3e214968414715194adcb3797c78"
+  },
+  "clawd-on-desk/hooks/codewhale-hook.js": {
+    "mtime": 1784373289.5524173,
+    "seen": 1787494094.7316968,
+    "ast_hash": "6d4c13d24abf4b99342f72b2b7251638",
+    "semantic_hash": "6d4c13d24abf4b99342f72b2b7251638"
+  },
+  "clawd-on-desk/hooks/codewhale-install.js": {
+    "mtime": 1784373289.5529325,
+    "seen": 1787494094.7316976,
+    "ast_hash": "23e580ea147933a30e376db528a74c93",
+    "semantic_hash": "23e580ea147933a30e376db528a74c93"
+  },
+  "clawd-on-desk/hooks/codex-assistant-output.js": {
+    "mtime": 1784373289.5529325,
+    "seen": 1787494094.7316983,
+    "ast_hash": "a078d42872d6155f7f8d947217381aaa",
+    "semantic_hash": "a078d42872d6155f7f8d947217381aaa"
+  },
+  "clawd-on-desk/hooks/codex-debug-hook.js": {
+    "mtime": 1784373289.5539484,
+    "seen": 1787494094.731699,
+    "ast_hash": "78641fd830601291fa2a5efa519dfda0",
+    "semantic_hash": "78641fd830601291fa2a5efa519dfda0"
+  },
+  "clawd-on-desk/hooks/codex-debug-install.js": {
+    "mtime": 1784373289.5539484,
+    "seen": 1787494094.7316997,
+    "ast_hash": "6837a9042fc5f7421d509254bd81383a",
+    "semantic_hash": "6837a9042fc5f7421d509254bd81383a"
+  },
+  "clawd-on-desk/hooks/codex-hook.js": {
+    "mtime": 1784373289.5539484,
+    "seen": 1787494094.7317004,
+    "ast_hash": "0fde0777e4f3d40b78a4be503df6a174",
+    "semantic_hash": "0fde0777e4f3d40b78a4be503df6a174"
+  },
+  "clawd-on-desk/hooks/codex-install-utils.js": {
+    "mtime": 1784373289.5549479,
+    "seen": 1787494094.731701,
+    "ast_hash": "4dd58b2b66bb130a8ff70e0b0f692d8a",
+    "semantic_hash": "4dd58b2b66bb130a8ff70e0b0f692d8a"
+  },
+  "clawd-on-desk/hooks/codex-install.js": {
+    "mtime": 1784373289.5549479,
+    "seen": 1787494094.731702,
+    "ast_hash": "15521a8a142c32e39ed6d9a0037b78ba",
+    "semantic_hash": "15521a8a142c32e39ed6d9a0037b78ba"
+  },
+  "clawd-on-desk/hooks/codex-remote-monitor.js": {
+    "mtime": 1784373289.5559473,
+    "seen": 1787494094.7317028,
+    "ast_hash": "e17815fa0fd2765c790315d421370173",
+    "semantic_hash": "e17815fa0fd2765c790315d421370173"
+  },
+  "clawd-on-desk/hooks/codex-session-index.js": {
+    "mtime": 1784373289.5559473,
+    "seen": 1787494094.7317033,
+    "ast_hash": "61546b96062583c8042ef9cb420004df",
+    "semantic_hash": "61546b96062583c8042ef9cb420004df"
+  },
+  "clawd-on-desk/hooks/codex-subagent-fields.js": {
+    "mtime": 1784373289.5559473,
+    "seen": 1787494094.7317045,
+    "ast_hash": "33ebf27df87c2d569f8529a744e50361",
+    "semantic_hash": "33ebf27df87c2d569f8529a744e50361"
+  },
+  "clawd-on-desk/hooks/context-usage.js": {
+    "mtime": 1784373289.5569406,
+    "seen": 1787494094.7317052,
+    "ast_hash": "cfb69ed27f839ac7f77c5e92bedf4a4e",
+    "semantic_hash": "cfb69ed27f839ac7f77c5e92bedf4a4e"
+  },
+  "clawd-on-desk/hooks/copilot-hook.js": {
+    "mtime": 1784373289.5569406,
+    "seen": 1787494094.731706,
+    "ast_hash": "0a40916e9f209f3d29d95509e9cebcbb",
+    "semantic_hash": "0a40916e9f209f3d29d95509e9cebcbb"
+  },
+  "clawd-on-desk/hooks/copilot-install.js": {
+    "mtime": 1784373289.5569406,
+    "seen": 1787494094.7317066,
+    "ast_hash": "3fd872dcacec923efce28875572da504",
+    "semantic_hash": "3fd872dcacec923efce28875572da504"
+  },
+  "clawd-on-desk/hooks/cursor-hook.js": {
+    "mtime": 1784373289.5579405,
+    "seen": 1787494094.7317073,
+    "ast_hash": "61af01b8cdebfe00f680e67085b9127d",
+    "semantic_hash": "61af01b8cdebfe00f680e67085b9127d"
+  },
+  "clawd-on-desk/hooks/cursor-install.js": {
+    "mtime": 1784373289.5579405,
+    "seen": 1787494094.7317078,
+    "ast_hash": "c6058bbeb59efa1e7e5bcb5b7dfa4310",
+    "semantic_hash": "c6058bbeb59efa1e7e5bcb5b7dfa4310"
+  },
+  "clawd-on-desk/hooks/gemini-hook.js": {
+    "mtime": 1784373289.5579405,
+    "seen": 1787494094.7317085,
+    "ast_hash": "bc3312bdf63e7f49f3019a973a0d0363",
+    "semantic_hash": "bc3312bdf63e7f49f3019a973a0d0363"
+  },
+  "clawd-on-desk/hooks/gemini-install.js": {
+    "mtime": 1784373289.5589404,
+    "seen": 1787494094.7317092,
+    "ast_hash": "5933909afb3c7a70a176538c43e384c1",
+    "semantic_hash": "5933909afb3c7a70a176538c43e384c1"
+  },
+  "clawd-on-desk/hooks/hermes-install.js": {
+    "mtime": 1784373289.5589404,
+    "seen": 1787494094.7317097,
+    "ast_hash": "c48c9520c14485b10d10f12ef71afea0",
+    "semantic_hash": "c48c9520c14485b10d10f12ef71afea0"
+  },
+  "clawd-on-desk/hooks/hermes-plugin/__init__.py": {
+    "mtime": 1784373289.55994,
+    "seen": 1787494094.7317104,
+    "ast_hash": "5baa96790ad260734b39b5055042b63d",
+    "semantic_hash": "5baa96790ad260734b39b5055042b63d"
+  },
+  "clawd-on-desk/hooks/install.js": {
+    "mtime": 1784373289.55994,
+    "seen": 1787494094.731711,
+    "ast_hash": "e85b0ff2325a757043bf7e7d9410b569",
+    "semantic_hash": "e85b0ff2325a757043bf7e7d9410b569"
+  },
+  "clawd-on-desk/hooks/json-utils.js": {
+    "mtime": 1784373289.5609398,
+    "seen": 1787494094.7317114,
+    "ast_hash": "dae220bee54025a603381a4e3dfa2f5f",
+    "semantic_hash": "dae220bee54025a603381a4e3dfa2f5f"
+  },
+  "clawd-on-desk/hooks/kimi-hook.js": {
+    "mtime": 1784373289.5609398,
+    "seen": 1787494094.7317126,
+    "ast_hash": "301504c237e802f373214375b69e0668",
+    "semantic_hash": "301504c237e802f373214375b69e0668"
+  },
+  "clawd-on-desk/hooks/kimi-install.js": {
+    "mtime": 1784373289.5619407,
+    "seen": 1787494094.731713,
+    "ast_hash": "d39bc498f386d68950e82e14d6b899dd",
+    "semantic_hash": "d39bc498f386d68950e82e14d6b899dd"
+  },
+  "clawd-on-desk/hooks/kiro-hook.js": {
+    "mtime": 1784373289.5619407,
+    "seen": 1787494094.7317138,
+    "ast_hash": "65fa7667b1801fa02150c9ac034a3b63",
+    "semantic_hash": "65fa7667b1801fa02150c9ac034a3b63"
+  },
+  "clawd-on-desk/hooks/kiro-install.js": {
+    "mtime": 1784373289.5619407,
+    "seen": 1787494094.7317145,
+    "ast_hash": "cc3a876876fb73851d10e7912b9e3dcb",
+    "semantic_hash": "cc3a876876fb73851d10e7912b9e3dcb"
+  },
+  "clawd-on-desk/hooks/openclaw-install.js": {
+    "mtime": 1784373289.56294,
+    "seen": 1787494094.731715,
+    "ast_hash": "63e9d0282d98db7230590d78c7930541",
+    "semantic_hash": "63e9d0282d98db7230590d78c7930541"
+  },
+  "clawd-on-desk/hooks/openclaw-plugin/index.js": {
+    "mtime": 1784373289.56294,
+    "seen": 1787494094.731716,
+    "ast_hash": "2cef190ab457061a057bd94d96444b0d",
+    "semantic_hash": "2cef190ab457061a057bd94d96444b0d"
+  },
+  "clawd-on-desk/hooks/openclaw-plugin/openclaw.plugin.json": {
+    "mtime": 1784373289.56294,
+    "seen": 1787494094.7317166,
+    "ast_hash": "e387d08d54316d0b7fc0cec9f6af3232",
+    "semantic_hash": "e387d08d54316d0b7fc0cec9f6af3232"
+  },
+  "clawd-on-desk/hooks/openclaw-plugin/package.json": {
+    "mtime": 1784373289.56294,
+    "seen": 1787494094.731717,
+    "ast_hash": "2da188eeaf748dd227185acb06f1c87f",
+    "semantic_hash": "2da188eeaf748dd227185acb06f1c87f"
+  },
+  "clawd-on-desk/hooks/opencode-install.js": {
+    "mtime": 1784373289.5641167,
+    "seen": 1787494094.7317178,
+    "ast_hash": "4df36ad92d9b1107c9a6553057d5ce17",
+    "semantic_hash": "4df36ad92d9b1107c9a6553057d5ce17"
+  },
+  "clawd-on-desk/hooks/opencode-plugin/index.mjs": {
+    "mtime": 1784373289.5641167,
+    "seen": 1787494094.7317183,
+    "ast_hash": "4d031c88dfd2ce0172081739acc1c234",
+    "semantic_hash": "4d031c88dfd2ce0172081739acc1c234"
+  },
+  "clawd-on-desk/hooks/opencode-plugin/package.json": {
+    "mtime": 1784373289.5651164,
+    "seen": 1787494094.7317193,
+    "ast_hash": "66e6752c9af18254ea91d9e494a96522",
+    "semantic_hash": "66e6752c9af18254ea91d9e494a96522"
+  },
+  "clawd-on-desk/hooks/opencode-plugin/session-ids.mjs": {
+    "mtime": 1784373289.5651164,
+    "seen": 1787494094.73172,
+    "ast_hash": "a674fd9c634e60b5cc612877857140c4",
+    "semantic_hash": "a674fd9c634e60b5cc612877857140c4"
+  },
+  "clawd-on-desk/hooks/pi-extension-core.js": {
+    "mtime": 1784373289.5651164,
+    "seen": 1787494094.7317207,
+    "ast_hash": "14c706c8f5b541fdb2280a693cbddd8f",
+    "semantic_hash": "14c706c8f5b541fdb2280a693cbddd8f"
+  },
+  "clawd-on-desk/hooks/pi-extension.ts": {
+    "mtime": 1784373289.566116,
+    "seen": 1787494094.7317212,
+    "ast_hash": "b2c292b75992906ec8774913f4e50903",
+    "semantic_hash": "b2c292b75992906ec8774913f4e50903"
+  },
+  "clawd-on-desk/hooks/pi-install.js": {
+    "mtime": 1784373289.566116,
+    "seen": 1787494094.7317216,
+    "ast_hash": "37e4b91a8477b3a506a560872a1a8ef7",
+    "semantic_hash": "37e4b91a8477b3a506a560872a1a8ef7"
+  },
+  "clawd-on-desk/hooks/qoder-hook.js": {
+    "mtime": 1784373289.566116,
+    "seen": 1787494094.7317226,
+    "ast_hash": "30be500cf7da4bf07fe6c23a0ed85d5d",
+    "semantic_hash": "30be500cf7da4bf07fe6c23a0ed85d5d"
+  },
+  "clawd-on-desk/hooks/qoder-install.js": {
+    "mtime": 1784373289.567117,
+    "seen": 1787494094.731723,
+    "ast_hash": "e12ebc170daf5a4c23a094e8b3f7c5f3",
+    "semantic_hash": "e12ebc170daf5a4c23a094e8b3f7c5f3"
+  },
+  "clawd-on-desk/hooks/qwen-code-hook.js": {
+    "mtime": 1784373289.567117,
+    "seen": 1787494094.7317238,
+    "ast_hash": "9cb2f293d2391ad4fea7933a2db18aa5",
+    "semantic_hash": "9cb2f293d2391ad4fea7933a2db18aa5"
+  },
+  "clawd-on-desk/hooks/qwen-code-install.js": {
+    "mtime": 1784373289.567117,
+    "seen": 1787494094.7317243,
+    "ast_hash": "0f442762f0e9707b0a8562c0e8ba8e93",
+    "semantic_hash": "0f442762f0e9707b0a8562c0e8ba8e93"
+  },
+  "clawd-on-desk/hooks/reasonix-hook.js": {
+    "mtime": 1784373289.568117,
+    "seen": 1787494094.731725,
+    "ast_hash": "cc4c5d023e086f88d6d4aaa140f9c26b",
+    "semantic_hash": "cc4c5d023e086f88d6d4aaa140f9c26b"
+  },
+  "clawd-on-desk/hooks/reasonix-install.js": {
+    "mtime": 1784373289.568117,
+    "seen": 1787494094.7317262,
+    "ast_hash": "50ad8638895cb330fea909908352b302",
+    "semantic_hash": "50ad8638895cb330fea909908352b302"
+  },
+  "clawd-on-desk/hooks/server-config.js": {
+    "mtime": 1784373289.568117,
+    "seen": 1787494094.7317266,
+    "ast_hash": "17f21a8e9a1c98c0349eabb2933740bb",
+    "semantic_hash": "17f21a8e9a1c98c0349eabb2933740bb"
+  },
+  "clawd-on-desk/hooks/shared-process.js": {
+    "mtime": 1784373289.569117,
+    "seen": 1787494094.7317274,
+    "ast_hash": "64b9a0f7509a04d778f9716efab492a5",
+    "semantic_hash": "64b9a0f7509a04d778f9716efab492a5"
+  },
+  "clawd-on-desk/hooks/state-payload-size.js": {
+    "mtime": 1784373289.5696208,
+    "seen": 1787494094.7317283,
+    "ast_hash": "5f8c72bee225de3b2915d8c11f66c1d5",
+    "semantic_hash": "5f8c72bee225de3b2915d8c11f66c1d5"
+  },
+  "clawd-on-desk/hooks/uninstall.js": {
+    "mtime": 1784373289.5696208,
+    "seen": 1787494094.7317293,
+    "ast_hash": "25e22835922b6fa562dc84cefad313f4",
+    "semantic_hash": "25e22835922b6fa562dc84cefad313f4"
+  },
+  "clawd-on-desk/launch.js": {
+    "mtime": 1787502079.2319324,
+    "seen": 1787581467.5884042,
+    "ast_hash": "99d5790ef90d2ae7749657affbe89a93",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/package.json": {
+    "mtime": 1787585951.6536236,
+    "seen": 1787586058.7852907,
+    "ast_hash": "170d00a933bd2410de56e1ef821c62fc",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/perf/k6/clawdbot-stress.js": {
+    "mtime": 1784373289.5726273,
+    "seen": 1787494094.7317314,
+    "ast_hash": "cc48aca5dbb9a67789661d013662ffda",
+    "semantic_hash": "cc48aca5dbb9a67789661d013662ffda"
+  },
+  "clawd-on-desk/pwa/app.js": {
+    "mtime": 1784373289.573627,
+    "seen": 1787494094.7317324,
+    "ast_hash": "b2a4f92e78f8df5a4518d956e80313cc",
+    "semantic_hash": "b2a4f92e78f8df5a4518d956e80313cc"
+  },
+  "clawd-on-desk/pwa/icons.js": {
+    "mtime": 1784373289.573627,
+    "seen": 1787494094.7317333,
+    "ast_hash": "c6c1dea91864554fd34191b06a34be00",
+    "semantic_hash": "c6c1dea91864554fd34191b06a34be00"
+  },
+  "clawd-on-desk/pwa/manifest.json": {
+    "mtime": 1784373289.5756366,
+    "seen": 1787494094.731734,
+    "ast_hash": "e038005320d1157215bb775275bf2365",
+    "semantic_hash": "e038005320d1157215bb775275bf2365"
+  },
+  "clawd-on-desk/pwa/sw.js": {
+    "mtime": 1784373289.5766282,
+    "seen": 1787494094.7317357,
+    "ast_hash": "e944d33af8eab26cac506ba300ec99d1",
+    "semantic_hash": "e944d33af8eab26cac506ba300ec99d1"
+  },
+  "clawd-on-desk/scripts/build-dmg-notarize.sh": {
+    "mtime": 1784373289.5776362,
+    "seen": 1787494094.7317364,
+    "ast_hash": "38103b1f94e10b6f08248f169f95c6c0",
+    "semantic_hash": "38103b1f94e10b6f08248f169f95c6c0"
+  },
+  "clawd-on-desk/scripts/create-theme.js": {
+    "mtime": 1784373289.5776362,
+    "seen": 1787494094.7317371,
+    "ast_hash": "0095503352cf9d52dc21f7ff501a54fe",
+    "semantic_hash": "0095503352cf9d52dc21f7ff501a54fe"
+  },
+  "clawd-on-desk/scripts/export-agent-icons.js": {
+    "mtime": 1784373289.5776362,
+    "seen": 1787494094.731738,
+    "ast_hash": "bd051bb5e5fc7691361ebb792066e0ad",
+    "semantic_hash": "bd051bb5e5fc7691361ebb792066e0ad"
+  },
+  "clawd-on-desk/scripts/fetch-adapters.js": {
+    "mtime": 1784373289.5786288,
+    "seen": 1787494094.7317388,
+    "ast_hash": "10bf970d65485facbf94ba24c5354d3d",
+    "semantic_hash": "10bf970d65485facbf94ba24c5354d3d"
+  },
+  "clawd-on-desk/scripts/fetch-sidecar-binaries.js": {
+    "mtime": 1784373289.5786288,
+    "seen": 1787494094.7317398,
+    "ast_hash": "ea5342917770c8f4f1f0e60cd814c5a8",
+    "semantic_hash": "ea5342917770c8f4f1f0e60cd814c5a8"
+  },
+  "clawd-on-desk/scripts/monitor-clawd-power.ps1": {
+    "mtime": 1784373289.5786288,
+    "seen": 1787494094.7317405,
+    "ast_hash": "43e96154e810d778076ba61226a30215",
+    "semantic_hash": "43e96154e810d778076ba61226a30215"
+  },
+  "clawd-on-desk/scripts/monitor-clawd-resources.sh": {
+    "mtime": 1784373289.5796278,
+    "seen": 1787494094.7317412,
+    "ast_hash": "b88e71c69a8ac02c544032fc6e59c221",
+    "semantic_hash": "b88e71c69a8ac02c544032fc6e59c221"
+  },
+  "clawd-on-desk/scripts/notarize.js": {
+    "mtime": 1784373289.5796278,
+    "seen": 1787494094.7317421,
+    "ast_hash": "b4f9318662fe9a00c3746f23473633e0",
+    "semantic_hash": "b4f9318662fe9a00c3746f23473633e0"
+  },
+  "clawd-on-desk/scripts/remote-deploy.sh": {
+    "mtime": 1784373289.5796278,
+    "seen": 1787494094.7317429,
+    "ast_hash": "58b97ebf59fda75309893ceefdb9fe72",
+    "semantic_hash": "58b97ebf59fda75309893ceefdb9fe72"
+  },
+  "clawd-on-desk/scripts/run-clawdbot-stress.sh": {
+    "mtime": 1784373289.5806284,
+    "seen": 1787494094.7317436,
+    "ast_hash": "8e2efb5bc2503dab649a08d9b6fee2e4",
+    "semantic_hash": "8e2efb5bc2503dab649a08d9b6fee2e4"
+  },
+  "clawd-on-desk/scripts/validate-theme.js": {
+    "mtime": 1784373289.5806284,
+    "seen": 1787494094.7317445,
+    "ast_hash": "1b29e2904547ebe0728bf672fc23b871",
+    "semantic_hash": "1b29e2904547ebe0728bf672fc23b871"
+  },
+  "clawd-on-desk/scripts/verify-adapters.js": {
+    "mtime": 1784373289.5806284,
+    "seen": 1787494094.7317452,
+    "ast_hash": "ed6629c90918d7b58df2e23e186c5628",
+    "semantic_hash": "ed6629c90918d7b58df2e23e186c5628"
+  },
+  "clawd-on-desk/scripts/verify-sidecar-binaries.js": {
+    "mtime": 1784373289.5816276,
+    "seen": 1787494094.7317457,
+    "ast_hash": "b3fbea2a47338531500651cbc4bce0e0",
+    "semantic_hash": "b3fbea2a47338531500651cbc4bce0e0"
+  },
+  "clawd-on-desk/src/agent-gate.js": {
+    "mtime": 1784373289.5816276,
+    "seen": 1787494094.7317467,
+    "ast_hash": "f98010458e74893cbd6e17ac2c8058d8",
+    "semantic_hash": "f98010458e74893cbd6e17ac2c8058d8"
+  },
+  "clawd-on-desk/src/agent-installation-detector.js": {
+    "mtime": 1784373289.5826273,
+    "seen": 1787494094.7317474,
+    "ast_hash": "cafefb088c3b1f835cf670dce91907fb",
+    "semantic_hash": "cafefb088c3b1f835cf670dce91907fb"
+  },
+  "clawd-on-desk/src/agent-runtime-main.js": {
+    "mtime": 1784373289.5826273,
+    "seen": 1787494094.731748,
+    "ast_hash": "f5376fc1d547dcd33864f637192c06dd",
+    "semantic_hash": "f5376fc1d547dcd33864f637192c06dd"
+  },
+  "clawd-on-desk/src/animation-cycle.js": {
+    "mtime": 1784373289.5836284,
+    "seen": 1787494094.7317486,
+    "ast_hash": "405a0d0e5b3284408fdb96f770b3f78d",
+    "semantic_hash": "405a0d0e5b3284408fdb96f770b3f78d"
+  },
+  "clawd-on-desk/src/bubble-format.js": {
+    "mtime": 1784373289.5836284,
+    "seen": 1787494094.7317493,
+    "ast_hash": "4e0c271ec9e7d3841fc366f3437ddc1a",
+    "semantic_hash": "4e0c271ec9e7d3841fc366f3437ddc1a"
+  },
+  "clawd-on-desk/src/bubble-policy.js": {
+    "mtime": 1784373289.5836284,
+    "seen": 1787494094.7317502,
+    "ast_hash": "9249c59d20a46e4aa9dcf68b72425c45",
+    "semantic_hash": "9249c59d20a46e4aa9dcf68b72425c45"
+  },
+  "clawd-on-desk/src/bubble-renderer.js": {
+    "mtime": 1784373289.584628,
+    "seen": 1787494094.7317507,
+    "ast_hash": "4924672e796eb9b00b66a926ed134bcb",
+    "semantic_hash": "4924672e796eb9b00b66a926ed134bcb"
+  },
+  "clawd-on-desk/src/claude-settings-watcher.js": {
+    "mtime": 1784373289.5856283,
+    "seen": 1787494094.7317514,
+    "ast_hash": "ec3473bda4bf920569ec8e43a4c9dcd6",
+    "semantic_hash": "ec3473bda4bf920569ec8e43a4c9dcd6"
+  },
+  "clawd-on-desk/src/codex-monitor-callback.js": {
+    "mtime": 1784373289.5861325,
+    "seen": 1787494094.7317522,
+    "ast_hash": "9af9f57cdc948d097204f990421cbcbc",
+    "semantic_hash": "9af9f57cdc948d097204f990421cbcbc"
+  },
+  "clawd-on-desk/src/codex-pet-adapter.js": {
+    "mtime": 1784373289.5861325,
+    "seen": 1787494094.7317529,
+    "ast_hash": "4124073871e25daeb18eb31b1872b1da",
+    "semantic_hash": "4124073871e25daeb18eb31b1872b1da"
+  },
+  "clawd-on-desk/src/codex-pet-importer.js": {
+    "mtime": 1784373289.5871372,
+    "seen": 1787494094.7317538,
+    "ast_hash": "1b8b95ae30ac98fb7bb34679167d3749",
+    "semantic_hash": "1b8b95ae30ac98fb7bb34679167d3749"
+  },
+  "clawd-on-desk/src/codex-pet-main.js": {
+    "mtime": 1784373289.5871372,
+    "seen": 1787494094.7317543,
+    "ast_hash": "4af9669d434a4d34fa56b0762759d5fe",
+    "semantic_hash": "4af9669d434a4d34fa56b0762759d5fe"
+  },
+  "clawd-on-desk/src/dashboard-renderer.js": {
+    "mtime": 1784373289.5881376,
+    "seen": 1787494094.731755,
+    "ast_hash": "05eac44e932079e4052f7fa719c45fc7",
+    "semantic_hash": "05eac44e932079e4052f7fa719c45fc7"
+  },
+  "clawd-on-desk/src/dashboard.js": {
+    "mtime": 1784373289.5891373,
+    "seen": 1787494094.7317555,
+    "ast_hash": "52d8a4373e761dd6652a1307d926404d",
+    "semantic_hash": "52d8a4373e761dd6652a1307d926404d"
+  },
+  "clawd-on-desk/src/default-theme.js": {
+    "mtime": 1784373289.5891373,
+    "seen": 1787494094.7317562,
+    "ast_hash": "3d9d4b88f7af85a939837336806d8232",
+    "semantic_hash": "3d9d4b88f7af85a939837336806d8232"
+  },
+  "clawd-on-desk/src/doctor-detectors/agent-descriptors.js": {
+    "mtime": 1784373289.590137,
+    "seen": 1787494094.7317572,
+    "ast_hash": "549869c47a842fcf4879ec6b69ae615d",
+    "semantic_hash": "549869c47a842fcf4879ec6b69ae615d"
+  },
+  "clawd-on-desk/src/doctor-detectors/agent-integrations.js": {
+    "mtime": 1784373289.590137,
+    "seen": 1787494094.7317579,
+    "ast_hash": "fc1ded4e5cff791bcef6a47f5222d7d4",
+    "semantic_hash": "fc1ded4e5cff791bcef6a47f5222d7d4"
+  },
+  "clawd-on-desk/src/doctor-detectors/agent-node-bin-parser.js": {
+    "mtime": 1784373289.5911367,
+    "seen": 1787494094.7317588,
+    "ast_hash": "44b20e27d2fbbcc164dd756b4c0313b6",
+    "semantic_hash": "44b20e27d2fbbcc164dd756b4c0313b6"
+  },
+  "clawd-on-desk/src/doctor-detectors/codex-features-check.js": {
+    "mtime": 1784373289.5911367,
+    "seen": 1787494094.7317595,
+    "ast_hash": "5a755407f80d688d5d2d9b6d9c98ec5d",
+    "semantic_hash": "5a755407f80d688d5d2d9b6d9c98ec5d"
+  },
+  "clawd-on-desk/src/doctor-detectors/local-server.js": {
+    "mtime": 1784373289.5911367,
+    "seen": 1787494094.73176,
+    "ast_hash": "4bb2100f812e30a9fd1028b83b11ae9e",
+    "semantic_hash": "4bb2100f812e30a9fd1028b83b11ae9e"
+  },
+  "clawd-on-desk/src/doctor-detectors/openclaw-entry-validator.js": {
+    "mtime": 1784373289.5911367,
+    "seen": 1787494094.731761,
+    "ast_hash": "d7fa1e11b3bcb3b44779031128e37f8d",
+    "semantic_hash": "d7fa1e11b3bcb3b44779031128e37f8d"
+  },
+  "clawd-on-desk/src/doctor-detectors/opencode-entry-validator.js": {
+    "mtime": 1784373289.5921361,
+    "seen": 1787494094.7317617,
+    "ast_hash": "b43c3dc5d4591995778412dd1c3e8cfe",
+    "semantic_hash": "b43c3dc5d4591995778412dd1c3e8cfe"
+  },
+  "clawd-on-desk/src/doctor-detectors/permission-bubble-policy.js": {
+    "mtime": 1784373289.5921361,
+    "seen": 1787494094.7317622,
+    "ast_hash": "9d7d10a42960475ca63003d112eea365",
+    "semantic_hash": "9d7d10a42960475ca63003d112eea365"
+  },
+  "clawd-on-desk/src/doctor-detectors/theme-health.js": {
+    "mtime": 1784373289.5921361,
+    "seen": 1787494094.731763,
+    "ast_hash": "b2f4c9face6cdebdccb7d02a4488b0c1",
+    "semantic_hash": "b2f4c9face6cdebdccb7d02a4488b0c1"
+  },
+  "clawd-on-desk/src/doctor-hook-activity.js": {
+    "mtime": 1784373289.5931363,
+    "seen": 1787494094.7317634,
+    "ast_hash": "66a8caa5e0bfdf075aa58233a5556756",
+    "semantic_hash": "66a8caa5e0bfdf075aa58233a5556756"
+  },
+  "clawd-on-desk/src/doctor-ipc.js": {
+    "mtime": 1784373289.5931363,
+    "seen": 1787494094.7317643,
+    "ast_hash": "a1a77c51bbb3153c8ae2619910b0fb96",
+    "semantic_hash": "a1a77c51bbb3153c8ae2619910b0fb96"
+  },
+  "clawd-on-desk/src/doctor-logs.js": {
+    "mtime": 1784373289.5931363,
+    "seen": 1787494094.731765,
+    "ast_hash": "e800a47ae77bf138d084f938d4696ded",
+    "semantic_hash": "e800a47ae77bf138d084f938d4696ded"
+  },
+  "clawd-on-desk/src/doctor-report.js": {
+    "mtime": 1784373289.5931363,
+    "seen": 1787494094.7317655,
+    "ast_hash": "ac32e04939fd8c9b7b456a7a27f9cf89",
+    "semantic_hash": "ac32e04939fd8c9b7b456a7a27f9cf89"
+  },
+  "clawd-on-desk/src/doctor.js": {
+    "mtime": 1784373289.5946388,
+    "seen": 1787494094.7317662,
+    "ast_hash": "a0da90fb9159eb89bafd57a8606b361b",
+    "semantic_hash": "a0da90fb9159eb89bafd57a8606b361b"
+  },
+  "clawd-on-desk/src/drag-position.js": {
+    "mtime": 1784373289.5946388,
+    "seen": 1787494094.7317667,
+    "ast_hash": "b0718309ff4d6e611f5b7555cc410259",
+    "semantic_hash": "b0718309ff4d6e611f5b7555cc410259"
+  },
+  "clawd-on-desk/src/floating-window-runtime.js": {
+    "mtime": 1784373289.5946388,
+    "seen": 1787494094.7317677,
+    "ast_hash": "ae9ebaad82160955516651f0d6a51f46",
+    "semantic_hash": "ae9ebaad82160955516651f0d6a51f46"
+  },
+  "clawd-on-desk/src/focus.js": {
+    "mtime": 1784373289.5956433,
+    "seen": 1787494094.7317684,
+    "ast_hash": "992c2a7fb2826b766299024180713c4a",
+    "semantic_hash": "992c2a7fb2826b766299024180713c4a"
+  },
+  "clawd-on-desk/src/hardware-buddy-adapter.js": {
+    "mtime": 1784373289.5966425,
+    "seen": 1787494094.7317688,
+    "ast_hash": "cfbb99d35fb9162418ec385050969121",
+    "semantic_hash": "cfbb99d35fb9162418ec385050969121"
+  },
+  "clawd-on-desk/src/hardware-buddy-settings.js": {
+    "mtime": 1784373289.5966425,
+    "seen": 1787494094.7317696,
+    "ast_hash": "47194ef62b995a97fb744a26aa2c8392",
+    "semantic_hash": "47194ef62b995a97fb744a26aa2c8392"
+  },
+  "clawd-on-desk/src/hit-geometry.js": {
+    "mtime": 1784373289.5966425,
+    "seen": 1787494094.7317703,
+    "ast_hash": "c19e6b538a3592caa0c0c99405a1e442",
+    "semantic_hash": "c19e6b538a3592caa0c0c99405a1e442"
+  },
+  "clawd-on-desk/src/hit-renderer.js": {
+    "mtime": 1784373289.597643,
+    "seen": 1787494094.731771,
+    "ast_hash": "9fefd8fee00cdeb2605137bb01472bdb",
+    "semantic_hash": "9fefd8fee00cdeb2605137bb01472bdb"
+  },
+  "clawd-on-desk/src/i18n.js": {
+    "mtime": 1787477357.611401,
+    "seen": 1787494094.7317717,
+    "ast_hash": "4a321b6022f356272fa2b1dcb6b826e3",
+    "semantic_hash": "4a321b6022f356272fa2b1dcb6b826e3"
+  },
+  "clawd-on-desk/src/integration-sync.js": {
+    "mtime": 1784373289.5986428,
+    "seen": 1787494094.7317724,
+    "ast_hash": "694d0f1bc77593595afa3261f6397178",
+    "semantic_hash": "694d0f1bc77593595afa3261f6397178"
+  },
+  "clawd-on-desk/src/launch-claude.js": {
+    "mtime": 1784373289.599643,
+    "seen": 1787494094.731773,
+    "ast_hash": "6787582432f72f8ee96fd5c155136826",
+    "semantic_hash": "6787582432f72f8ee96fd5c155136826"
+  },
+  "clawd-on-desk/src/linux-ozone.js": {
+    "mtime": 1784373289.599643,
+    "seen": 1787494094.7317736,
+    "ast_hash": "44be3c4e30600fa652a4811045553d6b",
+    "semantic_hash": "44be3c4e30600fa652a4811045553d6b"
+  },
+  "clawd-on-desk/src/llamaServer.js": {
+    "mtime": 1784378295.0764518,
+    "seen": 1787494094.731774,
+    "ast_hash": "967bfac7b7ef5a094999ed49da21d135",
+    "semantic_hash": "967bfac7b7ef5a094999ed49da21d135"
+  },
+  "clawd-on-desk/src/llmService.js": {
+    "mtime": 1784373553.8865795,
+    "seen": 1787494094.7317748,
+    "ast_hash": "52a2cf50b49cb0cba680cb7342222428",
+    "semantic_hash": "52a2cf50b49cb0cba680cb7342222428"
+  },
+  "clawd-on-desk/src/locale-resolver.js": {
+    "mtime": 1786865757.5856392,
+    "seen": 1787494094.7317755,
+    "ast_hash": "bd8623dbdd96ee125f703c6a5edee11f",
+    "semantic_hash": "bd8623dbdd96ee125f703c6a5edee11f"
+  },
+  "clawd-on-desk/src/log-rotate.js": {
+    "mtime": 1784373289.6006422,
+    "seen": 1787494094.7317762,
+    "ast_hash": "ca5f8e0e134075dc42898e1bd69dfd83",
+    "semantic_hash": "ca5f8e0e134075dc42898e1bd69dfd83"
+  },
+  "clawd-on-desk/src/log-timestamp.js": {
+    "mtime": 1784373289.6006422,
+    "seen": 1787494094.731777,
+    "ast_hash": "e5217a48080e3adf40f75aead8cc6bf9",
+    "semantic_hash": "e5217a48080e3adf40f75aead8cc6bf9"
+  },
+  "clawd-on-desk/src/login-item.js": {
+    "mtime": 1787397720.8740208,
+    "seen": 1787494094.7317774,
+    "ast_hash": "52737a45d9231d6898a6bc9ee86e3462",
+    "semantic_hash": "52737a45d9231d6898a6bc9ee86e3462"
+  },
+  "clawd-on-desk/src/mac-hide.js": {
+    "mtime": 1784373289.6006422,
+    "seen": 1787494094.7317784,
+    "ast_hash": "4f0c626fe8cab1760dcd88f04dd39db0",
+    "semantic_hash": "4f0c626fe8cab1760dcd88f04dd39db0"
+  },
+  "clawd-on-desk/src/mac-window.js": {
+    "mtime": 1784373289.6021445,
+    "seen": 1787494094.7317789,
+    "ast_hash": "9e947acf418be6d14edb7af85ee42760",
+    "semantic_hash": "9e947acf418be6d14edb7af85ee42760"
+  },
+  "clawd-on-desk/src/main.js": {
+    "mtime": 1787496333.7697973,
+    "seen": 1787581467.588509,
+    "ast_hash": "73efc76fd582b0507b75dacdd0b8268f",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/menu.js": {
+    "mtime": 1787397721.3877628,
+    "seen": 1787494094.7317805,
+    "ast_hash": "067e069db133fb5ac4ffb3da1c9775b3",
+    "semantic_hash": "067e069db133fb5ac4ffb3da1c9775b3"
+  },
+  "clawd-on-desk/src/mini.js": {
+    "mtime": 1787415004.169386,
+    "seen": 1787494094.7317815,
+    "ast_hash": "a983232a1449c4ae25ed6ff24048c068",
+    "semantic_hash": "a983232a1449c4ae25ed6ff24048c068"
+  },
+  "clawd-on-desk/src/minicpm-chat-context.js": {
+    "mtime": 1784373289.6046598,
+    "seen": 1787494094.7317824,
+    "ast_hash": "5676f262f0061c58e0ccb64ec33801a9",
+    "semantic_hash": "5676f262f0061c58e0ccb64ec33801a9"
+  },
+  "clawd-on-desk/src/minicpm-chat-renderer.js": {
+    "mtime": 1787492001.4338083,
+    "seen": 1787494094.7317832,
+    "ast_hash": "714ebe94bfc1f5e4d0900f83a25ea265",
+    "semantic_hash": "714ebe94bfc1f5e4d0900f83a25ea265"
+  },
+  "clawd-on-desk/src/minicpm-chat.js": {
+    "mtime": 1787586661.5374532,
+    "seen": 1787587300.80219,
+    "ast_hash": "99f2cb661fb44c5af7703ea11abb1207",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/minicpm-i18n.js": {
+    "mtime": 1787479502.3771403,
+    "seen": 1787494094.7317843,
+    "ast_hash": "01ef2149bfe8bc0d4e931cafcc8bf07d",
+    "semantic_hash": "01ef2149bfe8bc0d4e931cafcc8bf07d"
+  },
+  "clawd-on-desk/src/minicpm-model-download.js": {
+    "mtime": 1784373289.6076605,
+    "seen": 1787494094.7317853,
+    "ast_hash": "fbb546b675e7ff173db1f8fb601708ff",
+    "semantic_hash": "fbb546b675e7ff173db1f8fb601708ff"
+  },
+  "clawd-on-desk/src/minicpm-onboarding-renderer.js": {
+    "mtime": 1784373289.6076605,
+    "seen": 1787494094.731786,
+    "ast_hash": "d594afb9380872c4ec990d41372fad4c",
+    "semantic_hash": "d594afb9380872c4ec990d41372fad4c"
+  },
+  "clawd-on-desk/src/minicpm-onboarding.js": {
+    "mtime": 1787402387.8698218,
+    "seen": 1787494094.7317867,
+    "ast_hash": "45c1f2e57a114f0354237878fa71e6d2",
+    "semantic_hash": "45c1f2e57a114f0354237878fa71e6d2"
+  },
+  "clawd-on-desk/src/network/mobile-preview-server.js": {
+    "mtime": 1784373289.6096585,
+    "seen": 1787494094.7317874,
+    "ast_hash": "9c72c49e8491262f5352ade7ff3a65d2",
+    "semantic_hash": "9c72c49e8491262f5352ade7ff3a65d2"
+  },
+  "clawd-on-desk/src/permission.js": {
+    "mtime": 1784373289.6096585,
+    "seen": 1787494094.7317884,
+    "ast_hash": "d1394bcd5f6607b7bebeb2b794eb626a",
+    "semantic_hash": "d1394bcd5f6607b7bebeb2b794eb626a"
+  },
+  "clawd-on-desk/src/pet-geometry-main.js": {
+    "mtime": 1784373289.6106603,
+    "seen": 1787494094.731789,
+    "ast_hash": "7e29ec2c7b013968697e2a03707ff55c",
+    "semantic_hash": "7e29ec2c7b013968697e2a03707ff55c"
+  },
+  "clawd-on-desk/src/pet-interaction-ipc.js": {
+    "mtime": 1784373289.6106603,
+    "seen": 1787494094.7317898,
+    "ast_hash": "cafa4b4919ded11d12221a1da2f279cf",
+    "semantic_hash": "cafa4b4919ded11d12221a1da2f279cf"
+  },
+  "clawd-on-desk/src/pet-window-runtime.js": {
+    "mtime": 1784373289.611661,
+    "seen": 1787494094.7317905,
+    "ast_hash": "1eb05580a90e1387fc5083db356b8a6d",
+    "semantic_hash": "1eb05580a90e1387fc5083db356b8a6d"
+  },
+  "clawd-on-desk/src/prefs.js": {
+    "mtime": 1787492078.4773276,
+    "seen": 1787494094.7317913,
+    "ast_hash": "adefd4eb98c5004823ec5a45869b14ac",
+    "semantic_hash": "adefd4eb98c5004823ec5a45869b14ac"
+  },
+  "clawd-on-desk/src/preload-bubble.js": {
+    "mtime": 1784373289.611661,
+    "seen": 1787494094.7317922,
+    "ast_hash": "84e5d7601de1f75979ab11e81570363f",
+    "semantic_hash": "84e5d7601de1f75979ab11e81570363f"
+  },
+  "clawd-on-desk/src/preload-dashboard.js": {
+    "mtime": 1784373289.6126595,
+    "seen": 1787494094.731793,
+    "ast_hash": "cb8b1266770a783561799ff7528abdf1",
+    "semantic_hash": "cb8b1266770a783561799ff7528abdf1"
+  },
+  "clawd-on-desk/src/preload-hit.js": {
+    "mtime": 1784373289.6126595,
+    "seen": 1787494094.7317936,
+    "ast_hash": "3517ca701a22a3915de860a6bb2b8e06",
+    "semantic_hash": "3517ca701a22a3915de860a6bb2b8e06"
+  },
+  "clawd-on-desk/src/preload-minicpm-chat.js": {
+    "mtime": 1787479113.9461975,
+    "seen": 1787494094.731794,
+    "ast_hash": "9ae6c32e37285c8d2fc0f278b3cc9671",
+    "semantic_hash": "9ae6c32e37285c8d2fc0f278b3cc9671"
+  },
+  "clawd-on-desk/src/preload-minicpm-onboarding.js": {
+    "mtime": 1784373289.6136594,
+    "seen": 1787494094.7317948,
+    "ast_hash": "4a0aa8aaba732b0e52a9e454b21cdb61",
+    "semantic_hash": "4a0aa8aaba732b0e52a9e454b21cdb61"
+  },
+  "clawd-on-desk/src/preload-session-hud.js": {
+    "mtime": 1784373289.6136594,
+    "seen": 1787494094.7317958,
+    "ast_hash": "74772593932a16a620c1bbeaf4cec104",
+    "semantic_hash": "74772593932a16a620c1bbeaf4cec104"
+  },
+  "clawd-on-desk/src/preload-settings.js": {
+    "mtime": 1784373289.6146617,
+    "seen": 1787494094.7317965,
+    "ast_hash": "6d08f9dfbbfa054df7a09b7fa476dce0",
+    "semantic_hash": "6d08f9dfbbfa054df7a09b7fa476dce0"
+  },
+  "clawd-on-desk/src/preload-update-bubble.js": {
+    "mtime": 1784373289.6146617,
+    "seen": 1787494094.7317982,
+    "ast_hash": "3a60ef073b9db34c437a80f6433eed73",
+    "semantic_hash": "3a60ef073b9db34c437a80f6433eed73"
+  },
+  "clawd-on-desk/src/preload.js": {
+    "mtime": 1784373289.6146617,
+    "seen": 1787494094.7317991,
+    "ast_hash": "d81e51a4220c95e06284f17cb50f07fc",
+    "semantic_hash": "d81e51a4220c95e06284f17cb50f07fc"
+  },
+  "clawd-on-desk/src/product-metadata.js": {
+    "mtime": 1787403494.3948662,
+    "seen": 1787494094.7317998,
+    "ast_hash": "e23803e4c344a22f1caf66766faab44b",
+    "semantic_hash": "e23803e4c344a22f1caf66766faab44b"
+  },
+  "clawd-on-desk/src/proxy-agent.js": {
+    "mtime": 1784373289.6156602,
+    "seen": 1787494094.7318006,
+    "ast_hash": "c476a01a05f57b2d5a15a098a278bffd",
+    "semantic_hash": "c476a01a05f57b2d5a15a098a278bffd"
+  },
+  "clawd-on-desk/src/remote-ssh-decode.js": {
+    "mtime": 1784373289.6156602,
+    "seen": 1787494094.731801,
+    "ast_hash": "903dd07c703105a1cc7c6cd8e93c31d8",
+    "semantic_hash": "903dd07c703105a1cc7c6cd8e93c31d8"
+  },
+  "clawd-on-desk/src/remote-ssh-deploy.js": {
+    "mtime": 1784373289.61666,
+    "seen": 1787494094.7318017,
+    "ast_hash": "9ced6b563dec05715ed442237d123e75",
+    "semantic_hash": "9ced6b563dec05715ed442237d123e75"
+  },
+  "clawd-on-desk/src/remote-ssh-ipc.js": {
+    "mtime": 1784373289.61666,
+    "seen": 1787494094.7318027,
+    "ast_hash": "9f32b318479d63572c97b0e850d72845",
+    "semantic_hash": "9f32b318479d63572c97b0e850d72845"
+  },
+  "clawd-on-desk/src/remote-ssh-node.js": {
+    "mtime": 1784373289.6176598,
+    "seen": 1787494094.7318034,
+    "ast_hash": "4aaca79ae1336f5583f4a90d7698ba8e",
+    "semantic_hash": "4aaca79ae1336f5583f4a90d7698ba8e"
+  },
+  "clawd-on-desk/src/remote-ssh-profile.js": {
+    "mtime": 1784373289.6176598,
+    "seen": 1787494094.731804,
+    "ast_hash": "da997d58625f9641a9b8e41d88f4dd07",
+    "semantic_hash": "da997d58625f9641a9b8e41d88f4dd07"
+  },
+  "clawd-on-desk/src/remote-ssh-quote.js": {
+    "mtime": 1784373289.6176598,
+    "seen": 1787494094.7318046,
+    "ast_hash": "376910c3232953b2eb95f8f9e021013a",
+    "semantic_hash": "376910c3232953b2eb95f8f9e021013a"
+  },
+  "clawd-on-desk/src/remote-ssh-runtime.js": {
+    "mtime": 1784373289.6186593,
+    "seen": 1787494094.731805,
+    "ast_hash": "c5dac69186c33f4cb230f3cd274eb562",
+    "semantic_hash": "c5dac69186c33f4cb230f3cd274eb562"
+  },
+  "clawd-on-desk/src/remote-ssh-shell-detect.js": {
+    "mtime": 1784373289.6186593,
+    "seen": 1787494094.7318058,
+    "ast_hash": "c1bf22afeef875538d92e6a51c25c54e",
+    "semantic_hash": "c1bf22afeef875538d92e6a51c25c54e"
+  },
+  "clawd-on-desk/src/render-canvas.js": {
+    "mtime": 1784373289.6186593,
+    "seen": 1787494094.7318065,
+    "ast_hash": "93a1079eedf8d32b35af3912175b8853",
+    "semantic_hash": "93a1079eedf8d32b35af3912175b8853"
+  },
+  "clawd-on-desk/src/renderer.js": {
+    "mtime": 1784373289.6201634,
+    "seen": 1787494094.731807,
+    "ast_hash": "23c3c576657f4e463c99af1ff4178581",
+    "semantic_hash": "23c3c576657f4e463c99af1ff4178581"
+  },
+  "clawd-on-desk/src/roam.js": {
+    "mtime": 1784373289.6201634,
+    "seen": 1787494094.7318077,
+    "ast_hash": "d12e8f244727cd513b4819ce01263467",
+    "semantic_hash": "d12e8f244727cd513b4819ce01263467"
+  },
+  "clawd-on-desk/src/server-agent-id.js": {
+    "mtime": 1784373289.6201634,
+    "seen": 1787494094.7318084,
+    "ast_hash": "063ec05810e25dc2bdf2293365bc2ca1",
+    "semantic_hash": "063ec05810e25dc2bdf2293365bc2ca1"
+  },
+  "clawd-on-desk/src/server-codex-official-turns.js": {
+    "mtime": 1784373289.6211677,
+    "seen": 1787494094.7318094,
+    "ast_hash": "1aea96ad7353da13b7033701e00f9442",
+    "semantic_hash": "1aea96ad7353da13b7033701e00f9442"
+  },
+  "clawd-on-desk/src/server-hook-events.js": {
+    "mtime": 1784373289.6211677,
+    "seen": 1787494094.73181,
+    "ast_hash": "309acc4e47fa25b37ddc944c8f5d66b9",
+    "semantic_hash": "309acc4e47fa25b37ddc944c8f5d66b9"
+  },
+  "clawd-on-desk/src/server-permission-utils.js": {
+    "mtime": 1784373289.6211677,
+    "seen": 1787494094.7318108,
+    "ast_hash": "8852d749e6ca680ec949a0ef1f06b12a",
+    "semantic_hash": "8852d749e6ca680ec949a0ef1f06b12a"
+  },
+  "clawd-on-desk/src/server-route-permission.js": {
+    "mtime": 1784373289.6223867,
+    "seen": 1787494094.7318115,
+    "ast_hash": "7f9b2449f26908eaf346012027f35377",
+    "semantic_hash": "7f9b2449f26908eaf346012027f35377"
+  },
+  "clawd-on-desk/src/server-route-state.js": {
+    "mtime": 1787410098.4751873,
+    "seen": 1787494094.731812,
+    "ast_hash": "abd091717db2bbfe3112c81a168cc8f0",
+    "semantic_hash": "abd091717db2bbfe3112c81a168cc8f0"
+  },
+  "clawd-on-desk/src/server.js": {
+    "mtime": 1784373289.6233864,
+    "seen": 1787494094.7318127,
+    "ast_hash": "f635935ab5ac9cdac93d1dcf41af89bd",
+    "semantic_hash": "f635935ab5ac9cdac93d1dcf41af89bd"
+  },
+  "clawd-on-desk/src/session-alias.js": {
+    "mtime": 1784373289.6233864,
+    "seen": 1787494094.7318134,
+    "ast_hash": "bd998e4db34afffa7e27b0154c267b98",
+    "semantic_hash": "bd998e4db34afffa7e27b0154c267b98"
+  },
+  "clawd-on-desk/src/session-focus-handoff.js": {
+    "mtime": 1784373289.6233864,
+    "seen": 1787494094.7318141,
+    "ast_hash": "66573135e1345a22714e71b5c6acb496",
+    "semantic_hash": "66573135e1345a22714e71b5c6acb496"
+  },
+  "clawd-on-desk/src/session-focus.js": {
+    "mtime": 1784373289.6243863,
+    "seen": 1787494094.7318146,
+    "ast_hash": "e2877db2a3e6653d5ef2c6b4f8669713",
+    "semantic_hash": "e2877db2a3e6653d5ef2c6b4f8669713"
+  },
+  "clawd-on-desk/src/session-hud-renderer.js": {
+    "mtime": 1784373289.6243863,
+    "seen": 1787494094.7318153,
+    "ast_hash": "0ead664ccf280bf841f93ac4c4b44b94",
+    "semantic_hash": "0ead664ccf280bf841f93ac4c4b44b94"
+  },
+  "clawd-on-desk/src/session-hud.js": {
+    "mtime": 1784373289.6253858,
+    "seen": 1787494094.7318163,
+    "ast_hash": "892db80fa9c01926b670a7ac8a141ecf",
+    "semantic_hash": "892db80fa9c01926b670a7ac8a141ecf"
+  },
+  "clawd-on-desk/src/session-ipc.js": {
+    "mtime": 1784373289.6253858,
+    "seen": 1787494094.7318168,
+    "ast_hash": "ece4f52bf837da97d3aa3f2e8c0c520f",
+    "semantic_hash": "ece4f52bf837da97d3aa3f2e8c0c520f"
+  },
+  "clawd-on-desk/src/settings-actions-agents.js": {
+    "mtime": 1784373289.6263862,
+    "seen": 1787494094.7318175,
+    "ast_hash": "9976c6450a19f7a2f49d3c4292dbeb53",
+    "semantic_hash": "9976c6450a19f7a2f49d3c4292dbeb53"
+  },
+  "clawd-on-desk/src/settings-actions-shortcuts.js": {
+    "mtime": 1784373289.6263862,
+    "seen": 1787494094.731818,
+    "ast_hash": "db7b4ac681a9513faca3ce093c2f64c6",
+    "semantic_hash": "db7b4ac681a9513faca3ce093c2f64c6"
+  },
+  "clawd-on-desk/src/settings-actions-system.js": {
+    "mtime": 1784373289.6263862,
+    "seen": 1787494094.731819,
+    "ast_hash": "1c09aba4207c2d8fa3fbb9d833908aca",
+    "semantic_hash": "1c09aba4207c2d8fa3fbb9d833908aca"
+  },
+  "clawd-on-desk/src/settings-actions-theme-overrides.js": {
+    "mtime": 1784373289.6273863,
+    "seen": 1787494094.7318196,
+    "ast_hash": "f41ee9db246711e5423c965a89563463",
+    "semantic_hash": "f41ee9db246711e5423c965a89563463"
+  },
+  "clawd-on-desk/src/settings-actions.js": {
+    "mtime": 1787469938.6060195,
+    "seen": 1787494094.7318203,
+    "ast_hash": "963351ec2a63951ed84ebc8ef8454ef1",
+    "semantic_hash": "963351ec2a63951ed84ebc8ef8454ef1"
+  },
+  "clawd-on-desk/src/settings-agent-order.js": {
+    "mtime": 1784373289.6283865,
+    "seen": 1787494094.731821,
+    "ast_hash": "53adc0c3507ce9ab961a3e924e76659c",
+    "semantic_hash": "53adc0c3507ce9ab961a3e924e76659c"
+  },
+  "clawd-on-desk/src/settings-anim-overrides-merge.js": {
+    "mtime": 1784373289.6283865,
+    "seen": 1787494094.7318218,
+    "ast_hash": "d1d52e480622486ec83ce7c7dc68c30d",
+    "semantic_hash": "d1d52e480622486ec83ce7c7dc68c30d"
+  },
+  "clawd-on-desk/src/settings-animation-overrides-main.js": {
+    "mtime": 1784373289.6293862,
+    "seen": 1787494094.7318223,
+    "ast_hash": "2589ee2cbede73f9ff5b38750eb1b78c",
+    "semantic_hash": "2589ee2cbede73f9ff5b38750eb1b78c"
+  },
+  "clawd-on-desk/src/settings-controller.js": {
+    "mtime": 1784373289.6293862,
+    "seen": 1787494094.7318232,
+    "ast_hash": "1c176ca12e9f5286886646254b364470",
+    "semantic_hash": "1c176ca12e9f5286886646254b364470"
+  },
+  "clawd-on-desk/src/settings-doctor-modal.js": {
+    "mtime": 1784373289.630386,
+    "seen": 1787494094.7318237,
+    "ast_hash": "cfb55e56149e71de4b6dad95a855693d",
+    "semantic_hash": "cfb55e56149e71de4b6dad95a855693d"
+  },
+  "clawd-on-desk/src/settings-effect-router.js": {
+    "mtime": 1784373289.6308901,
+    "seen": 1787494094.7318244,
+    "ast_hash": "c41c6e9d3adfef3d4e21c5ff1342f629",
+    "semantic_hash": "c41c6e9d3adfef3d4e21c5ff1342f629"
+  },
+  "clawd-on-desk/src/settings-hardware-buddy-panel.js": {
+    "mtime": 1784373289.6308901,
+    "seen": 1787494094.7318249,
+    "ast_hash": "789e05aa0f1c42ab7b6bb8ffac29fcd0",
+    "semantic_hash": "789e05aa0f1c42ab7b6bb8ffac29fcd0"
+  },
+  "clawd-on-desk/src/settings-i18n.js": {
+    "mtime": 1787470035.3408237,
+    "seen": 1787494094.7318254,
+    "ast_hash": "832ef290c3a507632d26850551c4631c",
+    "semantic_hash": "832ef290c3a507632d26850551c4631c"
+  },
+  "clawd-on-desk/src/settings-icons.js": {
+    "mtime": 1784373289.632904,
+    "seen": 1787494094.731826,
+    "ast_hash": "a31c224fd9a11fc01e3cc85bb1ee1421",
+    "semantic_hash": "a31c224fd9a11fc01e3cc85bb1ee1421"
+  },
+  "clawd-on-desk/src/settings-ipc.js": {
+    "mtime": 1787397756.5013595,
+    "seen": 1787494094.7318268,
+    "ast_hash": "f196693210c0becf3d00be60f2b591e3",
+    "semantic_hash": "f196693210c0becf3d00be60f2b591e3"
+  },
+  "clawd-on-desk/src/settings-renderer.js": {
+    "mtime": 1784373289.633894,
+    "seen": 1787494094.7318275,
+    "ast_hash": "9b3536741b0e74f0f2bf02ded5a08947",
+    "semantic_hash": "9b3536741b0e74f0f2bf02ded5a08947"
+  },
+  "clawd-on-desk/src/settings-size-preview-session.js": {
+    "mtime": 1784373289.633894,
+    "seen": 1787494094.7318282,
+    "ast_hash": "63143d91f5f861c9929f1c4c95a10f6f",
+    "semantic_hash": "63143d91f5f861c9929f1c4c95a10f6f"
+  },
+  "clawd-on-desk/src/settings-size-slider.js": {
+    "mtime": 1784373289.6348948,
+    "seen": 1787494094.7318287,
+    "ast_hash": "69a08846fce59948972c171367f6c73a",
+    "semantic_hash": "69a08846fce59948972c171367f6c73a"
+  },
+  "clawd-on-desk/src/settings-store.js": {
+    "mtime": 1784373289.6348948,
+    "seen": 1787494094.7318294,
+    "ast_hash": "c3f7f83ceb2915f08d370d704c36b405",
+    "semantic_hash": "c3f7f83ceb2915f08d370d704c36b405"
+  },
+  "clawd-on-desk/src/settings-tab-about.js": {
+    "mtime": 1787397744.9073155,
+    "seen": 1787494094.7318301,
+    "ast_hash": "06c5b54ab287470a3cab723f315fac45",
+    "semantic_hash": "06c5b54ab287470a3cab723f315fac45"
+  },
+  "clawd-on-desk/src/settings-tab-agents.js": {
+    "mtime": 1784373289.6348948,
+    "seen": 1787494094.7318308,
+    "ast_hash": "ea9c6ae0b023589514708c205ee2f56d",
+    "semantic_hash": "ea9c6ae0b023589514708c205ee2f56d"
+  },
+  "clawd-on-desk/src/settings-tab-anim-map.js": {
+    "mtime": 1784373289.6363983,
+    "seen": 1787494094.7318313,
+    "ast_hash": "6357740f4d56d1bec0fcbaf9b1395a55",
+    "semantic_hash": "6357740f4d56d1bec0fcbaf9b1395a55"
+  },
+  "clawd-on-desk/src/settings-tab-anim-overrides.js": {
+    "mtime": 1784373289.6363983,
+    "seen": 1787494094.7318323,
+    "ast_hash": "75a4affe6ff1967197b12789ad610d4c",
+    "semantic_hash": "75a4affe6ff1967197b12789ad610d4c"
+  },
+  "clawd-on-desk/src/settings-tab-general.js": {
+    "mtime": 1784373289.637402,
+    "seen": 1787494094.7318327,
+    "ast_hash": "45a61c6acd4d232ba8999956b4866e4d",
+    "semantic_hash": "45a61c6acd4d232ba8999956b4866e4d"
+  },
+  "clawd-on-desk/src/settings-tab-minicpm.js": {
+    "mtime": 1787492036.8438528,
+    "seen": 1787494094.7318337,
+    "ast_hash": "85b7d04128625141e484c4e96407072b",
+    "semantic_hash": "85b7d04128625141e484c4e96407072b"
+  },
+  "clawd-on-desk/src/settings-tab-mobile.js": {
+    "mtime": 1784373289.638402,
+    "seen": 1787494094.7318342,
+    "ast_hash": "cc3c655c7ea0c3c27d829a6d529241ac",
+    "semantic_hash": "cc3c655c7ea0c3c27d829a6d529241ac"
+  },
+  "clawd-on-desk/src/settings-tab-remote-ssh.js": {
+    "mtime": 1784373289.638402,
+    "seen": 1787494094.731835,
+    "ast_hash": "0c3d128c975d0651ef42084a667346c1",
+    "semantic_hash": "0c3d128c975d0651ef42084a667346c1"
+  },
+  "clawd-on-desk/src/settings-tab-shortcuts.js": {
+    "mtime": 1784373289.639402,
+    "seen": 1787494094.7318354,
+    "ast_hash": "c6a489e17c8b1edb971ba5b21637a92e",
+    "semantic_hash": "c6a489e17c8b1edb971ba5b21637a92e"
+  },
+  "clawd-on-desk/src/settings-tab-telegram-approval.js": {
+    "mtime": 1784373289.639402,
+    "seen": 1787494094.731836,
+    "ast_hash": "d3248ae04caa5b799e635b0cbc07ca0e",
+    "semantic_hash": "d3248ae04caa5b799e635b0cbc07ca0e"
+  },
+  "clawd-on-desk/src/settings-tab-theme.js": {
+    "mtime": 1784373289.6404028,
+    "seen": 1787494094.731837,
+    "ast_hash": "e2831962bc34077e886b805e3d1bdea5",
+    "semantic_hash": "e2831962bc34077e886b805e3d1bdea5"
+  },
+  "clawd-on-desk/src/settings-theme-importer.js": {
+    "mtime": 1784373289.6404028,
+    "seen": 1787494094.7318377,
+    "ast_hash": "fddbcd71526d53c80ea19cff5e8f7bc3",
+    "semantic_hash": "fddbcd71526d53c80ea19cff5e8f7bc3"
+  },
+  "clawd-on-desk/src/settings-ui-core.js": {
+    "mtime": 1787477357.611401,
+    "seen": 1787494094.7318385,
+    "ast_hash": "3a6f778f0c072bf169a5473b236960ab",
+    "semantic_hash": "3a6f778f0c072bf169a5473b236960ab"
+  },
+  "clawd-on-desk/src/settings-validators.js": {
+    "mtime": 1784373289.6414018,
+    "seen": 1787494094.7318394,
+    "ast_hash": "0126cc52a9c52c887232a24ce38e91e6",
+    "semantic_hash": "0126cc52a9c52c887232a24ce38e91e6"
+  },
+  "clawd-on-desk/src/settings-window-icon.js": {
+    "mtime": 1787402274.8754635,
+    "seen": 1787494094.73184,
+    "ast_hash": "25e7dcc2435c0e410beacbbe213fa6ba",
+    "semantic_hash": "25e7dcc2435c0e410beacbbe213fa6ba"
+  },
+  "clawd-on-desk/src/settings-window.js": {
+    "mtime": 1784373289.6424017,
+    "seen": 1787494094.7318408,
+    "ast_hash": "fc5c3b4476c3b33549598200c2f58d14",
+    "semantic_hash": "fc5c3b4476c3b33549598200c2f58d14"
+  },
+  "clawd-on-desk/src/shortcut-actions.js": {
+    "mtime": 1784373289.6434019,
+    "seen": 1787494094.7318413,
+    "ast_hash": "09da3589539b8ab441a387b81a626afe",
+    "semantic_hash": "09da3589539b8ab441a387b81a626afe"
+  },
+  "clawd-on-desk/src/shortcut-runtime.js": {
+    "mtime": 1786865764.1189513,
+    "seen": 1787494094.731842,
+    "ast_hash": "8c1d7f453aba77770f6155c7ee9da758",
+    "semantic_hash": "8c1d7f453aba77770f6155c7ee9da758"
+  },
+  "clawd-on-desk/src/size-utils.js": {
+    "mtime": 1784373289.644402,
+    "seen": 1787494094.7318428,
+    "ast_hash": "8eeb67db5c6b358f77fcc56f934316e9",
+    "semantic_hash": "8eeb67db5c6b358f77fcc56f934316e9"
+  },
+  "clawd-on-desk/src/state-agent-icons.js": {
+    "mtime": 1784373289.644402,
+    "seen": 1787494094.7318432,
+    "ast_hash": "eafc6dad6c92903c7e45b84b9d8144bc",
+    "semantic_hash": "eafc6dad6c92903c7e45b84b9d8144bc"
+  },
+  "clawd-on-desk/src/state-hitbox-resolver.js": {
+    "mtime": 1784373289.644402,
+    "seen": 1787494094.731844,
+    "ast_hash": "11ad97f877f1a29f2972949bde770035",
+    "semantic_hash": "11ad97f877f1a29f2972949bde770035"
+  },
+  "clawd-on-desk/src/state-priority.js": {
+    "mtime": 1784373289.6454022,
+    "seen": 1787494094.7318447,
+    "ast_hash": "95cae770c45f124dca0f6b1742c3f775",
+    "semantic_hash": "95cae770c45f124dca0f6b1742c3f775"
+  },
+  "clawd-on-desk/src/state-session-dedupe.js": {
+    "mtime": 1784373289.6454022,
+    "seen": 1787494094.7318451,
+    "ast_hash": "93a4e531e45f1c2ad84d8c2e1dbc71d0",
+    "semantic_hash": "93a4e531e45f1c2ad84d8c2e1dbc71d0"
+  },
+  "clawd-on-desk/src/state-session-events.js": {
+    "mtime": 1784373289.6454022,
+    "seen": 1787494094.7318459,
+    "ast_hash": "1df9d5a7ab65c864fb8056819203f67b",
+    "semantic_hash": "1df9d5a7ab65c864fb8056819203f67b"
+  },
+  "clawd-on-desk/src/state-session-snapshot.js": {
+    "mtime": 1784373289.6465764,
+    "seen": 1787494094.7318463,
+    "ast_hash": "764b887bb7724ff975394712a843dadd",
+    "semantic_hash": "764b887bb7724ff975394712a843dadd"
+  },
+  "clawd-on-desk/src/state-stale-cleanup.js": {
+    "mtime": 1784373289.6465764,
+    "seen": 1787494094.7318473,
+    "ast_hash": "bb91242b491187bc357c456e28b348ed",
+    "semantic_hash": "bb91242b491187bc357c456e28b348ed"
+  },
+  "clawd-on-desk/src/state-visual-resolver.js": {
+    "mtime": 1784373289.6475773,
+    "seen": 1787494094.7318478,
+    "ast_hash": "01661e53eb75284b522b2eff12f50e41",
+    "semantic_hash": "01661e53eb75284b522b2eff12f50e41"
+  },
+  "clawd-on-desk/src/state.js": {
+    "mtime": 1787385387.0239973,
+    "seen": 1787494094.7318485,
+    "ast_hash": "070034cae887a85954fd8c601118b59d",
+    "semantic_hash": "070034cae887a85954fd8c601118b59d"
+  },
+  "clawd-on-desk/src/system-wake-recovery.js": {
+    "mtime": 1784373289.6485775,
+    "seen": 1787494094.7318492,
+    "ast_hash": "cfd719eb2d8048a52216e13c969cbed1",
+    "semantic_hash": "cfd719eb2d8048a52216e13c969cbed1"
+  },
+  "clawd-on-desk/src/taskbar.js": {
+    "mtime": 1784373289.6485775,
+    "seen": 1787494094.73185,
+    "ast_hash": "b8b474c9f68ebbd7630214bee2085320",
+    "semantic_hash": "b8b474c9f68ebbd7630214bee2085320"
+  },
+  "clawd-on-desk/src/telegram-approval-client.js": {
+    "mtime": 1784373289.649577,
+    "seen": 1787494094.7318509,
+    "ast_hash": "9f3b79b5ccebed527041e561671fa4bf",
+    "semantic_hash": "9f3b79b5ccebed527041e561671fa4bf"
+  },
+  "clawd-on-desk/src/telegram-approval-runtime-status.js": {
+    "mtime": 1787492507.0567489,
+    "seen": 1787494094.7318516,
+    "ast_hash": "62e58047a3e37c8ff25c25b909634d26",
+    "semantic_hash": "62e58047a3e37c8ff25c25b909634d26"
+  },
+  "clawd-on-desk/src/telegram-approval-settings.js": {
+    "mtime": 1784373289.649577,
+    "seen": 1787494094.731852,
+    "ast_hash": "1bb07c9220f3ce7511e9232b3634b75c",
+    "semantic_hash": "1bb07c9220f3ce7511e9232b3634b75c"
+  },
+  "clawd-on-desk/src/telegram-approval-sidecar.js": {
+    "mtime": 1784373289.650577,
+    "seen": 1787494094.7318528,
+    "ast_hash": "832ac1854b14a1e5f927c691b0a3e5af",
+    "semantic_hash": "832ac1854b14a1e5f927c691b0a3e5af"
+  },
+  "clawd-on-desk/src/telegram-companion.js": {
+    "mtime": 1787492537.2755375,
+    "seen": 1787494094.7318532,
+    "ast_hash": "5fc330117c9b45caddbcc34177ef6200",
+    "semantic_hash": "5fc330117c9b45caddbcc34177ef6200"
+  },
+  "clawd-on-desk/src/telegram-direct-send.js": {
+    "mtime": 1784373289.651577,
+    "seen": 1787494094.731854,
+    "ast_hash": "67b0e9791f6bf83393c1376b9b3df36a",
+    "semantic_hash": "67b0e9791f6bf83393c1376b9b3df36a"
+  },
+  "clawd-on-desk/src/telegram-fetch-transport.js": {
+    "mtime": 1784373289.651577,
+    "seen": 1787494094.7318547,
+    "ast_hash": "62fdcd4321c5e7ca5fa06182043f531c",
+    "semantic_hash": "62fdcd4321c5e7ca5fa06182043f531c"
+  },
+  "clawd-on-desk/src/telegram-migration-controller.js": {
+    "mtime": 1784373289.651577,
+    "seen": 1787494094.7318554,
+    "ast_hash": "55d447869dabdb9efa7ae8c799ae1e89",
+    "semantic_hash": "55d447869dabdb9efa7ae8c799ae1e89"
+  },
+  "clawd-on-desk/src/telegram-migration-state.js": {
+    "mtime": 1784373289.652577,
+    "seen": 1787494094.731856,
+    "ast_hash": "0edf6038ce461804b0260c7caf60fb90",
+    "semantic_hash": "0edf6038ce461804b0260c7caf60fb90"
+  },
+  "clawd-on-desk/src/telegram-native-client.js": {
+    "mtime": 1784373289.6530805,
+    "seen": 1787494094.7318568,
+    "ast_hash": "00252bded959ad1afaba493f10522fa0",
+    "semantic_hash": "00252bded959ad1afaba493f10522fa0"
+  },
+  "clawd-on-desk/src/telegram-native-runner.js": {
+    "mtime": 1784373289.6530805,
+    "seen": 1787494094.7318573,
+    "ast_hash": "c2c58166b10cc0603b78e47b2338abef",
+    "semantic_hash": "c2c58166b10cc0603b78e47b2338abef"
+  },
+  "clawd-on-desk/src/telegram-owner-manager.js": {
+    "mtime": 1784373289.6540844,
+    "seen": 1787494094.7318583,
+    "ast_hash": "43adee451c11b39f67c384c5ed8f2578",
+    "semantic_hash": "43adee451c11b39f67c384c5ed8f2578"
+  },
+  "clawd-on-desk/src/telegram-sidecar-status-bridge.js": {
+    "mtime": 1784373289.6540844,
+    "seen": 1787494094.7318587,
+    "ast_hash": "de359a8da1b9b31a0775665827448319",
+    "semantic_hash": "de359a8da1b9b31a0775665827448319"
+  },
+  "clawd-on-desk/src/telegram-token-store.js": {
+    "mtime": 1784373289.6550856,
+    "seen": 1787494094.7318594,
+    "ast_hash": "ab7675c593b70009747b19aba9c89077",
+    "semantic_hash": "ab7675c593b70009747b19aba9c89077"
+  },
+  "clawd-on-desk/src/text-scale.js": {
+    "mtime": 1784373289.6550856,
+    "seen": 1787494094.7318602,
+    "ast_hash": "ecd70cba4e4fafc758adce2219525e65",
+    "semantic_hash": "ecd70cba4e4fafc758adce2219525e65"
+  },
+  "clawd-on-desk/src/theme-assets-cache.js": {
+    "mtime": 1784373289.6550856,
+    "seen": 1787494094.7318606,
+    "ast_hash": "f66dbf83b7d83211d522a5f892090763",
+    "semantic_hash": "f66dbf83b7d83211d522a5f892090763"
+  },
+  "clawd-on-desk/src/theme-context.js": {
+    "mtime": 1784373289.6560912,
+    "seen": 1787494094.7318616,
+    "ast_hash": "b90ee09a678b94c3fbcb35ee67cf605e",
+    "semantic_hash": "b90ee09a678b94c3fbcb35ee67cf605e"
+  },
+  "clawd-on-desk/src/theme-fade-sequencer.js": {
+    "mtime": 1784373289.6560912,
+    "seen": 1787494094.731862,
+    "ast_hash": "31377dc1c926450c660bf48e5377e1c7",
+    "semantic_hash": "31377dc1c926450c660bf48e5377e1c7"
+  },
+  "clawd-on-desk/src/theme-loader.js": {
+    "mtime": 1784373289.6570842,
+    "seen": 1787494094.7318628,
+    "ast_hash": "3a103bcbcc010739a32591ef1996b361",
+    "semantic_hash": "3a103bcbcc010739a32591ef1996b361"
+  },
+  "clawd-on-desk/src/theme-metadata.js": {
+    "mtime": 1784373289.6570842,
+    "seen": 1787494094.7318633,
+    "ast_hash": "73fa83774bcdbcd72a3554822f883c7b",
+    "semantic_hash": "73fa83774bcdbcd72a3554822f883c7b"
+  },
+  "clawd-on-desk/src/theme-runtime.js": {
+    "mtime": 1784373289.6570842,
+    "seen": 1787494094.7318637,
+    "ast_hash": "993b4c4b4d70d1cc4090751b1a476a5b",
+    "semantic_hash": "993b4c4b4d70d1cc4090751b1a476a5b"
+  },
+  "clawd-on-desk/src/theme-sanitizer.js": {
+    "mtime": 1787382332.612631,
+    "seen": 1787494094.7318647,
+    "ast_hash": "2b5f318837870c0937ecfec33f14e1c7",
+    "semantic_hash": "2b5f318837870c0937ecfec33f14e1c7"
+  },
+  "clawd-on-desk/src/theme-schema.js": {
+    "mtime": 1784373289.6580842,
+    "seen": 1787494094.7318652,
+    "ast_hash": "2c27beeed78f7d6e161895ceac6b2ea3",
+    "semantic_hash": "2c27beeed78f7d6e161895ceac6b2ea3"
+  },
+  "clawd-on-desk/src/theme-variants.js": {
+    "mtime": 1784373289.6580842,
+    "seen": 1787494094.731866,
+    "ast_hash": "3749f4844dc096806a588477b144fb7d",
+    "semantic_hash": "3749f4844dc096806a588477b144fb7d"
+  },
+  "clawd-on-desk/src/tick.js": {
+    "mtime": 1787414969.554726,
+    "seen": 1787494094.7318664,
+    "ast_hash": "a3ba54ce6775d9b0d4fc4f2ef0e66a1e",
+    "semantic_hash": "a3ba54ce6775d9b0d4fc4f2ef0e66a1e"
+  },
+  "clawd-on-desk/src/topmost-runtime.js": {
+    "mtime": 1784373289.6590848,
+    "seen": 1787494094.7318668,
+    "ast_hash": "fe3f4c2906f84d58ce6ad036e4dc3536",
+    "semantic_hash": "fe3f4c2906f84d58ce6ad036e4dc3536"
+  },
+  "clawd-on-desk/src/transcript-path.js": {
+    "mtime": 1784373289.6590848,
+    "seen": 1787494094.7318676,
+    "ast_hash": "4eef88d5376a6e8403234e08ac3cbe8e",
+    "semantic_hash": "4eef88d5376a6e8403234e08ac3cbe8e"
+  },
+  "clawd-on-desk/src/update-bubble.js": {
+    "mtime": 1784373289.6600847,
+    "seen": 1787494094.7318685,
+    "ast_hash": "4ecc56f5677e870be15c5b4df196bf85",
+    "semantic_hash": "4ecc56f5677e870be15c5b4df196bf85"
+  },
+  "clawd-on-desk/src/updater.js": {
+    "mtime": 1787397770.4060607,
+    "seen": 1787494094.731869,
+    "ast_hash": "4ef12ac9921b68285ef9e5f0bc2a0768",
+    "semantic_hash": "4ef12ac9921b68285ef9e5f0bc2a0768"
+  },
+  "clawd-on-desk/src/visible-margins.js": {
+    "mtime": 1784373289.661084,
+    "seen": 1787494094.7318695,
+    "ast_hash": "0d721536b9b19d37cc80653f01f45259",
+    "semantic_hash": "0d721536b9b19d37cc80653f01f45259"
+  },
+  "clawd-on-desk/src/win-fullscreen-detect.js": {
+    "mtime": 1784373289.6621046,
+    "seen": 1787494094.7318702,
+    "ast_hash": "bd23d0755bf46dbee3452016b5563d9b",
+    "semantic_hash": "bd23d0755bf46dbee3452016b5563d9b"
+  },
+  "clawd-on-desk/src/window-opacity-transition.js": {
+    "mtime": 1784373289.6626081,
+    "seen": 1787494094.731871,
+    "ast_hash": "a0493d17bdc2f585c24c27d504ed9c6c",
+    "semantic_hash": "a0493d17bdc2f585c24c27d504ed9c6c"
+  },
+  "clawd-on-desk/src/work-area.js": {
+    "mtime": 1784373289.6626081,
+    "seen": 1787494094.7318718,
+    "ast_hash": "4a2b7afb80e48bfd870a2abefb939715",
+    "semantic_hash": "4a2b7afb80e48bfd870a2abefb939715"
+  },
+  "clawd-on-desk/test-demo.sh": {
+    "mtime": 1784373289.663119,
+    "seen": 1787494094.7318726,
+    "ast_hash": "e7c9675b8f8b0dd6c31e86188ef039d8",
+    "semantic_hash": "e7c9675b8f8b0dd6c31e86188ef039d8"
+  },
+  "clawd-on-desk/test-macos.sh": {
+    "mtime": 1784373289.663119,
+    "seen": 1787494094.731873,
+    "ast_hash": "25774448ea60b0538c1da0e304af0168",
+    "semantic_hash": "25774448ea60b0538c1da0e304af0168"
+  },
+  "clawd-on-desk/test-mini.sh": {
+    "mtime": 1784373289.6641233,
+    "seen": 1787494094.7318738,
+    "ast_hash": "72fa7818df6fdfc0f28525bc80bdfb4a",
+    "semantic_hash": "72fa7818df6fdfc0f28525bc80bdfb4a"
+  },
+  "clawd-on-desk/test-oneshot-gate.sh": {
+    "mtime": 1784373289.6641233,
+    "seen": 1787494094.7318742,
+    "ast_hash": "f0e133064bbeca275ee2ea08b28625d1",
+    "semantic_hash": "f0e133064bbeca275ee2ea08b28625d1"
+  },
+  "clawd-on-desk/test/agent-gate.test.js": {
+    "mtime": 1784373289.665135,
+    "seen": 1787494094.7318752,
+    "ast_hash": "9298abef52ab15c9bc9cd03f67f479b4",
+    "semantic_hash": "9298abef52ab15c9bc9cd03f67f479b4"
+  },
+  "clawd-on-desk/test/agent-installation-detector.test.js": {
+    "mtime": 1784373289.665135,
+    "seen": 1787494094.7318757,
+    "ast_hash": "6cc764819c95ef45648eada614f49df2",
+    "semantic_hash": "6cc764819c95ef45648eada614f49df2"
+  },
+  "clawd-on-desk/test/agent-runtime-main.test.js": {
+    "mtime": 1784373289.66618,
+    "seen": 1787494094.7318764,
+    "ast_hash": "1bca828d223617bdf66a758f93719c61",
+    "semantic_hash": "1bca828d223617bdf66a758f93719c61"
+  },
+  "clawd-on-desk/test/agents.test.js": {
+    "mtime": 1784373289.66618,
+    "seen": 1787494094.731877,
+    "ast_hash": "ec04003e9375cc3c2122f644478eab7b",
+    "semantic_hash": "ec04003e9375cc3c2122f644478eab7b"
+  },
+  "clawd-on-desk/test/animation-cycle.test.js": {
+    "mtime": 1784373289.66618,
+    "seen": 1787494094.7318776,
+    "ast_hash": "3093bb8c88d1d1070d1a9f6bc2df1f44",
+    "semantic_hash": "3093bb8c88d1d1070d1a9f6bc2df1f44"
+  },
+  "clawd-on-desk/test/antigravity-hook.test.js": {
+    "mtime": 1784373289.6671793,
+    "seen": 1787494094.731878,
+    "ast_hash": "c09fe418a96400391e027817642333e0",
+    "semantic_hash": "c09fe418a96400391e027817642333e0"
+  },
+  "clawd-on-desk/test/antigravity-install.test.js": {
+    "mtime": 1784373289.6671793,
+    "seen": 1787494094.731879,
+    "ast_hash": "04934eee50044b0437d72b89167765a8",
+    "semantic_hash": "04934eee50044b0437d72b89167765a8"
+  },
+  "clawd-on-desk/test/auto-start.test.js": {
+    "mtime": 1784373289.668179,
+    "seen": 1787494094.7318795,
+    "ast_hash": "1bdf9eada0601e33719a17f5d9bb256a",
+    "semantic_hash": "1bdf9eada0601e33719a17f5d9bb256a"
+  },
+  "clawd-on-desk/test/bubble-elicitation-other.test.js": {
+    "mtime": 1784373289.668179,
+    "seen": 1787494094.7318802,
+    "ast_hash": "a37b6c2cd95679e1aeedab96a17fb8c7",
+    "semantic_hash": "a37b6c2cd95679e1aeedab96a17fb8c7"
+  },
+  "clawd-on-desk/test/bubble-elicitation-overflow.test.js": {
+    "mtime": 1784373289.668179,
+    "seen": 1787494094.7318807,
+    "ast_hash": "a753a888a2c94aff16e137d700cf2b42",
+    "semantic_hash": "a753a888a2c94aff16e137d700cf2b42"
+  },
+  "clawd-on-desk/test/bubble-elicitation-stepper.test.js": {
+    "mtime": 1784373289.668179,
+    "seen": 1787494094.7318814,
+    "ast_hash": "6fcc73c1ba841d9a54400c771e6dc581",
+    "semantic_hash": "6fcc73c1ba841d9a54400c771e6dc581"
+  },
+  "clawd-on-desk/test/bubble-format.test.js": {
+    "mtime": 1784373289.6696823,
+    "seen": 1787494094.7318823,
+    "ast_hash": "faf14559d9403368268f72c805044d17",
+    "semantic_hash": "faf14559d9403368268f72c805044d17"
+  },
+  "clawd-on-desk/test/bubble-html-assets.test.js": {
+    "mtime": 1784373289.6696823,
+    "seen": 1787494094.7318828,
+    "ast_hash": "1ca8b3963a2fca94bf08ad6afa868f8c",
+    "semantic_hash": "1ca8b3963a2fca94bf08ad6afa868f8c"
+  },
+  "clawd-on-desk/test/bubble-mcp-labeling.test.js": {
+    "mtime": 1784373289.6696823,
+    "seen": 1787494094.7318835,
+    "ast_hash": "db92fead3e4a65deec9b58105fb9c800",
+    "semantic_hash": "db92fead3e4a65deec9b58105fb9c800"
+  },
+  "clawd-on-desk/test/bubble-policy.test.js": {
+    "mtime": 1784373289.670687,
+    "seen": 1787494094.731884,
+    "ast_hash": "83c0e6705e965bd4e048707be6b6a4ea",
+    "semantic_hash": "83c0e6705e965bd4e048707be6b6a4ea"
+  },
+  "clawd-on-desk/test/claude-settings-watcher.test.js": {
+    "mtime": 1784373289.6711912,
+    "seen": 1787494094.7318847,
+    "ast_hash": "794a2f8fd98e373d585d36f4d7554875",
+    "semantic_hash": "794a2f8fd98e373d585d36f4d7554875"
+  },
+  "clawd-on-desk/test/clawd-hook.test.js": {
+    "mtime": 1784373289.6711912,
+    "seen": 1787494094.7318857,
+    "ast_hash": "6a4c42527d5b8aac41513bcb86dd45ed",
+    "semantic_hash": "6a4c42527d5b8aac41513bcb86dd45ed"
+  },
+  "clawd-on-desk/test/clawd-mini-enter-rendering.test.js": {
+    "mtime": 1784373289.6721952,
+    "seen": 1787494094.7318861,
+    "ast_hash": "fd87ca00b99818705fbeb9255d7f3be7",
+    "semantic_hash": "fd87ca00b99818705fbeb9255d7f3be7"
+  },
+  "clawd-on-desk/test/cleanup-integrations.test.js": {
+    "mtime": 1784373289.6721952,
+    "seen": 1787494094.7318869,
+    "ast_hash": "09d00658a617f681c9293c3cdde2e601",
+    "semantic_hash": "09d00658a617f681c9293c3cdde2e601"
+  },
+  "clawd-on-desk/test/cloudling-theme.test.js": {
+    "mtime": 1784373289.6731951,
+    "seen": 1787494094.7318876,
+    "ast_hash": "5c5bcf34b9726b1dc5860890092c2ef2",
+    "semantic_hash": "5c5bcf34b9726b1dc5860890092c2ef2"
+  },
+  "clawd-on-desk/test/codebuddy-install.test.js": {
+    "mtime": 1784373289.6731951,
+    "seen": 1787494094.731888,
+    "ast_hash": "39a78143d80cb37ee2d86411de8c0094",
+    "semantic_hash": "39a78143d80cb37ee2d86411de8c0094"
+  },
+  "clawd-on-desk/test/codewhale-hook.test.js": {
+    "mtime": 1784373289.6731951,
+    "seen": 1787494094.731889,
+    "ast_hash": "bb1a13bfc246f9dca7a82499d8a04624",
+    "semantic_hash": "bb1a13bfc246f9dca7a82499d8a04624"
+  },
+  "clawd-on-desk/test/codewhale-install.test.js": {
+    "mtime": 1784373289.6741943,
+    "seen": 1787494094.7318895,
+    "ast_hash": "8272d31859bb18a4698019a4691204cf",
+    "semantic_hash": "8272d31859bb18a4698019a4691204cf"
+  },
+  "clawd-on-desk/test/codex-debug-hook.test.js": {
+    "mtime": 1784373289.6741943,
+    "seen": 1787494094.7318902,
+    "ast_hash": "33f49638207f434c59b68622a3bbcec3",
+    "semantic_hash": "33f49638207f434c59b68622a3bbcec3"
+  },
+  "clawd-on-desk/test/codex-debug-install.test.js": {
+    "mtime": 1784373289.6741943,
+    "seen": 1787494094.7318907,
+    "ast_hash": "b8eb3e71c87d1f613ed7fbe5a061318b",
+    "semantic_hash": "b8eb3e71c87d1f613ed7fbe5a061318b"
+  },
+  "clawd-on-desk/test/codex-hook.test.js": {
+    "mtime": 1784373289.6751943,
+    "seen": 1787494094.7318914,
+    "ast_hash": "f2a0b754f5ad9ec8f1304ed3264cd074",
+    "semantic_hash": "f2a0b754f5ad9ec8f1304ed3264cd074"
+  },
+  "clawd-on-desk/test/codex-install.test.js": {
+    "mtime": 1784373289.6751943,
+    "seen": 1787494094.731892,
+    "ast_hash": "bdfb88ec8ee87500656f1d98026ee7ae",
+    "semantic_hash": "bdfb88ec8ee87500656f1d98026ee7ae"
+  },
+  "clawd-on-desk/test/codex-log-monitor.test.js": {
+    "mtime": 1784373289.6761942,
+    "seen": 1787494094.7318928,
+    "ast_hash": "c287cd756a845d451eacdec8aedab9a8",
+    "semantic_hash": "c287cd756a845d451eacdec8aedab9a8"
+  },
+  "clawd-on-desk/test/codex-notify-subgate.test.js": {
+    "mtime": 1784373289.6761942,
+    "seen": 1787494094.7318935,
+    "ast_hash": "3c0c269cfaa3b764affa920c7ace3a5a",
+    "semantic_hash": "3c0c269cfaa3b764affa920c7ace3a5a"
+  },
+  "clawd-on-desk/test/codex-pet-adapter.test.js": {
+    "mtime": 1784373289.677195,
+    "seen": 1787494094.731894,
+    "ast_hash": "d1f02673924fa05d9b55eae7002a8910",
+    "semantic_hash": "d1f02673924fa05d9b55eae7002a8910"
+  },
+  "clawd-on-desk/test/codex-pet-importer.test.js": {
+    "mtime": 1784373289.677195,
+    "seen": 1787494094.7318945,
+    "ast_hash": "75d216a4134edeeca57d5688a1e2903a",
+    "semantic_hash": "75d216a4134edeeca57d5688a1e2903a"
+  },
+  "clawd-on-desk/test/codex-pet-main.test.js": {
+    "mtime": 1784373289.677195,
+    "seen": 1787494094.7318952,
+    "ast_hash": "56958e515c80d218cbe048e43aa18fe0",
+    "semantic_hash": "56958e515c80d218cbe048e43aa18fe0"
+  },
+  "clawd-on-desk/test/codex-remote-monitor.test.js": {
+    "mtime": 1784373289.678195,
+    "seen": 1787494094.731896,
+    "ast_hash": "9f0f2757149b5e5c8a99c9d476a2e271",
+    "semantic_hash": "9f0f2757149b5e5c8a99c9d476a2e271"
+  },
+  "clawd-on-desk/test/codex-subagent-classifier.test.js": {
+    "mtime": 1784373289.678195,
+    "seen": 1787494094.7318966,
+    "ast_hash": "d84edb5fa4d95d995505681b78af87b0",
+    "semantic_hash": "d84edb5fa4d95d995505681b78af87b0"
+  },
+  "clawd-on-desk/test/codex-subagent-fields.test.js": {
+    "mtime": 1784373289.6791952,
+    "seen": 1787494094.731897,
+    "ast_hash": "bb304c1410af8c1378a62cb3fb936a76",
+    "semantic_hash": "bb304c1410af8c1378a62cb3fb936a76"
+  },
+  "clawd-on-desk/test/completion-notify-integration.test.js": {
+    "mtime": 1784373289.6791952,
+    "seen": 1787494094.7318978,
+    "ast_hash": "7b6e0caa4f57e8ec63fb9eb080d79fdd",
+    "semantic_hash": "7b6e0caa4f57e8ec63fb9eb080d79fdd"
+  },
+  "clawd-on-desk/test/context-usage.test.js": {
+    "mtime": 1784373289.6801956,
+    "seen": 1787494094.7318985,
+    "ast_hash": "82ce77689cf1a7e9d49b4453b6ec48e5",
+    "semantic_hash": "82ce77689cf1a7e9d49b4453b6ec48e5"
+  },
+  "clawd-on-desk/test/copilot-doctor.test.js": {
+    "mtime": 1784373289.6801956,
+    "seen": 1787494094.731899,
+    "ast_hash": "9a944129aad80143dcff4b1e30f05a61",
+    "semantic_hash": "9a944129aad80143dcff4b1e30f05a61"
+  },
+  "clawd-on-desk/test/copilot-hook.test.js": {
+    "mtime": 1784373289.6801956,
+    "seen": 1787494094.7319,
+    "ast_hash": "a0d5c77d3677755afe464ce7db6bdf40",
+    "semantic_hash": "a0d5c77d3677755afe464ce7db6bdf40"
+  },
+  "clawd-on-desk/test/copilot-install.test.js": {
+    "mtime": 1784373289.681202,
+    "seen": 1787494094.7319005,
+    "ast_hash": "72313c62e7097103cdbf3eadf0521e78",
+    "semantic_hash": "72313c62e7097103cdbf3eadf0521e78"
+  },
+  "clawd-on-desk/test/create-theme.test.js": {
+    "mtime": 1784373289.681202,
+    "seen": 1787494094.731901,
+    "ast_hash": "0e73215c08a27256d2120d91cad8a1ae",
+    "semantic_hash": "0e73215c08a27256d2120d91cad8a1ae"
+  },
+  "clawd-on-desk/test/cursor-install.test.js": {
+    "mtime": 1784373289.682202,
+    "seen": 1787494094.7319016,
+    "ast_hash": "3b74715bdec1e9a8afa239f018605004",
+    "semantic_hash": "3b74715bdec1e9a8afa239f018605004"
+  },
+  "clawd-on-desk/test/dashboard.test.js": {
+    "mtime": 1784373289.682202,
+    "seen": 1787494094.7319021,
+    "ast_hash": "d935b59c7a5a8965c19d36d8a560cb8c",
+    "semantic_hash": "d935b59c7a5a8965c19d36d8a560cb8c"
+  },
+  "clawd-on-desk/test/doctor-agent-descriptors.test.js": {
+    "mtime": 1784373289.682202,
+    "seen": 1787494094.731903,
+    "ast_hash": "2d3245fdff16d21241d889176649fdef",
+    "semantic_hash": "2d3245fdff16d21241d889176649fdef"
+  },
+  "clawd-on-desk/test/doctor-agent-integrations.test.js": {
+    "mtime": 1784373289.6831944,
+    "seen": 1787494094.7319036,
+    "ast_hash": "43f8b781f262f407a2370ff5b4b49093",
+    "semantic_hash": "43f8b781f262f407a2370ff5b4b49093"
+  },
+  "clawd-on-desk/test/doctor-codex-features.test.js": {
+    "mtime": 1784373289.6831944,
+    "seen": 1787494094.7319043,
+    "ast_hash": "339060f553b5e1e0ea9a2f7403cd54a6",
+    "semantic_hash": "339060f553b5e1e0ea9a2f7403cd54a6"
+  },
+  "clawd-on-desk/test/doctor-find-hook-commands.test.js": {
+    "mtime": 1784373289.6841943,
+    "seen": 1787494094.7319047,
+    "ast_hash": "08feae5425dff0574830491cbab7ac3a",
+    "semantic_hash": "08feae5425dff0574830491cbab7ac3a"
+  },
+  "clawd-on-desk/test/doctor-find-kimi-hook-commands.test.js": {
+    "mtime": 1784373289.6841943,
+    "seen": 1787494094.7319052,
+    "ast_hash": "5dce882a0c051b15624787ab8c8b6d89",
+    "semantic_hash": "5dce882a0c051b15624787ab8c8b6d89"
+  },
+  "clawd-on-desk/test/doctor-hook-activity.test.js": {
+    "mtime": 1784373289.6841943,
+    "seen": 1787494094.731906,
+    "ast_hash": "b64a94d9ed14d703c060951fa0fc1a26",
+    "semantic_hash": "b64a94d9ed14d703c060951fa0fc1a26"
+  },
+  "clawd-on-desk/test/doctor-installer-defaults.test.js": {
+    "mtime": 1784373289.6841943,
+    "seen": 1787494094.731907,
+    "ast_hash": "0a5a9f545ecb6f33ca668532af474ce9",
+    "semantic_hash": "0a5a9f545ecb6f33ca668532af474ce9"
+  },
+  "clawd-on-desk/test/doctor-ipc.test.js": {
+    "mtime": 1784373289.6857028,
+    "seen": 1787494094.7319076,
+    "ast_hash": "90ac93a3aa755dc10d5afeb614dd86b9",
+    "semantic_hash": "90ac93a3aa755dc10d5afeb614dd86b9"
+  },
+  "clawd-on-desk/test/doctor-local-server.test.js": {
+    "mtime": 1784373289.6857028,
+    "seen": 1787494094.731908,
+    "ast_hash": "2c2978274ea663aedad5b437c551ad4c",
+    "semantic_hash": "2c2978274ea663aedad5b437c551ad4c"
+  },
+  "clawd-on-desk/test/doctor-logs.test.js": {
+    "mtime": 1784373289.6862125,
+    "seen": 1787494094.7319088,
+    "ast_hash": "4c4eda4318fde3efe1b807d7a992e4e7",
+    "semantic_hash": "4c4eda4318fde3efe1b807d7a992e4e7"
+  },
+  "clawd-on-desk/test/doctor-modal-no-active-integrations.test.js": {
+    "mtime": 1784373289.6862125,
+    "seen": 1787494094.7319093,
+    "ast_hash": "07b8f57edd5f4c91289ad27845b88051",
+    "semantic_hash": "07b8f57edd5f4c91289ad27845b88051"
+  },
+  "clawd-on-desk/test/doctor-node-bin-parser.test.js": {
+    "mtime": 1784373289.6872268,
+    "seen": 1787494094.73191,
+    "ast_hash": "2a243e372384d2a5bfd16447765e6471",
+    "semantic_hash": "2a243e372384d2a5bfd16447765e6471"
+  },
+  "clawd-on-desk/test/doctor-opencode-entry.test.js": {
+    "mtime": 1784373289.6872268,
+    "seen": 1787494094.7319107,
+    "ast_hash": "bb3bf16d3ead70f70e6d6a5545096a86",
+    "semantic_hash": "bb3bf16d3ead70f70e6d6a5545096a86"
+  },
+  "clawd-on-desk/test/doctor-permission-bubble-policy.test.js": {
+    "mtime": 1784373289.6872268,
+    "seen": 1787494094.7319114,
+    "ast_hash": "b01454debadacdcc662797c327753a92",
+    "semantic_hash": "b01454debadacdcc662797c327753a92"
+  },
+  "clawd-on-desk/test/doctor-report.test.js": {
+    "mtime": 1784373289.688215,
+    "seen": 1787494094.7319145,
+    "ast_hash": "0b24451eb7fdbc06dd3bbc5ba9b4ff74",
+    "semantic_hash": "0b24451eb7fdbc06dd3bbc5ba9b4ff74"
+  },
+  "clawd-on-desk/test/doctor.test.js": {
+    "mtime": 1784373289.688215,
+    "seen": 1787494094.731915,
+    "ast_hash": "af5b6a12691c7d592eddc0ecf5925d12",
+    "semantic_hash": "af5b6a12691c7d592eddc0ecf5925d12"
+  },
+  "clawd-on-desk/test/drag-position.test.js": {
+    "mtime": 1784373289.689215,
+    "seen": 1787494094.7319157,
+    "ast_hash": "d5ed8b24e7963324fd745bdd4baac270",
+    "semantic_hash": "d5ed8b24e7963324fd745bdd4baac270"
+  },
+  "clawd-on-desk/test/elicitation.test.js": {
+    "mtime": 1784373289.689215,
+    "seen": 1787494094.7319164,
+    "ast_hash": "bdd8c29099927a68fcbb39d902ef2028",
+    "semantic_hash": "bdd8c29099927a68fcbb39d902ef2028"
+  },
+  "clawd-on-desk/test/fakes/migration-transitions.js": {
+    "mtime": 1784373289.6902225,
+    "seen": 1787494094.7319174,
+    "ast_hash": "9fa6dfa7985cd087d1b363573a8112d2",
+    "semantic_hash": "9fa6dfa7985cd087d1b363573a8112d2"
+  },
+  "clawd-on-desk/test/fakes/telegram-server.js": {
+    "mtime": 1784373289.6902225,
+    "seen": 1787494094.7319179,
+    "ast_hash": "44b3814338c8757ee7df0045fb4a3c7d",
+    "semantic_hash": "44b3814338c8757ee7df0045fb4a3c7d"
+  },
+  "clawd-on-desk/test/fetch-adapters.test.js": {
+    "mtime": 1784373289.6902225,
+    "seen": 1787494094.7319186,
+    "ast_hash": "ff473c23b7a76b660f367c30568545b9",
+    "semantic_hash": "ff473c23b7a76b660f367c30568545b9"
+  },
+  "clawd-on-desk/test/fetch-sidecar-binaries.test.js": {
+    "mtime": 1784373289.6912227,
+    "seen": 1787494094.731919,
+    "ast_hash": "87b4f0f78cd49d34aa013161de4242ae",
+    "semantic_hash": "87b4f0f78cd49d34aa013161de4242ae"
+  },
+  "clawd-on-desk/test/fixtures/codex-pets/tiny-atlas-png/pet.json": {
+    "mtime": 1784373289.6922152,
+    "seen": 1787494094.7319198,
+    "ast_hash": "404d1bf5ba7d47309adb4f7b5a4bcfd6",
+    "semantic_hash": "404d1bf5ba7d47309adb4f7b5a4bcfd6"
+  },
+  "clawd-on-desk/test/floating-window-runtime.test.js": {
+    "mtime": 1784373289.6922152,
+    "seen": 1787494094.7319205,
+    "ast_hash": "2890f9867ca495f51528d8a2c3c19fcc",
+    "semantic_hash": "2890f9867ca495f51528d8a2c3c19fcc"
+  },
+  "clawd-on-desk/test/focus-cmux.test.js": {
+    "mtime": 1784373289.6932282,
+    "seen": 1787494094.7319212,
+    "ast_hash": "ed04412572d19122ec42c7b0595e80bf",
+    "semantic_hash": "ed04412572d19122ec42c7b0595e80bf"
+  },
+  "clawd-on-desk/test/focus-iterm-tab.test.js": {
+    "mtime": 1784373289.6932282,
+    "seen": 1787494094.731922,
+    "ast_hash": "72f733dff68ac6135932a990a4d43594",
+    "semantic_hash": "72f733dff68ac6135932a990a4d43594"
+  },
+  "clawd-on-desk/test/focus-mac-extras.test.js": {
+    "mtime": 1784373289.6942153,
+    "seen": 1787494094.7319224,
+    "ast_hash": "55c35bf18738a79deb71d24f099305b7",
+    "semantic_hash": "55c35bf18738a79deb71d24f099305b7"
+  },
+  "clawd-on-desk/test/focus-mac-open.test.js": {
+    "mtime": 1784373289.6942153,
+    "seen": 1787494094.731923,
+    "ast_hash": "d8a7ee62da952e19c83bb5b32efed98d",
+    "semantic_hash": "d8a7ee62da952e19c83bb5b32efed98d"
+  },
+  "clawd-on-desk/test/focus-superset.test.js": {
+    "mtime": 1784373289.6942153,
+    "seen": 1787494094.7319238,
+    "ast_hash": "fbedf30838da49ce5301f1e1716001dc",
+    "semantic_hash": "fbedf30838da49ce5301f1e1716001dc"
+  },
+  "clawd-on-desk/test/focus-tmux.test.js": {
+    "mtime": 1784373289.6942153,
+    "seen": 1787494094.7319245,
+    "ast_hash": "3fff082ea71e40b4cb8154bf55197735",
+    "semantic_hash": "3fff082ea71e40b4cb8154bf55197735"
+  },
+  "clawd-on-desk/test/focus-windows.test.js": {
+    "mtime": 1784373289.695719,
+    "seen": 1787494094.731925,
+    "ast_hash": "f796faf2056da0dd4bb3e8e1ec2091a1",
+    "semantic_hash": "f796faf2056da0dd4bb3e8e1ec2091a1"
+  },
+  "clawd-on-desk/test/gemini-hook.test.js": {
+    "mtime": 1784373289.695719,
+    "seen": 1787494094.7319257,
+    "ast_hash": "af593a749ad0a661110324ab51998fda",
+    "semantic_hash": "af593a749ad0a661110324ab51998fda"
+  },
+  "clawd-on-desk/test/gemini-install.test.js": {
+    "mtime": 1784373289.6967237,
+    "seen": 1787494094.7319262,
+    "ast_hash": "8dcf7835a9144ea5f3a15eeff8fcabf0",
+    "semantic_hash": "8dcf7835a9144ea5f3a15eeff8fcabf0"
+  },
+  "clawd-on-desk/test/gemini-log-monitor.test.js": {
+    "mtime": 1784373289.6967237,
+    "seen": 1787494094.7319272,
+    "ast_hash": "84f82e124aeeff3c96a493037b4efbab",
+    "semantic_hash": "84f82e124aeeff3c96a493037b4efbab"
+  },
+  "clawd-on-desk/test/hardware-buddy-adapter.test.js": {
+    "mtime": 1784373289.6967237,
+    "seen": 1787494094.7319279,
+    "ast_hash": "5479d288edc8f91e05b75f049c7b58d1",
+    "semantic_hash": "5479d288edc8f91e05b75f049c7b58d1"
+  },
+  "clawd-on-desk/test/helpers/load-focus-with-mock.js": {
+    "mtime": 1784373289.6977232,
+    "seen": 1787494094.7319286,
+    "ast_hash": "b84e239da0e01ccae73f054f08e5cde9",
+    "semantic_hash": "b84e239da0e01ccae73f054f08e5cde9"
+  },
+  "clawd-on-desk/test/helpers/load-shared-process-with-mock.js": {
+    "mtime": 1784373289.6977232,
+    "seen": 1787494094.731929,
+    "ast_hash": "d964e9e63656b3b7cd8beb8eb1b950c4",
+    "semantic_hash": "d964e9e63656b3b7cd8beb8eb1b950c4"
+  },
+  "clawd-on-desk/test/hermes-install.test.js": {
+    "mtime": 1784373289.6987233,
+    "seen": 1787494094.7319295,
+    "ast_hash": "992369c34c358d8e5e832b22ac8a923a",
+    "semantic_hash": "992369c34c358d8e5e832b22ac8a923a"
+  },
+  "clawd-on-desk/test/hermes-plugin.test.js": {
+    "mtime": 1784373289.6987233,
+    "seen": 1787494094.7319303,
+    "ast_hash": "37fc9df458e1ef53ad524caae5b023d8",
+    "semantic_hash": "37fc9df458e1ef53ad524caae5b023d8"
+  },
+  "clawd-on-desk/test/hit-geometry.test.js": {
+    "mtime": 1784373289.699723,
+    "seen": 1787494094.731931,
+    "ast_hash": "d49974044af2b62da44a8968be6f6e74",
+    "semantic_hash": "d49974044af2b62da44a8968be6f6e74"
+  },
+  "clawd-on-desk/test/hit-renderer.test.js": {
+    "mtime": 1784373289.699723,
+    "seen": 1787494094.7319317,
+    "ast_hash": "e21e84e51ca42a50baa82a7faf37a198",
+    "semantic_hash": "e21e84e51ca42a50baa82a7faf37a198"
+  },
+  "clawd-on-desk/test/hook-http-blocker.js": {
+    "mtime": 1784373289.699723,
+    "seen": 1787494094.7319322,
+    "ast_hash": "69eb59b23668d3a1ecf355875da0153e",
+    "semantic_hash": "69eb59b23668d3a1ecf355875da0153e"
+  },
+  "clawd-on-desk/test/i18n.test.js": {
+    "mtime": 1784373289.700723,
+    "seen": 1787494094.7319329,
+    "ast_hash": "5bcaa39c4f5d93e71042894321278326",
+    "semantic_hash": "5bcaa39c4f5d93e71042894321278326"
+  },
+  "clawd-on-desk/test/install.test.js": {
+    "mtime": 1784373289.700723,
+    "seen": 1787494094.7319336,
+    "ast_hash": "6025abb2f395988d1cf1a0982d055552",
+    "semantic_hash": "6025abb2f395988d1cf1a0982d055552"
+  },
+  "clawd-on-desk/test/integration-sync.test.js": {
+    "mtime": 1784373289.7017229,
+    "seen": 1787494094.7319343,
+    "ast_hash": "de4c1cda493f7f94abf7844ce25cf2e1",
+    "semantic_hash": "de4c1cda493f7f94abf7844ce25cf2e1"
+  },
+  "clawd-on-desk/test/json-utils.test.js": {
+    "mtime": 1784373289.7017229,
+    "seen": 1787494094.731935,
+    "ast_hash": "2aa69cb782ade8f3c1f99548400545bc",
+    "semantic_hash": "2aa69cb782ade8f3c1f99548400545bc"
+  },
+  "clawd-on-desk/test/kimi-agent-config.test.js": {
+    "mtime": 1784373289.7017229,
+    "seen": 1787494094.7319355,
+    "ast_hash": "025defa958ca31a927a673580556c1b7",
+    "semantic_hash": "025defa958ca31a927a673580556c1b7"
+  },
+  "clawd-on-desk/test/kimi-hook.test.js": {
+    "mtime": 1784373289.702723,
+    "seen": 1787494094.7319362,
+    "ast_hash": "7231cad556c891ba235d7ca21b3f9846",
+    "semantic_hash": "7231cad556c891ba235d7ca21b3f9846"
+  },
+  "clawd-on-desk/test/kimi-install.test.js": {
+    "mtime": 1784373289.702723,
+    "seen": 1787494094.7319367,
+    "ast_hash": "68a1a0a3b61425b509e455f3b3a656a6",
+    "semantic_hash": "68a1a0a3b61425b509e455f3b3a656a6"
+  },
+  "clawd-on-desk/test/kimi-log-monitor.test.js": {
+    "mtime": 1784373289.702723,
+    "seen": 1787494094.7319376,
+    "ast_hash": "915289ae3178561bae7660a3d5949ed3",
+    "semantic_hash": "915289ae3178561bae7660a3d5949ed3"
+  },
+  "clawd-on-desk/test/kiro-install.test.js": {
+    "mtime": 1784373289.7037513,
+    "seen": 1787494094.7319381,
+    "ast_hash": "52b5d564113f3e8cb5d3a0cf00c142dd",
+    "semantic_hash": "52b5d564113f3e8cb5d3a0cf00c142dd"
+  },
+  "clawd-on-desk/test/launch-claude.test.js": {
+    "mtime": 1784373289.7037513,
+    "seen": 1787494094.7319388,
+    "ast_hash": "2b7bdd709bcd6731dca0741736fad7a5",
+    "semantic_hash": "2b7bdd709bcd6731dca0741736fad7a5"
+  },
+  "clawd-on-desk/test/linux-ozone.test.js": {
+    "mtime": 1784373289.704754,
+    "seen": 1787494094.7319393,
+    "ast_hash": "938061759c0c6e3e22e8136a3d3fedfa",
+    "semantic_hash": "938061759c0c6e3e22e8136a3d3fedfa"
+  },
+  "clawd-on-desk/test/locale-resolver.test.js": {
+    "mtime": 1784373289.704754,
+    "seen": 1787494094.73194,
+    "ast_hash": "4fb29a2601610eeed59d1657acf3eb11",
+    "semantic_hash": "4fb29a2601610eeed59d1657acf3eb11"
+  },
+  "clawd-on-desk/test/log-rotate.test.js": {
+    "mtime": 1784373289.704754,
+    "seen": 1787494094.7319407,
+    "ast_hash": "feda464af5480ed16b31c751a0f2b6a2",
+    "semantic_hash": "feda464af5480ed16b31c751a0f2b6a2"
+  },
+  "clawd-on-desk/test/log-timestamp.test.js": {
+    "mtime": 1784373289.7057545,
+    "seen": 1787494094.7319415,
+    "ast_hash": "467ae46f673b212d87e4b394b6701f1e",
+    "semantic_hash": "467ae46f673b212d87e4b394b6701f1e"
+  },
+  "clawd-on-desk/test/mac-hide.test.js": {
+    "mtime": 1784373289.7057545,
+    "seen": 1787494094.7319422,
+    "ast_hash": "d48041fb0e9dde9f55849305360a9e04",
+    "semantic_hash": "d48041fb0e9dde9f55849305360a9e04"
+  },
+  "clawd-on-desk/test/main-codex-callback.test.js": {
+    "mtime": 1784373289.7057545,
+    "seen": 1787494094.731943,
+    "ast_hash": "42cf0678e90a055dabc484bd709d7fff",
+    "semantic_hash": "42cf0678e90a055dabc484bd709d7fff"
+  },
+  "clawd-on-desk/test/main-codex-log-suppress.test.js": {
+    "mtime": 1784373289.7067542,
+    "seen": 1787494094.7319434,
+    "ast_hash": "5d5bce6ca9e85d065a6f477f5b43bfb1",
+    "semantic_hash": "5d5bce6ca9e85d065a6f477f5b43bfb1"
+  },
+  "clawd-on-desk/test/main-codex-pet-protocol.test.js": {
+    "mtime": 1784373289.7067542,
+    "seen": 1787494094.731944,
+    "ast_hash": "108be6e174aff16b1b72d4875a65046b",
+    "semantic_hash": "108be6e174aff16b1b72d4875a65046b"
+  },
+  "clawd-on-desk/test/main-codex-pet-theme-sync.test.js": {
+    "mtime": 1784373289.7067542,
+    "seen": 1787494094.7319448,
+    "ast_hash": "a6f59a41e5379779deeb0f3411a0cf68",
+    "semantic_hash": "a6f59a41e5379779deeb0f3411a0cf68"
+  },
+  "clawd-on-desk/test/main-gemini-hook-only.test.js": {
+    "mtime": 1784373289.7077544,
+    "seen": 1787494094.7319453,
+    "ast_hash": "fc0f7fa0f5d07a00a9f91c3acf9b41e6",
+    "semantic_hash": "fc0f7fa0f5d07a00a9f91c3acf9b41e6"
+  },
+  "clawd-on-desk/test/main-mac-dock-icon.test.js": {
+    "mtime": 1787396354.7547529,
+    "seen": 1787494094.731946,
+    "ast_hash": "e1f78058a2e1dde3035e9192e970956b",
+    "semantic_hash": "e1f78058a2e1dde3035e9192e970956b"
+  },
+  "clawd-on-desk/test/main-mini-animation-cycle.test.js": {
+    "mtime": 1784373289.7077544,
+    "seen": 1787494094.7319465,
+    "ast_hash": "381a6cc02e631573f94d46842e8af99f",
+    "semantic_hash": "381a6cc02e631573f94d46842e8af99f"
+  },
+  "clawd-on-desk/test/main-theme-transition.test.js": {
+    "mtime": 1784373289.7087548,
+    "seen": 1787494094.7319472,
+    "ast_hash": "a7eb4cc0db2a818469536bc29104c7a1",
+    "semantic_hash": "a7eb4cc0db2a818469536bc29104c7a1"
+  },
+  "clawd-on-desk/test/menu-auto-approve.test.js": {
+    "mtime": 1784373289.7087548,
+    "seen": 1787494094.7319477,
+    "ast_hash": "9375d2b95dfc4753ec0dd296e17ad403",
+    "semantic_hash": "9375d2b95dfc4753ec0dd296e17ad403"
+  },
+  "clawd-on-desk/test/menu-autostart.test.js": {
+    "mtime": 1784373289.7087548,
+    "seen": 1787494094.7319484,
+    "ast_hash": "505effe7262cfc79a85def889d42f822",
+    "semantic_hash": "505effe7262cfc79a85def889d42f822"
+  },
+  "clawd-on-desk/test/menu-display.test.js": {
+    "mtime": 1787397804.5910318,
+    "seen": 1787494094.731949,
+    "ast_hash": "a4b20392e7df273c02f34049b7eb00b0",
+    "semantic_hash": "a4b20392e7df273c02f34049b7eb00b0"
+  },
+  "clawd-on-desk/test/menu-hide-pet.test.js": {
+    "mtime": 1784373289.709754,
+    "seen": 1787494094.7319498,
+    "ast_hash": "37a5596b8cbe2c971222dea20eb2af46",
+    "semantic_hash": "37a5596b8cbe2c971222dea20eb2af46"
+  },
+  "clawd-on-desk/test/menu-size-preview.test.js": {
+    "mtime": 1784373289.7107556,
+    "seen": 1787494094.7319505,
+    "ast_hash": "1f520f9b2675d7e3c55c363cd728e88a",
+    "semantic_hash": "1f520f9b2675d7e3c55c363cd728e88a"
+  },
+  "clawd-on-desk/test/mini.test.js": {
+    "mtime": 1787415055.1185234,
+    "seen": 1787494094.731951,
+    "ast_hash": "fb4c7c9e94df4256925361587a856160",
+    "semantic_hash": "fb4c7c9e94df4256925361587a856160"
+  },
+  "clawd-on-desk/test/minicpm-adapter-dir.test.js": {
+    "mtime": 1784373289.7107556,
+    "seen": 1787494094.731952,
+    "ast_hash": "2318297f449ec98f644f5d0f4b1af7be",
+    "semantic_hash": "2318297f449ec98f644f5d0f4b1af7be"
+  },
+  "clawd-on-desk/test/minicpm-adapter-manifest.test.js": {
+    "mtime": 1784373289.711755,
+    "seen": 1787494094.7319524,
+    "ast_hash": "4d8efab2ec6cf4c5e9c812a6ecb18a04",
+    "semantic_hash": "4d8efab2ec6cf4c5e9c812a6ecb18a04"
+  },
+  "clawd-on-desk/test/minicpm-adapter-reconcile.test.js": {
+    "mtime": 1784373289.711755,
+    "seen": 1787494094.7319531,
+    "ast_hash": "8f450a74bf90e137cbb9ca63d404d0e4",
+    "semantic_hash": "8f450a74bf90e137cbb9ca63d404d0e4"
+  },
+  "clawd-on-desk/test/minicpm-assistant-config.test.js": {
+    "mtime": 1787470776.4129739,
+    "seen": 1787494094.7319536,
+    "ast_hash": "7a2289794c0a060db5f581c0756c6221",
+    "semantic_hash": "7a2289794c0a060db5f581c0756c6221"
+  },
+  "clawd-on-desk/test/minicpm-chat-context.test.js": {
+    "mtime": 1784373289.7127564,
+    "seen": 1787494094.7319543,
+    "ast_hash": "d2a53910196c45099001800a8858e98e",
+    "semantic_hash": "d2a53910196c45099001800a8858e98e"
+  },
+  "clawd-on-desk/test/minicpm-chat-history.test.js": {
+    "mtime": 1787326068.890646,
+    "seen": 1787494094.731955,
+    "ast_hash": "55c9f5cfd0f3c7866ce398b71bb94a4f",
+    "semantic_hash": "55c9f5cfd0f3c7866ce398b71bb94a4f"
+  },
+  "clawd-on-desk/test/minicpm-i18n.test.js": {
+    "mtime": 1787477506.1290164,
+    "seen": 1787494094.7319558,
+    "ast_hash": "1ba3b83aebde0795742fd264942abe52",
+    "semantic_hash": "1ba3b83aebde0795742fd264942abe52"
+  },
+  "clawd-on-desk/test/minicpm-locate.test.js": {
+    "mtime": 1784373289.7127564,
+    "seen": 1787494094.7319562,
+    "ast_hash": "85e2a3e16a6564ac86ef5c8bc2900f6c",
+    "semantic_hash": "85e2a3e16a6564ac86ef5c8bc2900f6c"
+  },
+  "clawd-on-desk/test/minicpm-model-download.test.js": {
+    "mtime": 1784373289.713755,
+    "seen": 1787494094.731957,
+    "ast_hash": "78cc3a553a29bb90351f0af332f6e0a1",
+    "semantic_hash": "78cc3a553a29bb90351f0af332f6e0a1"
+  },
+  "clawd-on-desk/test/mobile-preview-server.test.js": {
+    "mtime": 1784373289.713755,
+    "seen": 1787494094.7319574,
+    "ast_hash": "8720216a928b827f462cbeed2a6d5ad5",
+    "semantic_hash": "8720216a928b827f462cbeed2a6d5ad5"
+  },
+  "clawd-on-desk/test/openclaw-install.test.js": {
+    "mtime": 1784373289.7147555,
+    "seen": 1787494094.7319584,
+    "ast_hash": "b56a12f7a2b8a39a40c517c3ba4c3871",
+    "semantic_hash": "b56a12f7a2b8a39a40c517c3ba4c3871"
+  },
+  "clawd-on-desk/test/openclaw-plugin.test.js": {
+    "mtime": 1784373289.7147555,
+    "seen": 1787494094.7319589,
+    "ast_hash": "63fd66aff81c60e09adc8b4c3ec245fb",
+    "semantic_hash": "63fd66aff81c60e09adc8b4c3ec245fb"
+  },
+  "clawd-on-desk/test/opencode-install.test.js": {
+    "mtime": 1784373289.7157545,
+    "seen": 1787494094.7319596,
+    "ast_hash": "14af7977962026462b242e001173d42f",
+    "semantic_hash": "14af7977962026462b242e001173d42f"
+  },
+  "clawd-on-desk/test/opencode-plugin-session.test.js": {
+    "mtime": 1784373289.7157545,
+    "seen": 1787494094.73196,
+    "ast_hash": "c18288065e81ca18f4dc580b01fec885",
+    "semantic_hash": "c18288065e81ca18f4dc580b01fec885"
+  },
+  "clawd-on-desk/test/package-build-config.test.js": {
+    "mtime": 1786865996.124011,
+    "seen": 1787494094.7319608,
+    "ast_hash": "d1f6fc7c790a9c69ac3832cf6cc92fb9",
+    "semantic_hash": "d1f6fc7c790a9c69ac3832cf6cc92fb9"
+  },
+  "clawd-on-desk/test/permission-auto-approve.test.js": {
+    "mtime": 1784373289.7167552,
+    "seen": 1787494094.7319613,
+    "ast_hash": "f6c2d9b205c2ba28d8b06b53744b221b",
+    "semantic_hash": "f6c2d9b205c2ba28d8b06b53744b221b"
+  },
+  "clawd-on-desk/test/permission-autoclose-dismiss.test.js": {
+    "mtime": 1784373289.7167552,
+    "seen": 1787494094.7319622,
+    "ast_hash": "a5e309499ee32128e7a428c5b39d82ec",
+    "semantic_hash": "a5e309499ee32128e7a428c5b39d82ec"
+  },
+  "clawd-on-desk/test/permission-codex-response.test.js": {
+    "mtime": 1784373289.7177544,
+    "seen": 1787494094.7319627,
+    "ast_hash": "946b55861c6532d563bd42be58c5e1cf",
+    "semantic_hash": "946b55861c6532d563bd42be58c5e1cf"
+  },
+  "clawd-on-desk/test/permission-dismiss-by-agent.test.js": {
+    "mtime": 1784373289.7177544,
+    "seen": 1787494094.7319634,
+    "ast_hash": "46c0320e741d975554db8aaf7c24eb89",
+    "semantic_hash": "46c0320e741d975554db8aaf7c24eb89"
+  },
+  "clawd-on-desk/test/permission-elicitation-deny-focus.test.js": {
+    "mtime": 1784373289.7187548,
+    "seen": 1787494094.7319639,
+    "ast_hash": "a7cab22e89630dc8907dcbb1e553edf2",
+    "semantic_hash": "a7cab22e89630dc8907dcbb1e553edf2"
+  },
+  "clawd-on-desk/test/permission-hotkey-focus.test.js": {
+    "mtime": 1784373289.7187548,
+    "seen": 1787494094.7319646,
+    "ast_hash": "5f044be8371587c71fd584b4be6d7ac5",
+    "semantic_hash": "5f044be8371587c71fd584b4be6d7ac5"
+  },
+  "clawd-on-desk/test/permission-notify-autoclose.test.js": {
+    "mtime": 1784373289.7187548,
+    "seen": 1787494094.731965,
+    "ast_hash": "b8baf13268767b2a5cfe9328c71802d9",
+    "semantic_hash": "b8baf13268767b2a5cfe9328c71802d9"
+  },
+  "clawd-on-desk/test/permission-plan-feedback.test.js": {
+    "mtime": 1784373289.7197542,
+    "seen": 1787494094.731966,
+    "ast_hash": "22cbbb7dfc616615b534f4d12d6f451e",
+    "semantic_hash": "22cbbb7dfc616615b534f4d12d6f451e"
+  },
+  "clawd-on-desk/test/permission-reposition.test.js": {
+    "mtime": 1784373289.7197542,
+    "seen": 1787494094.7319667,
+    "ast_hash": "1ea8f5ab8cc72e0571f1b4d034edc177",
+    "semantic_hash": "1ea8f5ab8cc72e0571f1b4d034edc177"
+  },
+  "clawd-on-desk/test/permission-telegram-approval.test.js": {
+    "mtime": 1784373289.7207785,
+    "seen": 1787494094.7319672,
+    "ast_hash": "57bd41eafb7db0c5ebf391c1f301c013",
+    "semantic_hash": "57bd41eafb7db0c5ebf391c1f301c013"
+  },
+  "clawd-on-desk/test/permission-update-bubble-ipc.test.js": {
+    "mtime": 1784373289.7207785,
+    "seen": 1787494094.731968,
+    "ast_hash": "67dcc0ad88ab15f0afb022d75c54a4da",
+    "semantic_hash": "67dcc0ad88ab15f0afb022d75c54a4da"
+  },
+  "clawd-on-desk/test/pet-geometry-main.test.js": {
+    "mtime": 1784373289.7212887,
+    "seen": 1787494094.7319684,
+    "ast_hash": "8737e7a635e499948d3e07c2bb0aa9c6",
+    "semantic_hash": "8737e7a635e499948d3e07c2bb0aa9c6"
+  },
+  "clawd-on-desk/test/pet-interaction-ipc.test.js": {
+    "mtime": 1784373289.7212887,
+    "seen": 1787494094.7319694,
+    "ast_hash": "46f5c6f84b07454c4bc5359ff1a6e21e",
+    "semantic_hash": "46f5c6f84b07454c4bc5359ff1a6e21e"
+  },
+  "clawd-on-desk/test/pet-window-runtime.test.js": {
+    "mtime": 1784373289.7222917,
+    "seen": 1787494094.7319698,
+    "ast_hash": "aeba7c69e0ea480546e47b8ff63dda11",
+    "semantic_hash": "aeba7c69e0ea480546e47b8ff63dda11"
+  },
+  "clawd-on-desk/test/pi-extension-core.test.js": {
+    "mtime": 1784373289.7222917,
+    "seen": 1787494094.7319705,
+    "ast_hash": "b441c97f35ed10f7f8ed39de3b2f9e99",
+    "semantic_hash": "b441c97f35ed10f7f8ed39de3b2f9e99"
+  },
+  "clawd-on-desk/test/pi-install.test.js": {
+    "mtime": 1784373289.7222917,
+    "seen": 1787494094.7319713,
+    "ast_hash": "78633ca4463f2914f22e0662375f928e",
+    "semantic_hash": "78633ca4463f2914f22e0662375f928e"
+  },
+  "clawd-on-desk/test/prefs.test.js": {
+    "mtime": 1787470371.9295683,
+    "seen": 1787494094.7319717,
+    "ast_hash": "ab5e68fe45e2e36470126a11772a5e0e",
+    "semantic_hash": "ab5e68fe45e2e36470126a11772a5e0e"
+  },
+  "clawd-on-desk/test/proxy-agent.test.js": {
+    "mtime": 1784373289.723292,
+    "seen": 1787494094.7319727,
+    "ast_hash": "9533c1d5dac503d7b4544371f82b5c62",
+    "semantic_hash": "9533c1d5dac503d7b4544371f82b5c62"
+  },
+  "clawd-on-desk/test/qoder-hook.test.js": {
+    "mtime": 1784373289.7242918,
+    "seen": 1787494094.7319732,
+    "ast_hash": "634cfba8f2d3fdb1fa57f97593529e97",
+    "semantic_hash": "634cfba8f2d3fdb1fa57f97593529e97"
+  },
+  "clawd-on-desk/test/qoder-install.test.js": {
+    "mtime": 1784373289.7242918,
+    "seen": 1787494094.731974,
+    "ast_hash": "92b13d2b07a99a766e6364318db8b0e9",
+    "semantic_hash": "92b13d2b07a99a766e6364318db8b0e9"
+  },
+  "clawd-on-desk/test/qwen-code-hook.test.js": {
+    "mtime": 1784373289.7242918,
+    "seen": 1787494094.7319744,
+    "ast_hash": "d8371eeb88aad62cd4cb1bcbd5e6438b",
+    "semantic_hash": "d8371eeb88aad62cd4cb1bcbd5e6438b"
+  },
+  "clawd-on-desk/test/qwen-code-install.test.js": {
+    "mtime": 1784373289.725292,
+    "seen": 1787494094.731975,
+    "ast_hash": "e455fd136b6dfb414d54fbebc207e7b3",
+    "semantic_hash": "e455fd136b6dfb414d54fbebc207e7b3"
+  },
+  "clawd-on-desk/test/readme-contributors.test.js": {
+    "mtime": 1787400737.953069,
+    "seen": 1787494094.7319758,
+    "ast_hash": "69c42fb8236e2b1ae920451a0ea52759",
+    "semantic_hash": "69c42fb8236e2b1ae920451a0ea52759"
+  },
+  "clawd-on-desk/test/reasonix-hook.test.js": {
+    "mtime": 1784373289.7262924,
+    "seen": 1787494094.7319763,
+    "ast_hash": "d14ca3fd08e31767b98609f1e5ef92da",
+    "semantic_hash": "d14ca3fd08e31767b98609f1e5ef92da"
+  },
+  "clawd-on-desk/test/registry-kimi.test.js": {
+    "mtime": 1784373289.7262924,
+    "seen": 1787494094.731977,
+    "ast_hash": "47aee331c3cd1680a4a1d20bbcd9b9b2",
+    "semantic_hash": "47aee331c3cd1680a4a1d20bbcd9b9b2"
+  },
+  "clawd-on-desk/test/registry.test.js": {
+    "mtime": 1784373289.7262924,
+    "seen": 1787494094.7319775,
+    "ast_hash": "0328b439eaae13f15c47a926918d0e4e",
+    "semantic_hash": "0328b439eaae13f15c47a926918d0e4e"
+  },
+  "clawd-on-desk/test/remote-deploy.test.js": {
+    "mtime": 1784373289.7272925,
+    "seen": 1787494094.731978,
+    "ast_hash": "df50b0515e41b8c6185a9180b79ebed2",
+    "semantic_hash": "df50b0515e41b8c6185a9180b79ebed2"
+  },
+  "clawd-on-desk/test/remote-ssh-decode.test.js": {
+    "mtime": 1784373289.7272925,
+    "seen": 1787494094.7319787,
+    "ast_hash": "d161495522988202605ade8d388fb24d",
+    "semantic_hash": "d161495522988202605ade8d388fb24d"
+  },
+  "clawd-on-desk/test/remote-ssh-deploy.test.js": {
+    "mtime": 1784373289.7272925,
+    "seen": 1787494094.7319796,
+    "ast_hash": "ca15ad8cda5a08ee7088ee6d6138a24a",
+    "semantic_hash": "ca15ad8cda5a08ee7088ee6d6138a24a"
+  },
+  "clawd-on-desk/test/remote-ssh-ipc.test.js": {
+    "mtime": 1784373289.728292,
+    "seen": 1787494094.73198,
+    "ast_hash": "1cdc99ab3c43d96d03d3b50071ba8be0",
+    "semantic_hash": "1cdc99ab3c43d96d03d3b50071ba8be0"
+  },
+  "clawd-on-desk/test/remote-ssh-node.test.js": {
+    "mtime": 1784373289.728292,
+    "seen": 1787494094.7319808,
+    "ast_hash": "8c9e2921564c983b2ccc036e361ba013",
+    "semantic_hash": "8c9e2921564c983b2ccc036e361ba013"
+  },
+  "clawd-on-desk/test/remote-ssh-profile.test.js": {
+    "mtime": 1784373289.729292,
+    "seen": 1787494094.7319813,
+    "ast_hash": "fec30dd435495746238f35d6d4609076",
+    "semantic_hash": "fec30dd435495746238f35d6d4609076"
+  },
+  "clawd-on-desk/test/remote-ssh-quote.test.js": {
+    "mtime": 1784373289.729292,
+    "seen": 1787494094.731982,
+    "ast_hash": "cde9e4a656ce0e445156345ec8606176",
+    "semantic_hash": "cde9e4a656ce0e445156345ec8606176"
+  },
+  "clawd-on-desk/test/remote-ssh-runtime.test.js": {
+    "mtime": 1784373289.7302914,
+    "seen": 1787494094.7319827,
+    "ast_hash": "aaf82e31bc6e0c8d429c4c36d4065fa3",
+    "semantic_hash": "aaf82e31bc6e0c8d429c4c36d4065fa3"
+  },
+  "clawd-on-desk/test/remote-ssh-shell-detect.test.js": {
+    "mtime": 1784373289.7302914,
+    "seen": 1787494094.7319834,
+    "ast_hash": "85a6a3b42023e001a06770c3572ba975",
+    "semantic_hash": "85a6a3b42023e001a06770c3572ba975"
+  },
+  "clawd-on-desk/test/renderer-low-power.test.js": {
+    "mtime": 1784373289.7312913,
+    "seen": 1787494094.731984,
+    "ast_hash": "9587c053a84a2a4de1e46d8d104a62dd",
+    "semantic_hash": "9587c053a84a2a4de1e46d8d104a62dd"
+  },
+  "clawd-on-desk/test/roam.test.js": {
+    "mtime": 1784373289.7312913,
+    "seen": 1787494094.7319846,
+    "ast_hash": "4795b9920c5dde39c19d6c45e647f90e",
+    "semantic_hash": "4795b9920c5dde39c19d6c45e647f90e"
+  },
+  "clawd-on-desk/test/run-tests.js": {
+    "mtime": 1784373289.732292,
+    "seen": 1787494094.7319853,
+    "ast_hash": "3ba7dc8aa1a77de5a13a1202abcea3a8",
+    "semantic_hash": "3ba7dc8aa1a77de5a13a1202abcea3a8"
+  },
+  "clawd-on-desk/test/server-agent-id.test.js": {
+    "mtime": 1784373289.732292,
+    "seen": 1787494094.7319858,
+    "ast_hash": "e0137f7f4d13149804d7a9e365e4f32a",
+    "semantic_hash": "e0137f7f4d13149804d7a9e365e4f32a"
+  },
+  "clawd-on-desk/test/server-codex-permission.test.js": {
+    "mtime": 1784373289.732292,
+    "seen": 1787494094.7319865,
+    "ast_hash": "531985b3de6692ba61870b88f625182e",
+    "semantic_hash": "531985b3de6692ba61870b88f625182e"
+  },
+  "clawd-on-desk/test/server-config.test.js": {
+    "mtime": 1784373289.7332914,
+    "seen": 1787494094.7319872,
+    "ast_hash": "34befd92e98348d3a7278bd619306157",
+    "semantic_hash": "34befd92e98348d3a7278bd619306157"
+  },
+  "clawd-on-desk/test/server-hook-management.test.js": {
+    "mtime": 1784373289.7332914,
+    "seen": 1787494094.7319877,
+    "ast_hash": "2b50137a413e1403033c563711650036",
+    "semantic_hash": "2b50137a413e1403033c563711650036"
+  },
+  "clawd-on-desk/test/server-permission-input.test.js": {
+    "mtime": 1784373289.7342913,
+    "seen": 1787494094.7319884,
+    "ast_hash": "ac8da8cb9706c737471345baa477ced2",
+    "semantic_hash": "ac8da8cb9706c737471345baa477ced2"
+  },
+  "clawd-on-desk/test/server-permission-state-cleanup.test.js": {
+    "mtime": 1784373289.7342913,
+    "seen": 1787494094.731989,
+    "ast_hash": "cdd9acad48b9d2d05ca3a4f4d048bf44",
+    "semantic_hash": "cdd9acad48b9d2d05ca3a4f4d048bf44"
+  },
+  "clawd-on-desk/test/server-permission-subgate.test.js": {
+    "mtime": 1784373289.7342913,
+    "seen": 1787494094.7319899,
+    "ast_hash": "3cef3c83b031369eb863ccf5e03f6320",
+    "semantic_hash": "3cef3c83b031369eb863ccf5e03f6320"
+  },
+  "clawd-on-desk/test/server-qwen-permission.test.js": {
+    "mtime": 1784373289.7352917,
+    "seen": 1787494094.7319903,
+    "ast_hash": "4241d30de7d8587fe0658bfa7f424367",
+    "semantic_hash": "4241d30de7d8587fe0658bfa7f424367"
+  },
+  "clawd-on-desk/test/server-ringbuffer.test.js": {
+    "mtime": 1784373289.7352917,
+    "seen": 1787494094.731991,
+    "ast_hash": "d86bc51683865a5a5942076712856f71",
+    "semantic_hash": "d86bc51683865a5a5942076712856f71"
+  },
+  "clawd-on-desk/test/server-route-permission.test.js": {
+    "mtime": 1784373289.7362916,
+    "seen": 1787494094.7319915,
+    "ast_hash": "ae5ff160b69f71d282e79f49297697cb",
+    "semantic_hash": "ae5ff160b69f71d282e79f49297697cb"
+  },
+  "clawd-on-desk/test/server-route-state.test.js": {
+    "mtime": 1784373289.7362916,
+    "seen": 1787494094.7319922,
+    "ast_hash": "1e05b69d04170773b7a72f235898c030",
+    "semantic_hash": "1e05b69d04170773b7a72f235898c030"
+  },
+  "clawd-on-desk/test/server-state-title.test.js": {
+    "mtime": 1784373289.7362916,
+    "seen": 1787494094.7319927,
+    "ast_hash": "9d5ca22b98ef568cd759e261afb07df9",
+    "semantic_hash": "9d5ca22b98ef568cd759e261afb07df9"
+  },
+  "clawd-on-desk/test/session-alias.test.js": {
+    "mtime": 1784373289.7374594,
+    "seen": 1787494094.7319937,
+    "ast_hash": "7df41b820e3676d5a81e9e32baf16e19",
+    "semantic_hash": "7df41b820e3676d5a81e9e32baf16e19"
+  },
+  "clawd-on-desk/test/session-focus-handoff.test.js": {
+    "mtime": 1784373289.7374594,
+    "seen": 1787494094.7319942,
+    "ast_hash": "f34bc5bbd2e19ba6d3a50fe853912f76",
+    "semantic_hash": "f34bc5bbd2e19ba6d3a50fe853912f76"
+  },
+  "clawd-on-desk/test/session-focus.test.js": {
+    "mtime": 1784373289.7374594,
+    "seen": 1787494094.7319946,
+    "ast_hash": "6134b1256c4dc572337a872139f57220",
+    "semantic_hash": "6134b1256c4dc572337a872139f57220"
+  },
+  "clawd-on-desk/test/session-hud-style.test.js": {
+    "mtime": 1784373289.7384593,
+    "seen": 1787494094.7319953,
+    "ast_hash": "98dbc6e4df25b4d4abe585ff0d6a3688",
+    "semantic_hash": "98dbc6e4df25b4d4abe585ff0d6a3688"
+  },
+  "clawd-on-desk/test/session-hud.test.js": {
+    "mtime": 1784373289.7384593,
+    "seen": 1787494094.7319958,
+    "ast_hash": "a8c09aa9739371d9ee71bd19977df385",
+    "semantic_hash": "a8c09aa9739371d9ee71bd19977df385"
+  },
+  "clawd-on-desk/test/session-ipc.test.js": {
+    "mtime": 1784373289.7394593,
+    "seen": 1787494094.7319968,
+    "ast_hash": "7614a2a2c3a7ecb145b72f483f7f69dd",
+    "semantic_hash": "7614a2a2c3a7ecb145b72f483f7f69dd"
+  },
+  "clawd-on-desk/test/settings-actions-agents.test.js": {
+    "mtime": 1784373289.7394593,
+    "seen": 1787494094.7319973,
+    "ast_hash": "eeeb4705599736b6f464aa72c6ac3a95",
+    "semantic_hash": "eeeb4705599736b6f464aa72c6ac3a95"
+  },
+  "clawd-on-desk/test/settings-actions-shortcuts.test.js": {
+    "mtime": 1784373289.7394593,
+    "seen": 1787494094.7319977,
+    "ast_hash": "67992d1fe38e0d5d0a9e4ae40e1ae22e",
+    "semantic_hash": "67992d1fe38e0d5d0a9e4ae40e1ae22e"
+  },
+  "clawd-on-desk/test/settings-actions-system.test.js": {
+    "mtime": 1784373289.74046,
+    "seen": 1787494094.7319984,
+    "ast_hash": "0e56eeb2f8ccc10caf06e5f324fb9f7a",
+    "semantic_hash": "0e56eeb2f8ccc10caf06e5f324fb9f7a"
+  },
+  "clawd-on-desk/test/settings-actions-theme-overrides.test.js": {
+    "mtime": 1784373289.74046,
+    "seen": 1787494094.7319992,
+    "ast_hash": "f358cb10aa818d8910715ff42237b818",
+    "semantic_hash": "f358cb10aa818d8910715ff42237b818"
+  },
+  "clawd-on-desk/test/settings-actions.test.js": {
+    "mtime": 1787470293.6724498,
+    "seen": 1787494094.732,
+    "ast_hash": "770af14cb8dcb63c0f7b0ad0689896db",
+    "semantic_hash": "770af14cb8dcb63c0f7b0ad0689896db"
+  },
+  "clawd-on-desk/test/settings-agent-order.test.js": {
+    "mtime": 1784373289.7414596,
+    "seen": 1787494094.7320006,
+    "ast_hash": "d5e89adbbd0873b67a6068a98dbeb742",
+    "semantic_hash": "d5e89adbbd0873b67a6068a98dbeb742"
+  },
+  "clawd-on-desk/test/settings-animation-overrides-main.test.js": {
+    "mtime": 1784373289.7424722,
+    "seen": 1787494094.7320013,
+    "ast_hash": "8d219f8720c85daaa153bedafccf1a1d",
+    "semantic_hash": "8d219f8720c85daaa153bedafccf1a1d"
+  },
+  "clawd-on-desk/test/settings-controller.test.js": {
+    "mtime": 1784373289.7424722,
+    "seen": 1787494094.7320018,
+    "ast_hash": "597010142de96504612b277ec0ea2e77",
+    "semantic_hash": "597010142de96504612b277ec0ea2e77"
+  },
+  "clawd-on-desk/test/settings-effect-router-notify-autoclose.test.js": {
+    "mtime": 1784373289.7424722,
+    "seen": 1787494094.7320025,
+    "ast_hash": "c69418041efa6a8155e8f5eb17622c61",
+    "semantic_hash": "c69418041efa6a8155e8f5eb17622c61"
+  },
+  "clawd-on-desk/test/settings-effect-router.test.js": {
+    "mtime": 1784373289.7434597,
+    "seen": 1787494094.732003,
+    "ast_hash": "603c89075c651f01b4502ede09dbd289",
+    "semantic_hash": "603c89075c651f01b4502ede09dbd289"
+  },
+  "clawd-on-desk/test/settings-ipc.test.js": {
+    "mtime": 1787403802.112359,
+    "seen": 1787494094.732004,
+    "ast_hash": "4060f6851087a4739df1bdbe964a2599",
+    "semantic_hash": "4060f6851087a4739df1bdbe964a2599"
+  },
+  "clawd-on-desk/test/settings-renderer-browser-env.test.js": {
+    "mtime": 1787397813.5814762,
+    "seen": 1787494094.7320044,
+    "ast_hash": "352b828c9bed5caab51edac2e43ee9a9",
+    "semantic_hash": "352b828c9bed5caab51edac2e43ee9a9"
+  },
+  "clawd-on-desk/test/settings-size-preview-session.test.js": {
+    "mtime": 1784373289.7459702,
+    "seen": 1787494094.7320051,
+    "ast_hash": "4eeaa448c54b057e38313f556a7b963e",
+    "semantic_hash": "4eeaa448c54b057e38313f556a7b963e"
+  },
+  "clawd-on-desk/test/settings-size-slider.test.js": {
+    "mtime": 1784373289.7459702,
+    "seen": 1787494094.7320058,
+    "ast_hash": "270e33fdf8c53154c178db1579fbaab4",
+    "semantic_hash": "270e33fdf8c53154c178db1579fbaab4"
+  },
+  "clawd-on-desk/test/settings-store.test.js": {
+    "mtime": 1784373289.7459702,
+    "seen": 1787494094.7320063,
+    "ast_hash": "bdcdbb36d4f1170d6653f8ede856366d",
+    "semantic_hash": "bdcdbb36d4f1170d6653f8ede856366d"
+  },
+  "clawd-on-desk/test/settings-tab-remote-ssh.test.js": {
+    "mtime": 1784373289.7469811,
+    "seen": 1787494094.7320073,
+    "ast_hash": "9dd347acb11f23dcb101201075986da6",
+    "semantic_hash": "9dd347acb11f23dcb101201075986da6"
+  },
+  "clawd-on-desk/test/settings-validators.test.js": {
+    "mtime": 1784373289.7469811,
+    "seen": 1787494094.7320077,
+    "ast_hash": "49f09148a4e46f220a0f9b53160ee09d",
+    "semantic_hash": "49f09148a4e46f220a0f9b53160ee09d"
+  },
+  "clawd-on-desk/test/settings-window-icon.test.js": {
+    "mtime": 1784373289.7479792,
+    "seen": 1787494094.7320085,
+    "ast_hash": "940952e47b9ca5fe9982b6dab126d57e",
+    "semantic_hash": "940952e47b9ca5fe9982b6dab126d57e"
+  },
+  "clawd-on-desk/test/settings-window.test.js": {
+    "mtime": 1784373289.7479792,
+    "seen": 1787494094.7320092,
+    "ast_hash": "d6a19b2042ec735e6aea572c0fa80918",
+    "semantic_hash": "d6a19b2042ec735e6aea572c0fa80918"
+  },
+  "clawd-on-desk/test/shared-process.test.js": {
+    "mtime": 1784373289.7479792,
+    "seen": 1787494094.7320096,
+    "ast_hash": "c7fdc72f969bc930e6dd600eafa647d0",
+    "semantic_hash": "c7fdc72f969bc930e6dd600eafa647d0"
+  },
+  "clawd-on-desk/test/shortcut-actions.test.js": {
+    "mtime": 1784373289.7489734,
+    "seen": 1787494094.7320106,
+    "ast_hash": "ea0730526d74b76054e7ff4a8c3cff0d",
+    "semantic_hash": "ea0730526d74b76054e7ff4a8c3cff0d"
+  },
+  "clawd-on-desk/test/shortcut-runtime.test.js": {
+    "mtime": 1784373289.7489734,
+    "seen": 1787494094.732011,
+    "ast_hash": "b31134a84c6c17eb9de44ffe9a32a756",
+    "semantic_hash": "b31134a84c6c17eb9de44ffe9a32a756"
+  },
+  "clawd-on-desk/test/size-utils.test.js": {
+    "mtime": 1784373289.7499802,
+    "seen": 1787494094.7320116,
+    "ast_hash": "ed8b5f5cb0b6d2ad41f4e23bd8f8be47",
+    "semantic_hash": "ed8b5f5cb0b6d2ad41f4e23bd8f8be47"
+  },
+  "clawd-on-desk/test/state-agent-icons.test.js": {
+    "mtime": 1784373289.7499802,
+    "seen": 1787494094.7320123,
+    "ast_hash": "cca9e6351d61875e9e7819bc9c37230a",
+    "semantic_hash": "cca9e6351d61875e9e7819bc9c37230a"
+  },
+  "clawd-on-desk/test/state-display-svg.test.js": {
+    "mtime": 1784373289.7499802,
+    "seen": 1787494094.7320127,
+    "ast_hash": "f1a643c98ca5c1c3bf7deae634f80569",
+    "semantic_hash": "f1a643c98ca5c1c3bf7deae634f80569"
+  },
+  "clawd-on-desk/test/state-hitbox-resolver.test.js": {
+    "mtime": 1784373289.7509732,
+    "seen": 1787494094.7320135,
+    "ast_hash": "4fb384081fb2f5d03df26957b8e789d8",
+    "semantic_hash": "4fb384081fb2f5d03df26957b8e789d8"
+  },
+  "clawd-on-desk/test/state-kimi-permission.test.js": {
+    "mtime": 1784373289.7509732,
+    "seen": 1787494094.7320142,
+    "ast_hash": "7bf1b988c7b0633ca59889b101fafe7a",
+    "semantic_hash": "7bf1b988c7b0633ca59889b101fafe7a"
+  },
+  "clawd-on-desk/test/state-notification-hook-gate.test.js": {
+    "mtime": 1784373289.751973,
+    "seen": 1787494094.7320147,
+    "ast_hash": "7662fa91c61b9233d85f9c3c7cacb0bd",
+    "semantic_hash": "7662fa91c61b9233d85f9c3c7cacb0bd"
+  },
+  "clawd-on-desk/test/state-payload-size.test.js": {
+    "mtime": 1784373289.751973,
+    "seen": 1787494094.7320154,
+    "ast_hash": "1a36739afced493d40d31040f44212a1",
+    "semantic_hash": "1a36739afced493d40d31040f44212a1"
+  },
+  "clawd-on-desk/test/state-priority.test.js": {
+    "mtime": 1784373289.751973,
+    "seen": 1787494094.732016,
+    "ast_hash": "588c1d1013c7b97c87b3809eef2924dc",
+    "semantic_hash": "588c1d1013c7b97c87b3809eef2924dc"
+  },
+  "clawd-on-desk/test/state-session-events.test.js": {
+    "mtime": 1784373289.752973,
+    "seen": 1787494094.7320166,
+    "ast_hash": "a50d6a3f93d6119206204e7cbdf06543",
+    "semantic_hash": "a50d6a3f93d6119206204e7cbdf06543"
+  },
+  "clawd-on-desk/test/state-session-snapshot.test.js": {
+    "mtime": 1784373289.752973,
+    "seen": 1787494094.7320175,
+    "ast_hash": "8a427ad6afd77c7ffe2bb8b3c9c336b0",
+    "semantic_hash": "8a427ad6afd77c7ffe2bb8b3c9c336b0"
+  },
+  "clawd-on-desk/test/state-stale-cleanup.test.js": {
+    "mtime": 1784373289.752973,
+    "seen": 1787494094.732018,
+    "ast_hash": "fde909308edf9f8e5d43738296e976d7",
+    "semantic_hash": "fde909308edf9f8e5d43738296e976d7"
+  },
+  "clawd-on-desk/test/state-startup-recovery-detect.test.js": {
+    "mtime": 1784373289.754222,
+    "seen": 1787494094.7320187,
+    "ast_hash": "6996bfaff8c7b705ebd07eee439dbccd",
+    "semantic_hash": "6996bfaff8c7b705ebd07eee439dbccd"
+  },
+  "clawd-on-desk/test/state-visual-resolver.test.js": {
+    "mtime": 1784373289.754222,
+    "seen": 1787494094.7320192,
+    "ast_hash": "917ce4c320cc273e9a27ae19667b1d45",
+    "semantic_hash": "917ce4c320cc273e9a27ae19667b1d45"
+  },
+  "clawd-on-desk/test/state.test.js": {
+    "mtime": 1784373289.755221,
+    "seen": 1787494094.73202,
+    "ast_hash": "a122c6d0e492bbf0fc26ee04912fd57c",
+    "semantic_hash": "a122c6d0e492bbf0fc26ee04912fd57c"
+  },
+  "clawd-on-desk/test/system-wake-recovery.test.js": {
+    "mtime": 1784373289.7562196,
+    "seen": 1787494094.7320204,
+    "ast_hash": "0dbe18a7770c78576d02ab4a97993e29",
+    "semantic_hash": "0dbe18a7770c78576d02ab4a97993e29"
+  },
+  "clawd-on-desk/test/taskbar.test.js": {
+    "mtime": 1784373289.7562196,
+    "seen": 1787494094.7320213,
+    "ast_hash": "deb12eee8e23d6cf747b6d30524cc9f0",
+    "semantic_hash": "deb12eee8e23d6cf747b6d30524cc9f0"
+  },
+  "clawd-on-desk/test/telegram-approval-client.test.js": {
+    "mtime": 1784373289.7562196,
+    "seen": 1787494094.7320218,
+    "ast_hash": "db7e2e1f1fd181be7e44d4e32335a3e5",
+    "semantic_hash": "db7e2e1f1fd181be7e44d4e32335a3e5"
+  },
+  "clawd-on-desk/test/telegram-approval-runtime-status.test.js": {
+    "mtime": 1787492807.6676276,
+    "seen": 1787494094.7320223,
+    "ast_hash": "c31db8f270091f1f53e66027331efae8",
+    "semantic_hash": "c31db8f270091f1f53e66027331efae8"
+  },
+  "clawd-on-desk/test/telegram-approval-settings.test.js": {
+    "mtime": 1784373289.7572272,
+    "seen": 1787494094.732023,
+    "ast_hash": "d9c21c403557980494565dfd6c9b181c",
+    "semantic_hash": "d9c21c403557980494565dfd6c9b181c"
+  },
+  "clawd-on-desk/test/telegram-approval-sidecar.test.js": {
+    "mtime": 1784373289.7582126,
+    "seen": 1787494094.7320237,
+    "ast_hash": "b1827191ba126e33a725daf720cf64fe",
+    "semantic_hash": "b1827191ba126e33a725daf720cf64fe"
+  },
+  "clawd-on-desk/test/telegram-companion.test.js": {
+    "mtime": 1787492743.774681,
+    "seen": 1787494094.7320247,
+    "ast_hash": "2796a234791ae3bd423e9a9640d80a2c",
+    "semantic_hash": "2796a234791ae3bd423e9a9640d80a2c"
+  },
+  "clawd-on-desk/test/telegram-direct-send.test.js": {
+    "mtime": 1784373289.7582126,
+    "seen": 1787494094.7320254,
+    "ast_hash": "ca9b92433e52e955695b7fd9f0271603",
+    "semantic_hash": "ca9b92433e52e955695b7fd9f0271603"
+  },
+  "clawd-on-desk/test/telegram-fetch-transport.test.js": {
+    "mtime": 1784373289.7592194,
+    "seen": 1787494094.732026,
+    "ast_hash": "dfd3c4d189e5c5dbf1c3fb6fed75bbe9",
+    "semantic_hash": "dfd3c4d189e5c5dbf1c3fb6fed75bbe9"
+  },
+  "clawd-on-desk/test/telegram-migration-controller.test.js": {
+    "mtime": 1784373289.7592194,
+    "seen": 1787494094.7320266,
+    "ast_hash": "ddb38d52dad09d7e0cd0957077566786",
+    "semantic_hash": "ddb38d52dad09d7e0cd0957077566786"
+  },
+  "clawd-on-desk/test/telegram-migration-state.test.js": {
+    "mtime": 1784373289.7602124,
+    "seen": 1787494094.7320273,
+    "ast_hash": "b0e393adc0a6b5b6aeafb8e96302a7f3",
+    "semantic_hash": "b0e393adc0a6b5b6aeafb8e96302a7f3"
+  },
+  "clawd-on-desk/test/telegram-native-client.test.js": {
+    "mtime": 1784373289.7602124,
+    "seen": 1787494094.732028,
+    "ast_hash": "9f4cbd7d243d074da40fec0f222679cc",
+    "semantic_hash": "9f4cbd7d243d074da40fec0f222679cc"
+  },
+  "clawd-on-desk/test/telegram-native-runner.test.js": {
+    "mtime": 1784373289.761212,
+    "seen": 1787494094.7320285,
+    "ast_hash": "98929ab24730c4e7844663af19365ed3",
+    "semantic_hash": "98929ab24730c4e7844663af19365ed3"
+  },
+  "clawd-on-desk/test/telegram-owner-manager.test.js": {
+    "mtime": 1784373289.761212,
+    "seen": 1787494094.7320292,
+    "ast_hash": "dd02e3e785f73a423e6d56e02335ba01",
+    "semantic_hash": "dd02e3e785f73a423e6d56e02335ba01"
+  },
+  "clawd-on-desk/test/telegram-sidecar-status-bridge.test.js": {
+    "mtime": 1784373289.761212,
+    "seen": 1787494094.7320297,
+    "ast_hash": "eda655cb07a4cb0d702f58da8d44ea6c",
+    "semantic_hash": "eda655cb07a4cb0d702f58da8d44ea6c"
+  },
+  "clawd-on-desk/test/telegram-status-command-main.test.js": {
+    "mtime": 1784373289.7622209,
+    "seen": 1787494094.7320304,
+    "ast_hash": "e79d1bec2e07348ec2901f7007299059",
+    "semantic_hash": "e79d1bec2e07348ec2901f7007299059"
+  },
+  "clawd-on-desk/test/telegram-token-store.test.js": {
+    "mtime": 1784373289.7622209,
+    "seen": 1787494094.7320309,
+    "ast_hash": "f588ac9c9c1e1c1e79e5426fd0cc4a77",
+    "semantic_hash": "f588ac9c9c1e1c1e79e5426fd0cc4a77"
+  },
+  "clawd-on-desk/test/text-scale.test.js": {
+    "mtime": 1784373289.7632203,
+    "seen": 1787494094.7320318,
+    "ast_hash": "d06aa12c3f23e08b451ccf051ed2a389",
+    "semantic_hash": "d06aa12c3f23e08b451ccf051ed2a389"
+  },
+  "clawd-on-desk/test/theme-assets-cache.test.js": {
+    "mtime": 1784373289.7637393,
+    "seen": 1787494094.7320323,
+    "ast_hash": "0a49400b4fe0d82b21296227606a0076",
+    "semantic_hash": "0a49400b4fe0d82b21296227606a0076"
+  },
+  "clawd-on-desk/test/theme-context.test.js": {
+    "mtime": 1784373289.7637393,
+    "seen": 1787494094.732033,
+    "ast_hash": "f9c97a2377569606b2bab74ac8afb1d4",
+    "semantic_hash": "f9c97a2377569606b2bab74ac8afb1d4"
+  },
+  "clawd-on-desk/test/theme-fade-sequencer.test.js": {
+    "mtime": 1784373289.7647364,
+    "seen": 1787494094.7320335,
+    "ast_hash": "144a8abf766b2e704633107b06a2d651",
+    "semantic_hash": "144a8abf766b2e704633107b06a2d651"
+  },
+  "clawd-on-desk/test/theme-loader-validate-shape.test.js": {
+    "mtime": 1784373289.7647364,
+    "seen": 1787494094.7320342,
+    "ast_hash": "5c7792d5b79e483d4515e26161555ec8",
+    "semantic_hash": "5c7792d5b79e483d4515e26161555ec8"
+  },
+  "clawd-on-desk/test/theme-loader.test.js": {
+    "mtime": 1784373289.7647364,
+    "seen": 1787494094.7320352,
+    "ast_hash": "2a8344287f0b3225858955e7508c3160",
+    "semantic_hash": "2a8344287f0b3225858955e7508c3160"
+  },
+  "clawd-on-desk/test/theme-metadata.test.js": {
+    "mtime": 1784373289.7657363,
+    "seen": 1787494094.7320356,
+    "ast_hash": "41366c74ab75a92d62899e1153dd14be",
+    "semantic_hash": "41366c74ab75a92d62899e1153dd14be"
+  },
+  "clawd-on-desk/test/theme-override.test.js": {
+    "mtime": 1784373289.7657363,
+    "seen": 1787494094.7320364,
+    "ast_hash": "e575ae88c61c3198f841dc234ab6ac8a",
+    "semantic_hash": "e575ae88c61c3198f841dc234ab6ac8a"
+  },
+  "clawd-on-desk/test/theme-runtime.test.js": {
+    "mtime": 1784373289.7667363,
+    "seen": 1787494094.732037,
+    "ast_hash": "4117d86bb9b79c3443c08eef3954f820",
+    "semantic_hash": "4117d86bb9b79c3443c08eef3954f820"
+  },
+  "clawd-on-desk/test/theme-sanitizer.test.js": {
+    "mtime": 1787382346.601855,
+    "seen": 1787494094.7320378,
+    "ast_hash": "15eaacd60630ce68cdd7c7613aa29709",
+    "semantic_hash": "15eaacd60630ce68cdd7c7613aa29709"
+  },
+  "clawd-on-desk/test/theme-schema.test.js": {
+    "mtime": 1784373289.7667363,
+    "seen": 1787494094.7320385,
+    "ast_hash": "5a5e1a0d23c198f1989655d7375a847e",
+    "semantic_hash": "5a5e1a0d23c198f1989655d7375a847e"
+  },
+  "clawd-on-desk/test/theme-variants.test.js": {
+    "mtime": 1784373289.7677462,
+    "seen": 1787494094.732039,
+    "ast_hash": "4c957fc72d8eec954bf8ee59468394b8",
+    "semantic_hash": "4c957fc72d8eec954bf8ee59468394b8"
+  },
+  "clawd-on-desk/test/tick.test.js": {
+    "mtime": 1784373289.7677462,
+    "seen": 1787494094.7320397,
+    "ast_hash": "70043f78b7fd60732e239655e15f1254",
+    "semantic_hash": "70043f78b7fd60732e239655e15f1254"
+  },
+  "clawd-on-desk/test/topmost-runtime.test.js": {
+    "mtime": 1784373289.7687438,
+    "seen": 1787494094.7320404,
+    "ast_hash": "6ec59f0865aba47c0a3307a263e084a3",
+    "semantic_hash": "6ec59f0865aba47c0a3307a263e084a3"
+  },
+  "clawd-on-desk/test/update-bubble-autoclose.test.js": {
+    "mtime": 1784373289.7687438,
+    "seen": 1787494094.732041,
+    "ast_hash": "f3ecc76ea1fd462d6bcd00fa9370a61d",
+    "semantic_hash": "f3ecc76ea1fd462d6bcd00fa9370a61d"
+  },
+  "clawd-on-desk/test/update-bubble-position.test.js": {
+    "mtime": 1784373289.7687438,
+    "seen": 1787494094.7320418,
+    "ast_hash": "e6abef33e2bdeef4cfaa86b7a7486475",
+    "semantic_hash": "e6abef33e2bdeef4cfaa86b7a7486475"
+  },
+  "clawd-on-desk/test/update-bubble-style.test.js": {
+    "mtime": 1784373289.7697437,
+    "seen": 1787494094.7320423,
+    "ast_hash": "1215e432077e8f041c1b66b5f286d07e",
+    "semantic_hash": "1215e432077e8f041c1b66b5f286d07e"
+  },
+  "clawd-on-desk/test/updater.test.js": {
+    "mtime": 1787397789.0279472,
+    "seen": 1787494094.732043,
+    "ast_hash": "e3b25c7b19f9ea32aa7a4e76beb72e3b",
+    "semantic_hash": "e3b25c7b19f9ea32aa7a4e76beb72e3b"
+  },
+  "clawd-on-desk/test/verify-adapters.test.js": {
+    "mtime": 1784373289.7697437,
+    "seen": 1787494094.7320435,
+    "ast_hash": "ba377a9217c5d68176a0b59fb3b9dc69",
+    "semantic_hash": "ba377a9217c5d68176a0b59fb3b9dc69"
+  },
+  "clawd-on-desk/test/visible-margins.test.js": {
+    "mtime": 1784373289.7713776,
+    "seen": 1787494094.732044,
+    "ast_hash": "ebdc2592c1345f38909bb4465bc15d9c",
+    "semantic_hash": "ebdc2592c1345f38909bb4465bc15d9c"
+  },
+  "clawd-on-desk/test/vscode-extension.test.js": {
+    "mtime": 1784373289.7713776,
+    "seen": 1787494094.7320447,
+    "ast_hash": "f7b79158fc988c54bd4b2d3d043cab5b",
+    "semantic_hash": "f7b79158fc988c54bd4b2d3d043cab5b"
+  },
+  "clawd-on-desk/test/win-fullscreen-detect.test.js": {
+    "mtime": 1784373289.7723906,
+    "seen": 1787494094.7320454,
+    "ast_hash": "f9ec2a51af979ddc458a22d3d9110f1b",
+    "semantic_hash": "f9ec2a51af979ddc458a22d3d9110f1b"
+  },
+  "clawd-on-desk/test/window-opacity-transition.test.js": {
+    "mtime": 1784373289.7723906,
+    "seen": 1787494094.7320461,
+    "ast_hash": "2e9cab7352469f28200a070dfebfc5b3",
+    "semantic_hash": "2e9cab7352469f28200a070dfebfc5b3"
+  },
+  "clawd-on-desk/test/windows-audit-554.test.js": {
+    "mtime": 1784373289.7733831,
+    "seen": 1787494094.7320468,
+    "ast_hash": "cbf46ec728fb8f116c988e0f7335a8ea",
+    "semantic_hash": "cbf46ec728fb8f116c988e0f7335a8ea"
+  },
+  "clawd-on-desk/test/windows-uninstall-cleanup.test.js": {
+    "mtime": 1784373289.7733831,
+    "seen": 1787494094.7320473,
+    "ast_hash": "c08760dac2dc489c8f6a07836d73b930",
+    "semantic_hash": "c08760dac2dc489c8f6a07836d73b930"
+  },
+  "clawd-on-desk/test/work-area.test.js": {
+    "mtime": 1784373289.7733831,
+    "seen": 1787494094.732048,
+    "ast_hash": "388aaa3a4360465c1d5f4ac632b6ca6c",
+    "semantic_hash": "388aaa3a4360465c1d5f4ac632b6ca6c"
+  },
+  "clawd-on-desk/themes/calico/theme.json": {
+    "mtime": 1784373289.8491538,
+    "seen": 1787494094.7320487,
+    "ast_hash": "d5383d693af37972dd660a8591eaf5f2",
+    "semantic_hash": "d5383d693af37972dd660a8591eaf5f2"
+  },
+  "clawd-on-desk/themes/cloudling/theme.json": {
+    "mtime": 1784373289.8618495,
+    "seen": 1787494094.7320495,
+    "ast_hash": "17454632e05728aa35fd87be76e2c755",
+    "semantic_hash": "17454632e05728aa35fd87be76e2c755"
+  },
+  "clawd-on-desk/themes/cybercat/theme.json": {
+    "mtime": 1784373289.9221027,
+    "seen": 1787494094.73205,
+    "ast_hash": "47e1cea3e7265291bee642e9fb27a9a0",
+    "semantic_hash": "47e1cea3e7265291bee642e9fb27a9a0"
+  },
+  "clawd-on-desk/themes/hamster/theme.json": {
+    "mtime": 1784373289.956232,
+    "seen": 1787494094.7320507,
+    "ast_hash": "bcac64f897a329f5971b4af699299241",
+    "semantic_hash": "bcac64f897a329f5971b4af699299241"
+  },
+  "clawd-on-desk/themes/template/theme.json": {
+    "mtime": 1784373289.956232,
+    "seen": 1787494094.7320511,
+    "ast_hash": "1e502f42dbb3c66c4919de65d742306b",
+    "semantic_hash": "1e502f42dbb3c66c4919de65d742306b"
+  },
+  "clawd-on-desk/tools/copilot-permission-capture/capture.js": {
+    "mtime": 1784373289.9582322,
+    "seen": 1787494094.7320518,
+    "ast_hash": "53be53402b7a1136876d3f60af23a967",
+    "semantic_hash": "53be53402b7a1136876d3f60af23a967"
+  },
+  "clawd-on-desk/tools/copilot-permission-capture/e2e-hook.js": {
+    "mtime": 1784373289.9582322,
+    "seen": 1787494094.7320526,
+    "ast_hash": "0804ca048df31e49a8eb681f03b547b6",
+    "semantic_hash": "0804ca048df31e49a8eb681f03b547b6"
+  },
+  "clawd-on-desk/tools/png2svg.py": {
+    "mtime": 1784373289.959232,
+    "seen": 1787494094.732053,
+    "ast_hash": "8c56b8919cb37904f575ee784ffba4ed",
+    "semantic_hash": "8c56b8919cb37904f575ee784ffba4ed"
+  },
+  "go.sh": {
+    "mtime": 1784373289.959232,
+    "seen": 1787494094.7320538,
+    "ast_hash": "206b94f88b5d8de4ad445c6520c42910",
+    "semantic_hash": "206b94f88b5d8de4ad445c6520c42910"
+  },
+  "minicpm-sidecar/gateway/__init__.py": {
+    "mtime": 1784373289.961232,
+    "seen": 1787494094.7320545,
+    "ast_hash": "99029491947ad9f2388516bda6a40666",
+    "semantic_hash": "99029491947ad9f2388516bda6a40666"
+  },
+  "minicpm-sidecar/gateway/__main__.py": {
+    "mtime": 1787320547.2192612,
+    "seen": 1787494094.732055,
+    "ast_hash": "9a719436fbbbcb3cfdec16c24a347efa",
+    "semantic_hash": "9a719436fbbbcb3cfdec16c24a347efa"
+  },
+  "minicpm-sidecar/gateway/clawd_state.py": {
+    "mtime": 1787388806.056299,
+    "seen": 1787494094.732056,
+    "ast_hash": "c3f34c8f33861da66f201953c68148c6",
+    "semantic_hash": "c3f34c8f33861da66f201953c68148c6"
+  },
+  "minicpm-sidecar/gateway/lifecycle.py": {
+    "mtime": 1784373289.962232,
+    "seen": 1787494094.7320564,
+    "ast_hash": "9e8b74afa712fbc46cea940e7fae244e",
+    "semantic_hash": "9e8b74afa712fbc46cea940e7fae244e"
+  },
+  "minicpm-sidecar/gateway/llama_client.py": {
+    "mtime": 1787319879.2481344,
+    "seen": 1787494094.7320569,
+    "ast_hash": "75bba45490842868ea577ca201208888",
+    "semantic_hash": "75bba45490842868ea577ca201208888"
+  },
+  "minicpm-sidecar/gateway/log_setup.py": {
+    "mtime": 1787148117.8604844,
+    "seen": 1787494094.7320576,
+    "ast_hash": "90b05bf2a30e1aca5c383d61be5c4798",
+    "semantic_hash": "90b05bf2a30e1aca5c383d61be5c4798"
+  },
+  "minicpm-sidecar/gateway/mcp_client.py": {
+    "mtime": 1787147973.8303182,
+    "seen": 1787494094.7320583,
+    "ast_hash": "d87bfcc9847d1159731564531c64448c",
+    "semantic_hash": "d87bfcc9847d1159731564531c64448c"
+  },
+  "minicpm-sidecar/gateway/persona.py": {
+    "mtime": 1787496218.6749928,
+    "seen": 1787581467.5891533,
+    "ast_hash": "af23b79f406af8503406f2920d39b274",
+    "semantic_hash": ""
+  },
+  "minicpm-sidecar/gateway/runtime_config.py": {
+    "mtime": 1787414603.5050273,
+    "seen": 1787494094.7320597,
+    "ast_hash": "d7079a6cc24c54fa11a5b1e88b311f7e",
+    "semantic_hash": "d7079a6cc24c54fa11a5b1e88b311f7e"
+  },
+  "minicpm-sidecar/gateway/screen_context.py": {
+    "mtime": 1787148664.598416,
+    "seen": 1787494094.7320604,
+    "ast_hash": "8df4c4bf8fc77255a1695da840787de3",
+    "semantic_hash": "8df4c4bf8fc77255a1695da840787de3"
+  },
+  "minicpm-sidecar/gateway/semantic_memory.py": {
+    "mtime": 1787149260.8827343,
+    "seen": 1787494094.732061,
+    "ast_hash": "c39e0b1c6b0e45aa40118b79df49f3aa",
+    "semantic_hash": "c39e0b1c6b0e45aa40118b79df49f3aa"
+  },
+  "minicpm-sidecar/gateway/server.py": {
+    "mtime": 1787586438.3192143,
+    "seen": 1787587300.8025663,
+    "ast_hash": "d6181a0f69dcb0fd43ff2f38d4899087",
+    "semantic_hash": ""
+  },
+  "minicpm-sidecar/gateway/task_dispatcher.py": {
+    "mtime": 1787149461.8146167,
+    "seen": 1787494094.732062,
+    "ast_hash": "ba0473d5a41bdd5361c447a1b07ee246",
+    "semantic_hash": "ba0473d5a41bdd5361c447a1b07ee246"
+  },
+  "minicpm-sidecar/gateway/think_filter.py": {
+    "mtime": 1784373289.9637365,
+    "seen": 1787494094.7320628,
+    "ast_hash": "5fb6648b9dac527a604ae7d90ff6b13a",
+    "semantic_hash": "5fb6648b9dac527a604ae7d90ff6b13a"
+  },
+  "minicpm-sidecar/gateway/tool_registry.py": {
+    "mtime": 1787492915.60238,
+    "seen": 1787494094.7320635,
+    "ast_hash": "f603c39907a46b135eb8ee2ff7c8e85d",
+    "semantic_hash": "f603c39907a46b135eb8ee2ff7c8e85d"
+  },
+  "minicpm-sidecar/gateway/tools.py": {
+    "mtime": 1787585784.1001544,
+    "seen": 1787586058.7857418,
+    "ast_hash": "f33d7e100f46616273ba92a89e2c8aca",
+    "semantic_hash": ""
+  },
+  "minicpm-sidecar/gateway/updater.py": {
+    "mtime": 1784373289.964742,
+    "seen": 1787494094.7320647,
+    "ast_hash": "2cf4d5fcc53d488fdeb697002e554910",
+    "semantic_hash": "2cf4d5fcc53d488fdeb697002e554910"
+  },
+  "minicpm-sidecar/pyproject.toml": {
+    "mtime": 1786801087.940512,
+    "seen": 1787494094.7320652,
+    "ast_hash": "6435a60821401ecbd3e7a7347823b5a0",
+    "semantic_hash": "6435a60821401ecbd3e7a7347823b5a0"
+  },
+  "minicpm-sidecar/scripts/build-all.sh": {
+    "mtime": 1784373289.964742,
+    "seen": 1787494094.7320662,
+    "ast_hash": "2dbf835413491ebd807a98de27134453",
+    "semantic_hash": "2dbf835413491ebd807a98de27134453"
+  },
+  "minicpm-sidecar/scripts/build-gateway.ps1": {
+    "mtime": 1784373289.964742,
+    "seen": 1787494094.7320669,
+    "ast_hash": "78921d5a2203f497371c46157e0ebb92",
+    "semantic_hash": "78921d5a2203f497371c46157e0ebb92"
+  },
+  "minicpm-sidecar/scripts/build-gateway.sh": {
+    "mtime": 1784373289.9657419,
+    "seen": 1787494094.7320673,
+    "ast_hash": "b9e1d42cc317d6ea00766f690eac9441",
+    "semantic_hash": "b9e1d42cc317d6ea00766f690eac9441"
+  },
+  "minicpm-sidecar/scripts/build-llama.ps1": {
+    "mtime": 1784373289.9657419,
+    "seen": 1787494094.732068,
+    "ast_hash": "dbb89afb1268bc1eb451923eb57676cb",
+    "semantic_hash": "dbb89afb1268bc1eb451923eb57676cb"
+  },
+  "minicpm-sidecar/scripts/build-llama.sh": {
+    "mtime": 1784373289.9657419,
+    "seen": 1787494094.7320685,
+    "ast_hash": "bf7b5ed585a6512db7d31eba1b615d51",
+    "semantic_hash": "bf7b5ed585a6512db7d31eba1b615d51"
+  },
+  "minicpm-sidecar/scripts/clone-llama.sh": {
+    "mtime": 1784373289.966742,
+    "seen": 1787494094.7320695,
+    "ast_hash": "ad98cd351c4f00728b128f2220c10ae1",
+    "semantic_hash": "ad98cd351c4f00728b128f2220c10ae1"
+  },
+  "minicpm-sidecar/scripts/fetch-llama-release.ps1": {
+    "mtime": 1784373289.966742,
+    "seen": 1787494094.73207,
+    "ast_hash": "f30d5743661b9835485f5cbb003d17f2",
+    "semantic_hash": "f30d5743661b9835485f5cbb003d17f2"
+  },
+  "minicpm-sidecar/scripts/fetch-llama-release.sh": {
+    "mtime": 1784373289.966742,
+    "seen": 1787494094.7320707,
+    "ast_hash": "88f834d734f57cba53fc29457c6b9930",
+    "semantic_hash": "88f834d734f57cba53fc29457c6b9930"
+  },
+  "minicpm-sidecar/scripts/restart-app.ps1": {
+    "mtime": 1786792402.9693327,
+    "seen": 1787494094.7320714,
+    "ast_hash": "90d7a62c03b323673f1e2ccb1e799b2a",
+    "semantic_hash": "90d7a62c03b323673f1e2ccb1e799b2a"
+  },
+  "minicpm-sidecar/scripts/run-dev.sh": {
+    "mtime": 1784373289.966742,
+    "seen": 1787494094.7320719,
+    "ast_hash": "116f114f5d11a4604b3ca69f25146cd9",
+    "semantic_hash": "116f114f5d11a4604b3ca69f25146cd9"
+  },
+  "minicpm-sidecar/scripts/smoke-chat.ps1": {
+    "mtime": 1786789934.9475656,
+    "seen": 1787494094.7320726,
+    "ast_hash": "cce9de0b9ec352964cf27bc80ab06a4b",
+    "semantic_hash": "cce9de0b9ec352964cf27bc80ab06a4b"
+  },
+  "minicpm-sidecar/scripts/smoke-e2e.ps1": {
+    "mtime": 1787328411.1266663,
+    "seen": 1787494094.7320733,
+    "ast_hash": "29717fbac78d50b01be41b1fbf0cfd3d",
+    "semantic_hash": "29717fbac78d50b01be41b1fbf0cfd3d"
+  },
+  "minicpm-sidecar/scripts/switch-model.ps1": {
+    "mtime": 1786805114.1757333,
+    "seen": 1787494094.732074,
+    "ast_hash": "6b0e16ef97531cefa49e2a125d22991f",
+    "semantic_hash": "6b0e16ef97531cefa49e2a125d22991f"
+  },
+  "minicpm-sidecar/tests/test_adapter_endpoints.py": {
+    "mtime": 1787321449.9173796,
+    "seen": 1787494094.7320745,
+    "ast_hash": "b8e760dface49c6060680727655653f7",
+    "semantic_hash": "b8e760dface49c6060680727655653f7"
+  },
+  "minicpm-sidecar/tests/test_backend_selection.py": {
+    "mtime": 1786794446.628245,
+    "seen": 1787494094.7320752,
+    "ast_hash": "0d1fc900f61f7a3ff43b6d86b0837793",
+    "semantic_hash": "0d1fc900f61f7a3ff43b6d86b0837793"
+  },
+  "minicpm-sidecar/tests/test_clawd_state_proactive.py": {
+    "mtime": 1787395184.7643375,
+    "seen": 1787494094.7320757,
+    "ast_hash": "06ce50358e7ef8fe3af4b47e816e2f66",
+    "semantic_hash": "06ce50358e7ef8fe3af4b47e816e2f66"
+  },
+  "minicpm-sidecar/tests/test_discover_adapters.py": {
+    "mtime": 1784373289.967742,
+    "seen": 1787494094.7320766,
+    "ast_hash": "0cb2a735c0a0c6d8fb506dfcac380a56",
+    "semantic_hash": "0cb2a735c0a0c6d8fb506dfcac380a56"
+  },
+  "minicpm-sidecar/tests/test_discover_models.py": {
+    "mtime": 1784373289.968742,
+    "seen": 1787494094.7320774,
+    "ast_hash": "5a64ce7a2449312611aeea7859847777",
+    "semantic_hash": "5a64ce7a2449312611aeea7859847777"
+  },
+  "minicpm-sidecar/tests/test_effective_max_new_tokens.py": {
+    "mtime": 1784373289.968742,
+    "seen": 1787494094.7320778,
+    "ast_hash": "da8dccff6de1c249aeed5660827c1771",
+    "semantic_hash": "da8dccff6de1c249aeed5660827c1771"
+  },
+  "minicpm-sidecar/tests/test_lifecycle.py": {
+    "mtime": 1784373289.968742,
+    "seen": 1787494094.7320786,
+    "ast_hash": "94b16c06672f485196a5a60c181d95e1",
+    "semantic_hash": "94b16c06672f485196a5a60c181d95e1"
+  },
+  "minicpm-sidecar/tests/test_llama_client_payload.py": {
+    "mtime": 1784373289.968742,
+    "seen": 1787494094.732079,
+    "ast_hash": "361fe740cd92e56e25bc8907a062ecf8",
+    "semantic_hash": "361fe740cd92e56e25bc8907a062ecf8"
+  },
+  "minicpm-sidecar/tests/test_lora_injection.py": {
+    "mtime": 1784373289.969742,
+    "seen": 1787494094.73208,
+    "ast_hash": "dbd74eea2c2a0a0aa24ac1b0fb46a04e",
+    "semantic_hash": "dbd74eea2c2a0a0aa24ac1b0fb46a04e"
+  },
+  "minicpm-sidecar/tests/test_mcp_client.py": {
+    "mtime": 1787148155.7392278,
+    "seen": 1787494094.7320805,
+    "ast_hash": "73c573972e98a948658d7d0580440c51",
+    "semantic_hash": "73c573972e98a948658d7d0580440c51"
+  },
+  "minicpm-sidecar/tests/test_mcp_endpoints.py": {
+    "mtime": 1787321449.9193852,
+    "seen": 1787494094.7320814,
+    "ast_hash": "b7715f199c9360f28b38a7ee71979082",
+    "semantic_hash": "b7715f199c9360f28b38a7ee71979082"
+  },
+  "minicpm-sidecar/tests/test_native_tools.py": {
+    "mtime": 1787321602.6166897,
+    "seen": 1787494094.732082,
+    "ast_hash": "e13ff8686f1108369585f1dbc483affa",
+    "semantic_hash": "e13ff8686f1108369585f1dbc483affa"
+  },
+  "minicpm-sidecar/tests/test_runtime_config.py": {
+    "mtime": 1787581084.74465,
+    "seen": 1787581467.5892248,
+    "ast_hash": "1caa5bc14ea60c5eb45bb3c6a5f243f7",
+    "semantic_hash": ""
+  },
+  "minicpm-sidecar/tests/test_screen_context.py": {
+    "mtime": 1787148744.447676,
+    "seen": 1787494094.7320836,
+    "ast_hash": "28efceae00d24af06bb05ea76d0df348",
+    "semantic_hash": "28efceae00d24af06bb05ea76d0df348"
+  },
+  "minicpm-sidecar/tests/test_semantic_memory.py": {
+    "mtime": 1787321449.9203854,
+    "seen": 1787494094.7320843,
+    "ast_hash": "8b76278caaf6ac9e77e2b71a84354dc3",
+    "semantic_hash": "8b76278caaf6ac9e77e2b71a84354dc3"
+  },
+  "minicpm-sidecar/tests/test_tag_scrubber.py": {
+    "mtime": 1787489637.1540065,
+    "seen": 1787494094.7320848,
+    "ast_hash": "25476819d9dc08c1ed9a5257a81515ec",
+    "semantic_hash": "25476819d9dc08c1ed9a5257a81515ec"
+  },
+  "minicpm-sidecar/tests/test_think_filter.py": {
+    "mtime": 1784373289.969742,
+    "seen": 1787494094.7320855,
+    "ast_hash": "8a5eec1d92530322cacde7db5cd1488e",
+    "semantic_hash": "8a5eec1d92530322cacde7db5cd1488e"
+  },
+  "minicpm-sidecar/tests/test_tool_registry.py": {
+    "mtime": 1787148149.8135655,
+    "seen": 1787494094.732086,
+    "ast_hash": "0af9cc4bb58d39149b0a1c663b9a69c5",
+    "semantic_hash": "0af9cc4bb58d39149b0a1c663b9a69c5"
+  },
+  "minicpm-sidecar/tests/test_tool_routing.py": {
+    "mtime": 1787582718.2354422,
+    "seen": 1787585496.361953,
+    "ast_hash": "6a6beb041aba52828c35f43a444f2190",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/tools/dump-dom.mjs": {
+    "mtime": 1787501228.784895,
+    "seen": 1787581467.5891352,
+    "ast_hash": "dbc16d31166784959b6cd924ff677500",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/tools/trace-one.mjs": {
+    "mtime": 1787501451.9438536,
+    "seen": 1787581467.5891387,
+    "ast_hash": "d2540016755b881a0b298bb434e172ed",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/tools/verify-bubble-ui.mjs": {
+    "mtime": 1787502291.8194492,
+    "seen": 1787581467.5891402,
+    "ast_hash": "82a13e4929d07d1f30966415ea5550a0",
+    "semantic_hash": ""
+  },
+  "minicpm-sidecar/tests/test_durable_reminders.py": {
+    "mtime": 1787585785.8333886,
+    "seen": 1787586058.7857614,
+    "ast_hash": "828c4e274bbb547691c49398805e6ce8",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1787494218.611068,
+    "seen": 1787581467.589244,
+    "ast_hash": "29632154e4783450a4660fb1c2fe73f7",
+    "semantic_hash": ""
+  },
+  "CONTRIBUTING.md": {
+    "mtime": 1784373289.13341,
+    "seen": 1787581467.5892456,
+    "ast_hash": "f41bb9edf95dd9fa8370caa607e3d45a",
+    "semantic_hash": ""
+  },
+  "NOTICE.md": {
+    "mtime": 1784373289.13341,
+    "seen": 1787581467.5892467,
+    "ast_hash": "5a37ee9d00f0dd2a4e5acb99b1771d16",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1787587179.8202515,
+    "seen": 1787587300.8026059,
+    "ast_hash": "f2e5507cea4f58bcfb6e71cd12e8bb37",
+    "semantic_hash": ""
+  },
+  "README.zh-CN.md": {
+    "mtime": 1784373289.1344075,
+    "seen": 1787581467.5892498,
+    "ast_hash": "d2321c0c3651e7aa4e8055934252075e",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/NOTICE.md": {
+    "mtime": 1784373289.34122,
+    "seen": 1787581467.5892515,
+    "ast_hash": "6049e3136f40c9662cb9e904abda498c",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/README.md": {
+    "mtime": 1787403595.432178,
+    "seen": 1787581467.5892532,
+    "ast_hash": "64a2116565afbc99eed6451cb5541c5f",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/bin/cc-connect-clawd/README.md": {
+    "mtime": 1784373289.5348744,
+    "seen": 1787581467.5892544,
+    "ast_hash": "ac5ad32e536e25a233ae633e4f84ff7d",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/cloudling/specs/core-states.md": {
+    "mtime": 1784373289.5373812,
+    "seen": 1787581467.5892556,
+    "ast_hash": "12d78ff423ea9f0a63c104f9a32ce32a",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/cloudling/specs/special-states.md": {
+    "mtime": 1784373289.5373812,
+    "seen": 1787581467.589257,
+    "ast_hash": "4cddb2dc4e8a5d27eefc1618852415ac",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/codex-wsl-clarification.ko-KR.md": {
+    "mtime": 1784373289.5373812,
+    "seen": 1787581467.5892582,
+    "ast_hash": "42caeffe40b01ce16230f64b36a324d4",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/codex-wsl-clarification.md": {
+    "mtime": 1784373289.538381,
+    "seen": 1787581467.5892603,
+    "ast_hash": "74d48a28493f029f08e9d74efb2a3e11",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/codex-wsl-clarification.zh-CN.md": {
+    "mtime": 1784373289.538381,
+    "seen": 1787581467.5892615,
+    "ast_hash": "cf0af3b285acb56f1e904293297b80ed",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/copilot-setup.md": {
+    "mtime": 1784373289.538381,
+    "seen": 1787581467.5892625,
+    "ast_hash": "435d7d41d319db04b1bdc523f8315605",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/copilot-setup.zh-CN.md": {
+    "mtime": 1784373289.5393815,
+    "seen": 1787581467.5892637,
+    "ast_hash": "20219356410141f33f781c5d226f8b04",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/guide-remote-ssh.md": {
+    "mtime": 1784373289.5393815,
+    "seen": 1787581467.589265,
+    "ast_hash": "efdd6f5cea2498bb1d166e82fbbc36fe",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/guide-remote-ssh.zh-CN.md": {
+    "mtime": 1784373289.5393815,
+    "seen": 1787581467.5892758,
+    "ast_hash": "f579f5bcc97824c42c03d5fc729f1b7b",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/guide-theme-creation.md": {
+    "mtime": 1784373289.5393815,
+    "seen": 1787581467.5892787,
+    "ast_hash": "18e78d8cf3632f3174d1dba839e19af3",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/known-limitations.md": {
+    "mtime": 1784373289.5408847,
+    "seen": 1787581467.58928,
+    "ast_hash": "71cf5055fa6b61a9a1de09940aac6dd3",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/known-limitations.zh-CN.md": {
+    "mtime": 1784373289.5408847,
+    "seen": 1787581467.589291,
+    "ast_hash": "5ec566eaf7bb6e5ad363ae89a2974fdc",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/setup-guide.md": {
+    "mtime": 1787403613.3497536,
+    "seen": 1787581467.5892925,
+    "ast_hash": "61c696daac41a82bb58cf41bc4f2446e",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/setup-guide.zh-CN.md": {
+    "mtime": 1787403631.5615983,
+    "seen": 1787581467.5892937,
+    "ast_hash": "d87adfe936534fd8f7c0409151c47a92",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/state-mapping.md": {
+    "mtime": 1784373289.5418885,
+    "seen": 1787581467.589295,
+    "ast_hash": "adba7281fc16fad5f41e38e9c2eb7268",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/state-mapping.zh-CN.md": {
+    "mtime": 1784373289.5418885,
+    "seen": 1787581467.589296,
+    "ast_hash": "2dc6f46a3b71f4322e4de3f1845bc162",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/guides/telegram-approval.md": {
+    "mtime": 1784373289.542889,
+    "seen": 1787581467.589297,
+    "ast_hash": "18f965f5379c78b00a2d9073988850ff",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/project/agent-runtime-architecture.md": {
+    "mtime": 1784373289.5438879,
+    "seen": 1787581467.5892982,
+    "ast_hash": "f5117c66e108a5f2624aafd4e5193e22",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/project/release-process.md": {
+    "mtime": 1784373289.5438879,
+    "seen": 1787581467.5892992,
+    "ast_hash": "16c15c478514da984ccfca9a2cbd9474",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/docs/project/theme-state-ui.md": {
+    "mtime": 1784373289.5449145,
+    "seen": 1787581467.5893004,
+    "ast_hash": "6bbacd3c345b7d18f3a489dbce17bba6",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/hooks/hermes-plugin/plugin.yaml": {
+    "mtime": 1784373289.55994,
+    "seen": 1787581467.589302,
+    "ast_hash": "212fafb39101cd249f76fbf3e41f83e4",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/pwa/index.html": {
+    "mtime": 1784373289.5756366,
+    "seen": 1787581467.589303,
+    "ast_hash": "3135dd9967503f01a3b6eeb0231dbbc5",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/bubble.html": {
+    "mtime": 1784373289.584628,
+    "seen": 1787581467.589304,
+    "ast_hash": "a67643a755ac0b2f06cf6b5ce987d90f",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/dashboard.html": {
+    "mtime": 1784373289.5881376,
+    "seen": 1787581467.5893056,
+    "ast_hash": "3b5ebe581efe305b014e26d4c8e80812",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/hit.html": {
+    "mtime": 1784373289.597643,
+    "seen": 1787581467.5893066,
+    "ast_hash": "fc363ca1226370b4bdbff588363034b7",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/index.html": {
+    "mtime": 1784378358.0797455,
+    "seen": 1787581467.5893073,
+    "ast_hash": "5d6947b2a024704190cd309cf0e435d5",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/minicpm-chat.html": {
+    "mtime": 1787492191.2730055,
+    "seen": 1787581467.5893087,
+    "ast_hash": "6e9ddfd9a4aa4909f521f843513ac097",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/minicpm-onboarding.html": {
+    "mtime": 1784378358.676886,
+    "seen": 1787581467.5893102,
+    "ast_hash": "fd5fbf5e554344f8108497eff48a24f9",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/session-hud.html": {
+    "mtime": 1784373289.6243863,
+    "seen": 1787581467.5893116,
+    "ast_hash": "db7f5247f87bae1258bb566856c1cee9",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/settings-animation-preview.html": {
+    "mtime": 1784373289.6293862,
+    "seen": 1787581467.5893128,
+    "ast_hash": "08b90e88b28cbe355ee70b6b75756eca",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/settings.html": {
+    "mtime": 1784373289.6434019,
+    "seen": 1787581467.5893137,
+    "ast_hash": "c2ce1940cd61f7026326335e94ca4298",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/update-bubble.html": {
+    "mtime": 1784373289.6600847,
+    "seen": 1787581467.5893152,
+    "ast_hash": "630c8f072776586ae531eeec19c03e1a",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/test/fixtures/codex-pets/tiny-atlas-png/README.md": {
+    "mtime": 1784373289.6912227,
+    "seen": 1787581467.5893161,
+    "ast_hash": "b49cd2dc186952a15c1602f3b7ab722b",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/tools/calico-test.html": {
+    "mtime": 1784373289.957232,
+    "seen": 1787581467.5893173,
+    "ast_hash": "73d36120ec7cabe6f1fe3cc15d114d1d",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/tools/copilot-permission-capture/README.md": {
+    "mtime": 1784373289.9582322,
+    "seen": 1787581467.5893188,
+    "ast_hash": "5f031a031e15e01289509d08ca1dd006",
+    "semantic_hash": ""
+  },
+  "docs/development.md": {
+    "mtime": 1787323515.4517114,
+    "seen": 1787581467.58932,
+    "ast_hash": "9a0184b9ef4ca77790a6ee757a576556",
+    "semantic_hash": ""
+  },
+  "minicpm-sidecar/README.md": {
+    "mtime": 1784373289.960232,
+    "seen": 1787581467.589321,
+    "ast_hash": "0a98ac1aeeb10d56e87247f94242b667",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/tools/calico-final.svg": {
+    "mtime": 1784373289.957232,
+    "seen": 1787581467.5893223,
+    "ast_hash": "44b3ec90d1cea41b524bc1405e3f61ce",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/tools/run-ui-smoke.mjs": {
+    "mtime": 1787585886.201751,
+    "seen": 1787586058.7857237,
+    "ast_hash": "59caf1c5c6761b72d68741e72d66cf92",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/minicpm-history-store.js": {
+    "mtime": 1787586637.5050743,
+    "seen": 1787587300.8021924,
+    "ast_hash": "38c066072cf51d7c4e253b40835b6b3a",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/src/minicpm-sidecar-manager.js": {
+    "mtime": 1787586953.1920624,
+    "seen": 1787587300.802198,
+    "ast_hash": "affc8b481cf1e092fb9fa510752fa3ee",
+    "semantic_hash": ""
+  },
+  "minicpm-sidecar/gateway/tag_scrubber.py": {
+    "mtime": 1787586393.1953316,
+    "seen": 1787587300.8025675,
+    "ast_hash": "639a21689843d06240a79785fb5264ad",
+    "semantic_hash": ""
+  }
+}

@@ -203,6 +203,53 @@ def detect_backend() -> dict:
     }
 
 
+def accumulate_tool_calls(fragments: list[dict]) -> list[dict]:
+    """Stitch OpenAI streamed ``tool_calls`` deltas into complete calls.
+
+    Input: the raw ``delta.tool_calls`` fragments in stream order. Output:
+    ``[{"id": ..., "name": ..., "arguments": dict}, ...]`` ordered by the
+    fragments' ``index`` field. Malformed argument JSON degrades to a
+    raw-string ``arguments`` so the caller can still see what the model
+    tried to say instead of silently dropping the call.
+    """
+    by_index: dict[int, dict] = {}
+    order: list[int] = []
+    for frag in fragments or []:
+        if not isinstance(frag, dict):
+            continue
+        idx = frag.get("index")
+        idx = idx if isinstance(idx, int) else 0
+        slot = by_index.get(idx)
+        if slot is None:
+            slot = {"id": "", "name": "", "args_json": ""}
+            by_index[idx] = slot
+            order.append(idx)
+        fn = frag.get("function") if isinstance(frag.get("function"), dict) else {}
+        if frag.get("id"):
+            slot["id"] = str(frag["id"])
+        if fn.get("name"):
+            # Some backends repeat the full name on every chunk; keep first.
+            slot["name"] = slot["name"] or str(fn["name"])
+        args = fn.get("arguments")
+        if isinstance(args, str):
+            slot["args_json"] += args
+    out: list[dict] = []
+    for idx in sorted(order):
+        slot = by_index[idx]
+        try:
+            args = json.loads(slot["args_json"]) if slot["args_json"].strip() else {}
+            if not isinstance(args, dict):
+                args = {"_raw": slot["args_json"]}
+        except Exception:
+            args = {"_raw": slot["args_json"]}
+        out.append({
+            "id": slot["id"] or f"call_{idx}",
+            "name": slot["name"],
+            "arguments": args,
+        })
+    return out
+
+
 class LlamaServer:
     """Owns one llama-server subprocess + an httpx client that talks to it."""
 
@@ -243,6 +290,16 @@ class LlamaServer:
         # boot reap an orphan that this process forgot to stop (e.g.
         # because we were `kill -9`'d before our FastAPI lifespan ran).
         self._pid_file: Path = default_pid_file_path()
+
+        # ── crash watchdog state ────────────────────────────────────────
+        # The watchdog re-spawns llama-server if it dies outside a planned
+        # stop()/swap. Bounded retries so a deterministic crash (bad GGUF,
+        # broken Vulkan driver) can't turn into a busy restart loop.
+        self._watchdog_task: Optional[asyncio.Task] = None
+        self._expect_down = False  # True while a planned stop/swap is running
+        self._stopping = False     # True after final stop(); disables watchdog
+        self.watchdog_restarts = 0
+        self.degraded_reason: Optional[str] = None
 
     # ── lifecycle ───────────────────────────────────────────────────────
 
@@ -344,6 +401,68 @@ class LlamaServer:
         # /lora-adapters response so a future llama.cpp behaviour change
         # can't quietly desynchronise our per-request `lora` arrays.
         await self._refresh_adapter_index()
+        # Armed AFTER the first successful readiness probe: a llama-server
+        # that never came up is handled by _await_ready's exception path,
+        # not by the watchdog.
+        self._expect_down = False
+        self.degraded_reason = None
+        self._arm_watchdog()
+
+    # ── crash watchdog ──────────────────────────────────────────────────
+
+    WATCHDOG_MAX_RESTARTS = 3
+    WATCHDOG_POLL_SECONDS = 2.0
+    WATCHDOG_BACKOFF_SECONDS = 3.0
+
+    def _arm_watchdog(self) -> None:
+        """(Re)start the background watchdog task. Safe to call repeatedly."""
+        if self._stopping:
+            return
+        if self._watchdog_task is not None and not self._watchdog_task.done():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return  # no running loop (unit tests / sync context) — skip
+        self._watchdog_task = loop.create_task(self._watchdog())
+
+    async def _watchdog(self) -> None:
+        log = get_logger()
+        while not self._stopping:
+            await asyncio.sleep(self.WATCHDOG_POLL_SECONDS)
+            proc = self._proc
+            if proc is None or self._expect_down:
+                continue
+            if proc.poll() is None:
+                continue
+            # Unexpected death — capture why, then attempt bounded restarts.
+            tail = "\n".join(self.last_stderr[-20:]) or "(no stderr)"
+            log.error(
+                "llama-server died unexpectedly code=%s\n----- stderr tail -----\n%s",
+                proc.returncode, tail,
+            )
+            if self.watchdog_restarts >= self.WATCHDOG_MAX_RESTARTS:
+                self.degraded_reason = (
+                    f"llama-server crashed {self.watchdog_restarts + 1} times; "
+                    "giving up until manual restart"
+                )
+                log.error("%s", self.degraded_reason)
+                return
+            self._proc = None
+            self._expect_down = True
+            try:
+                await asyncio.sleep(self.WATCHDOG_BACKOFF_SECONDS)
+                self.watchdog_restarts += 1
+                log.warning("watchdog: restarting llama-server (attempt %d/%d)",
+                            self.watchdog_restarts, self.WATCHDOG_MAX_RESTARTS)
+                await self.start()
+                log.info("watchdog: llama-server restarted OK")
+            except Exception as exc:
+                self.degraded_reason = f"watchdog restart failed: {exc}"
+                log.error("watchdog: restart failed: %s", exc)
+                return
+            finally:
+                self._expect_down = False
 
     def _spawn_tailer(self, proc: subprocess.Popen) -> None:
         log = get_logger()
@@ -394,8 +513,20 @@ class LlamaServer:
             f"(last probe error: {last_err})"
         )
 
+    async def shutdown(self, *, timeout: float = 5.0) -> None:
+        """Final teardown (app shutdown): stop llama-server AND permanently
+        disarm the watchdog so nothing re-spawns it afterwards."""
+        self._stopping = True
+        await self.stop(timeout=timeout)
+
     async def stop(self, *, timeout: float = 5.0) -> None:
         log = get_logger()
+        # Tell the watchdog this death is intentional BEFORE touching the
+        # process, so poll() seeing the exit code can't race us.
+        self._expect_down = True
+        if self._watchdog_task is not None and not self._watchdog_task.done():
+            self._watchdog_task.cancel()
+            self._watchdog_task = None
         with self._swap_lock:
             client = self._client
             self._client = None
@@ -538,7 +669,8 @@ class LlamaServer:
         stop: Optional[list[str]] = None,
         enable_thinking: bool = True,
         lora: Optional[list[dict]] = None,
-    ) -> AsyncIterator[tuple[str, str]]:
+        tools: Optional[list[dict]] = None,
+    ) -> AsyncIterator[tuple[str, Any]]:
         """Yield ``(kind, text)`` tuples from llama-server's OpenAI stream.
 
         `kind` is one of:
@@ -547,6 +679,11 @@ class LlamaServer:
             into a dedicated ``delta.reasoning_content`` field when the
             chat template includes a thinking section and we boot with
             ``--jinja``)
+          - ``"tool_delta"`` — one raw ``tool_calls`` delta fragment (OpenAI
+            chunk shape: ``{"index": i, "id": ..., "function": {"name",
+            "arguments": "<json fragment>"}}``). The caller accumulates
+            fragments per index and parses the concatenated arguments JSON
+            when the stream finishes (see ``accumulate_tool_calls``).
 
         We surface both kinds so the gateway can route them into the
         right SSE event (``event: think`` vs ``event: delta``). When the
@@ -582,6 +719,14 @@ class LlamaServer:
         # when adapters are pre-loaded.
         if lora is not None:
             body["lora"] = lora
+        if tools:
+            # Native OpenAI function calling. Requires --jinja (always on)
+            # and a GGUF chat template that models tool calls; when the
+            # template lacks support llama-server answers with plain
+            # content and finish_reason "stop", which the caller treats
+            # as "model chose not to call tools".
+            body["tools"] = tools
+            body["tool_choice"] = "auto"
 
         async with self._client.stream("POST", "/v1/chat/completions", json=body) as resp:
             if resp.status_code != 200:
@@ -606,6 +751,11 @@ class LlamaServer:
                 reasoning = delta.get("reasoning_content")
                 if reasoning:
                     yield ("reasoning", reasoning)
+                tool_deltas = delta.get("tool_calls")
+                if tool_deltas:
+                    for frag in tool_deltas:
+                        if isinstance(frag, dict):
+                            yield ("tool_delta", frag)
                 text = delta.get("content")
                 if text:
                     yield ("content", text)

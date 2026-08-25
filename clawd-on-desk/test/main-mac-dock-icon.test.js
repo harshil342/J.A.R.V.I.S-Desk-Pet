@@ -12,7 +12,7 @@ const DOCK_ICON_SOURCE = path.join(ROOT, "assets", "source", "dock-icon-fullblee
 const pkg = require("../package.json");
 
 // Minimal non-interlaced 8-bit RGBA PNG reader (no deps) so the dock/app icon
-// cannot silently regress to full-bleed square corners.
+// cannot silently drift away from the sentinel mark artwork.
 function readRgbaPng(file) {
   const buf = fs.readFileSync(file);
   assert.equal(buf.readUInt32BE(0), 0x89504e47, `${file} should be a PNG`);
@@ -118,32 +118,31 @@ test("macOS runtime dock icon override respects hidden Dock preference", () => {
   );
 });
 
-test("dock icon is full-bleed for macOS Tahoe tiling", () => {
+test("dock icon carries the sentinel mark on a 512px transparent canvas", () => {
   const { canvas, width, height } = alphaContentBBox(DOCK_ICON);
-  assert.equal(canvas, 1024, "dock icon canvas should be 1024px");
-  // MiniCPM uses full-bleed square icons so macOS Tahoe tiles them correctly.
+  assert.equal(canvas, 512, "dock icon canvas should be 512px");
   assert.ok(
-    width >= 900 && height >= 900,
-    `dock icon content (${width}x${height}) should be full-bleed (>= 900px)`
+    width > 300 && height > 300,
+    `dock icon content (${width}x${height}) should carry the sentinel mark`
   );
 });
 
-test("MiniCPM app icons use full-bleed opaque corners for macOS Tahoe", () => {
+test("app and dock icons keep fully transparent corners (sentinel mark, not full-bleed)", () => {
   for (const file of [APP_ICON, DOCK_ICON]) {
     const { canvas } = alphaContentBBox(file);
     const last = canvas - 1;
-    assert.ok(alphaAt(file, 0, 0) > 0, `${file} top-left corner should be opaque (full-bleed)`);
-    assert.ok(alphaAt(file, last, 0) > 0, `${file} top-right corner should be opaque (full-bleed)`);
-    assert.ok(alphaAt(file, 0, last) > 0, `${file} bottom-left corner should be opaque (full-bleed)`);
-    assert.ok(alphaAt(file, last, last) > 0, `${file} bottom-right corner should be opaque (full-bleed)`);
+    assert.equal(alphaAt(file, 0, 0), 0, `${file} top-left corner should be transparent`);
+    assert.equal(alphaAt(file, last, 0), 0, `${file} top-right corner should be transparent`);
+    assert.equal(alphaAt(file, 0, last), 0, `${file} bottom-left corner should be transparent`);
+    assert.equal(alphaAt(file, last, last), 0, `${file} bottom-right corner should be transparent`);
   }
 });
 
-test("dock icon source follows the MiniCPM app icon artwork", () => {
+test("dock icon matches the 512 sentinel app icon render", () => {
   assert.deepStrictEqual(
-    fs.readFileSync(DOCK_ICON_SOURCE),
-    fs.readFileSync(APP_ICON),
-    "dock icon source should match the MiniCPM app icon, not an upstream replacement"
+    fs.readFileSync(DOCK_ICON),
+    fs.readFileSync(path.join(ROOT, "assets", "icons", "512x512.png")),
+    "dock icon should be the same 512 sentinel render as assets/icons/512x512.png"
   );
 });
 
