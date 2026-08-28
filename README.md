@@ -113,11 +113,19 @@ Why DeskPet is fundamentally different from generic cloud AI chatbots:
 - Schedules asynchronous background tasks that trigger thought-bubble alerts when due.
 
 ### 6. Different Pets for Different People (PetDex)
-> *Personalize your desktop experience to match your personality and work style:*
-- **The Engineer (J.A.R.V.I.S. / Tech Orb):** A futuristic assistant for monitoring background builds, debugging stack traces, and executing tools.
-- **The Cozy Companion (Neko / Cat):** An expressive animated pet with playful banter, encouraging reactions, and gentle posture/break reminders.
-- **The Retro Sprite:** Classic pixel-art companions for nostalgic desktop vibes.
-- **Custom LoRA Adapters & Skins:** Switch characters, adjust personas, or import community sprite sheets in **Settings -> Themes & Petdex**.
+
+Personalize your desktop experience to match your personality, workflow, and aesthetic:
+
+| Pet Character | Illustration | Personality & Role | Included Theme / Persona |
+| :--- | :---: | :--- | :--- |
+| **Clawd / J.A.R.V.I.S.** | <img src="assets/pets/clawd.svg" width="80" alt="Clawd"> | **The Master Engineer.** Focused on monitoring background builds, debugging stack traces, and executing developer tools with high precision. | `Default Theme` / `J.A.R.V.I.S. Persona` |
+| **Hamster** | <img src="assets/pets/hamster.svg" width="80" alt="Hamster"> | **The Studious Researcher.** Glasses-wearing, analytical companion that loves deep reading, note-taking, and keeping facts organized in memory. | `themes/hamster` |
+| **Cloudling** | <img src="assets/pets/cloudling.svg" width="80" alt="Cloudling"> | **The Gentle Dreamer.** A soft, floating cloud sprite offering relaxing presence, break reminders, and gentle encouragement. | `themes/cloudling` |
+| **Calico Cat** | <img src="assets/pets/calico.svg" width="80" alt="Calico"> | **The Cozy Companion (Neko).** Playful, reactive, and expressive cat companion with interactive mouse-following and affectionate reactions. | `themes/calico` / `Neko LoRA` |
+| **CyberCat** | <img src="assets/pets/cybercat.gif" width="80" alt="CyberCat"> | **The Cyberpunk Hacker.** High-energy neon feline tuned for night coding sessions, terminal operations, and high-velocity workflows. | `themes/cybercat` |
+| **Wizard Clawd** | <img src="assets/pets/wizard.svg" width="80" alt="Wizard"> | **The Code Alchemist.** Transforms complex multi-step tasks into seamless automated routines with magic-themed thinking animations. | `Custom State Override` |
+
+> 💡 **Custom Skins & LoRAs**: Import your own `.zip` theme packages, custom sprite animations, or fine-tuned `.gguf` LoRA adapters directly in **Settings ➔ Themes & PetDex**.
 
 ---
 
