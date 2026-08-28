@@ -1,4 +1,4 @@
-<p align="center">
+﻿<p align="center">
   <img src="assets/banner.svg" alt="J.A.R.V.I.S. Desk Pet" width="100%">
 </p>
 
@@ -11,7 +11,7 @@
 </p>
 
 <h3 align="center">
-  ? The Autonomous, Local-First AI Desktop Companion &amp; Coding Supervisor
+  ⚡ The Autonomous, Local-First AI Desktop Companion &amp; Coding Supervisor
 </h3>
 
 <p align="center">
@@ -19,40 +19,40 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><strong>?? Download for Windows (.exe)</strong></a>
-  &nbsp;�&nbsp;
-  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><strong>?? Download for macOS (.dmg)</strong></a>
-  &nbsp;�&nbsp;
-  <a href="#-getting-started"><strong>?? Quickstart</strong></a>
-  &nbsp;�&nbsp;
-  <a href="#-quantized-models--hardware-matrix"><strong>?? Model Benchmarks</strong></a>
+  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><strong>⬇️ Download for Windows (.exe)</strong></a>
+  &nbsp;•&nbsp;
+  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><strong>⬇️ Download for macOS (.dmg)</strong></a>
+  &nbsp;•&nbsp;
+  <a href="#-getting-started"><strong>🚀 Quickstart</strong></a>
+  &nbsp;•&nbsp;
+  <a href="#-quantized-models--hardware-matrix"><strong>📊 Model Benchmarks</strong></a>
 </p>
 
 ---
 
-## ?? Why Developers Choose J.A.R.V.I.S.
+## 💎 Why Developers Choose J.A.R.V.I.S.
 
 | Advantage | J.A.R.V.I.S. Desk Pet | Cloud AI Tools (ChatGPT / Claude) |
 | :--- | :--- | :--- |
-| **?? Air-Gapped Privacy** | **100% On-Device.** Code, terminal outputs, and credentials never touch external servers. | Sensitive code & chat history sent to third-party cloud data centers. |
-| **? Zero-Copy Perception** | **Sub-15ms Local OCR.** Reads compiler errors, active IDE files, and windows automatically. | Requires manual copy-pasting or upload of multi-megabyte screenshots. |
-| **?? $0 Cost / Unlimited Tokens** | **Free Forever.** Runs indefinitely on your local hardware with 0 subscriptions or API keys. | Monthly $20+ subscriptions or metered per-token API charges. |
-| **?? Native MCP Ecosystem** | **Open Model Context Protocol.** Plug in any community or internal MCP server over stdio. | Restricted plugins with strict approval barriers. |
-| **?? Episodic Semantic Memory** | **Persistent Fact Store.** Automatically recalls environment configs, ports, and preferences. | Context lost between chat resets or requires manual system prompt editing. |
-| **? Proactive Workflows** | **Background Task Dispatcher.** Schedules async timers with native Windows Toast alerts. | Purely reactive�cannot alert you when you are away from the tab. |
-| **??? Ambient Desktop Presence** | **Interactive Pet & Edge-Dock Mini Mode.** Stays in your peripheral vision reacting to code tasks. | Trapped in a browser tab or buried behind windows. |
+| **🔒 Air-Gapped Privacy** | **100% On-Device.** Code, terminal outputs, and credentials never touch external servers. | Sensitive code & chat history sent to third-party cloud data centers. |
+| **⚡ Zero-Copy Perception** | **Sub-15ms Local OCR.** Reads compiler errors, active IDE files, and windows automatically. | Requires manual copy-pasting or upload of multi-megabyte screenshots. |
+| **💸 $0 Cost / Unlimited Tokens** | **Free Forever.** Runs indefinitely on your local hardware with 0 subscriptions or API keys. | Monthly $20+ subscriptions or metered per-token API charges. |
+| **🔌 Native MCP Ecosystem** | **Open Model Context Protocol.** Plug in any community or internal MCP server over stdio. | Restricted plugins with strict approval barriers. |
+| **🧠 Episodic Semantic Memory** | **Persistent Fact Store.** Automatically recalls environment configs, ports, and preferences. | Context lost between chat resets or requires manual system prompt editing. |
+| **⏰ Proactive Workflows** | **Background Task Dispatcher.** Schedules async timers with native Windows Toast alerts. | Purely reactive—cannot alert you when you are away from the tab. |
+| **🖥️ Ambient Desktop Presence** | **Interactive Pet & Edge-Dock Mini Mode.** Stays in your peripheral vision reacting to code tasks. | Trapped in a browser tab or buried behind windows. |
 
 ---
 
-## ?? High-Impact Developer Use Cases
+## 🎯 High-Impact Developer Use Cases
 
 ```
-  +----------------------------------------------------------------------------------------+
-  �                               ZERO-COPY DEBUGGING FLOW                                 �
-  �                                                                                        �
-  �  [IDE / Terminal Error]  --(15ms OCR)--?  [J.A.R.V.I.S. Core]  --?  [Instant 2-Sentence �
-  �   Stack Trace on Screen                     Local Brain                  Fix in Bubble]�
-  +----------------------------------------------------------------------------------------+
+  ┌────────────────────────────────────────────────────────────────────────────────────────┐
+  │                               ZERO-COPY DEBUGGING FLOW                                 │
+  │                                                                                        │
+  │  [IDE / Terminal Error]  ──(15ms OCR)──►  [J.A.R.V.I.S. Core]  ──►  [Instant 2-Sentence │
+  │   Stack Trace on Screen                     Local Brain                  Fix in Bubble]│
+  └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 1. Zero-Copy Terminal & Compiler Error Debugging
@@ -67,26 +67,26 @@
 - Schedules asynchronous background tasks into its persistent JSON store. Reminders survive app restarts and fire native OS toast notifications on completion.
 
 ### 4. Semantic Long-Term Knowledge Recall
-> *"Remember that our staging database is on port 5433"* ? *"What port does staging use?"*
+> *"Remember that our staging database is on port 5433"* ➔ *"What port does staging use?"*
 - Hybrid semantic memory retrieves relevant technical notes, credentials, and project instructions using TF-IDF + cosine concept matching.
 
 ---
 
-## ?? Meet The 3 J.A.R.V.I.S. Companions
+## 🐾 Meet The 3 J.A.R.V.I.S. Companions
 
-Choose from our three dedicated J.A.R.V.I.S. companions�each handcrafted for specific developer workflows:
+Choose from our three dedicated J.A.R.V.I.S. companion models—each handcrafted for specific developer workflows:
 
-| Companion | Avatar | Role & Capabilities | Ideal Workflow |
+| Companion Model | Vector Avatar | Role & Capabilities | Ideal Workflow |
 | :--- | :---: | :--- | :--- |
-| **J.A.R.V.I.S. Core** | <img src="assets/pets/clawd.svg" width="90" alt="J.A.R.V.I.S. Core"> | **The Master Engineer.** Holographic desktop sentinel equipped with screen OCR, active window tracking, background agent monitoring, and rapid stack trace diagnosis. | Daily coding, build monitoring, pair programming. |
-| **J.A.R.V.I.S. Alchemist** | <img src="assets/pets/wizard.svg" width="90" alt="J.A.R.V.I.S. Alchemist"> | **The Automation Wizard.** Orchestrates complex multi-step MCP tools, document generation, mathematics, web research, and system automation. | DevOps automation, script execution, research. |
-| **J.A.R.V.I.S. Cyber** | <img src="assets/pets/cybercat.gif" width="90" alt="J.A.R.V.I.S. Cyber"> | **The Cybernetic Sentinel.** High-velocity companion for night-ops, keyboard-first navigation, proactive drawer tasks, and persistent episodic memory. | Fast-paced terminal workflows, night hacking sessions. |
+| **Plain J.A.R.V.I.S.** | <img src="assets/pets/jarvis.svg" width="90" alt="Plain J.A.R.V.I.S."> | **The Core Intelligent Companion.** Holographic desktop sentinel equipped with instant screen OCR, active window context, background agent monitoring, and rapid stack trace diagnosis. | Daily coding, build monitoring, pair programming. |
+| **J.A.R.V.I.S. R** | <img src="assets/pets/jarvis-r.svg" width="90" alt="J.A.R.V.I.S. R"> | **The Deep Reasoning &amp; Research Specialist.** High-intensity thinking companion with brain-spark synthesis, deep chain-of-thought analysis, semantic memory recall, and research tools. | Architectural planning, complex debugging, deep reasoning. |
+| **J.A.R.V.I.S. Mark** | <img src="assets/pets/jarvis-mark.svg" width="90" alt="J.A.R.V.I.S. Mark"> | **The High-Velocity Action &amp; MCP Sentinel.** Tactical automation engine with wizard-grade execution for multi-step MCP tools, document generation, and system operations. | DevOps automation, script execution, high-velocity workflows. |
 
-> ?? **Custom Personas & Skins**: Switch companion styles, import custom `.zip` sprite packs, or load fine-tuned LoRA adapters directly in **Settings ? Deskpet Assistant**.
+> 💡 **Custom Personas & Skins**: Switch companion styles, import custom `.zip` sprite packs, or load fine-tuned LoRA adapters directly in **Settings ➔ Deskpet Assistant**.
 
 ---
 
-## ?? Quantized Models & Hardware Matrix
+## 📊 Quantized Models & Hardware Matrix
 
 J.A.R.V.I.S. runs on an optimized **1B Edge Language Model architecture** designed for extreme token efficiency and instant response times:
 
@@ -101,11 +101,11 @@ J.A.R.V.I.S. runs on an optimized **1B Edge Language Model architecture** design
 ### Hardware Acceleration Support
 
 ```
-  +------------------+      +------------------+      +------------------+
-  �   NVIDIA CUDA    �      �    Vulkan GPU    �      �   Universal CPU  �
-  �  RTX 20/30/40/50 �      � AMD Radeon / Arc �      � AVX2 / AVX-512   �
-  � Hardware Compute �      � Cross-Vendor GPU �      � Fallback Layer   �
-  +------------------+      +------------------+      +------------------+
+  ┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐
+  │   NVIDIA CUDA    │      │    Vulkan GPU    │      │   Universal CPU  │
+  │  RTX 20/30/40/50 │      │ AMD Radeon / Arc │      │ AVX2 / AVX-512   │
+  │ Hardware Compute │      │ Cross-Vendor GPU │      │ Fallback Layer   │
+  └──────────────────┘      └──────────────────┘      └──────────────────┘
 ```
 
 - **NVIDIA GPUs**: Native CUDA backend with bundled cuBLAS runtime acceleration.
@@ -115,7 +115,7 @@ J.A.R.V.I.S. runs on an optimized **1B Edge Language Model architecture** design
 
 ---
 
-## ?? System Requirements
+## 💻 System Requirements
 
 | Specification | Minimum Specification | Recommended Specification |
 | :--- | :--- | :--- |
@@ -127,31 +127,31 @@ J.A.R.V.I.S. runs on an optimized **1B Edge Language Model architecture** design
 
 ---
 
-## ?? Getting Started
+## 🚀 Getting Started
 
 ### 1. One-Click Installation
 
-#### ?? Windows Installation
+#### 🪟 Windows Installation
 1. Download **`Deskpet-Setup-0.11.0.exe`** from [Latest Releases](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest).
 2. Run the installer and launch **Deskpet**.
 3. The guided first-run onboarding wizard will automatically configure your local hardware backend and fetch weights.
 
-#### ?? macOS Installation
+#### 🍎 macOS Installation
 1. Download **`Deskpet-0.11.0-arm64.dmg`** from [Latest Releases](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest).
 2. Drag **Deskpet** into your `Applications` folder and launch.
 
 ---
 
-### ?? Global Hotkeys & Shortcuts
+### ⌨️ Global Hotkeys & Shortcuts
 
-- <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> (or <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd>) � **Toggle J.A.R.V.I.S. Chat Bubble**
-- <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> (or <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd>) � **Toggle Deep Thinking Mode**
-- <kbd>Esc</kbd> � Dismiss Chat Bubble
-- **Right-Click Companion** � Open Context Menu (Settings, Persona LoRA, Model Manager, Mini-Dock Mode)
+- <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> (or <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd>) — **Toggle J.A.R.V.I.S. Chat Bubble**
+- <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> (or <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd>) — **Toggle Deep Thinking Mode**
+- <kbd>Esc</kbd> — Dismiss Chat Bubble
+- **Right-Click Companion** — Open Context Menu (Settings, Persona LoRA, Model Manager, Mini-Dock Mode)
 
 ---
 
-## ?? Open Model Context Protocol (MCP) & REST API
+## 🔌 Open Model Context Protocol (MCP) & REST API
 
 Connect any external MCP tool server over standard stdio JSON-RPC 2.0. Configure `Documents/DeskPet/mcp_servers.json`:
 
@@ -176,15 +176,15 @@ Connect any external MCP tool server over standard stdio JSON-RPC 2.0. Configure
 ```
 
 ### Sidecar REST Endpoints (`http://127.0.0.1:18765`)
-- `POST /api/chat` � Streaming chat with auto-tool execution and thought-bubble responses.
-- `GET /api/mcp/servers` � List registered MCP servers and connection status.
-- `POST /api/mcp/servers` � Dynamically connect a new MCP server.
-- `POST /api/tasks` � Create asynchronous background timers and proactive alerts.
-- `POST /api/memory/search` � Query semantic memory store.
+- `POST /api/chat` — Streaming chat with auto-tool execution and thought-bubble responses.
+- `GET /api/mcp/servers` — List registered MCP servers and connection status.
+- `POST /api/mcp/servers` — Dynamically connect a new MCP server.
+- `POST /api/tasks` — Create asynchronous background timers and proactive alerts.
+- `POST /api/memory/search` — Query semantic memory store.
 
 ---
 
-## ?? Quality & Test Verification
+## 🧪 Quality & Test Verification
 
 ```powershell
 # Run the complete Electron & J.A.R.V.I.S. test suite (4,370+ tests)
@@ -196,7 +196,7 @@ uv run --project minicpm-sidecar pytest minicpm-sidecar/tests
 
 ---
 
-## ?? License & Credits
+## 📄 License & Credits
 
 Distributed under the [GNU AGPL-3.0-only](./LICENSE).  
 MiniCPM model weights are licensed under the [OpenBMB MiniCPM Model License](https://github.com/OpenBMB/MiniCPM/blob/main/MiniCPM%20Model%20License.md).
