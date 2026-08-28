@@ -103,7 +103,13 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: npx electron-builder --mac --arm64 --publish never
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: |
+          if [ "${{ steps.signing.outputs.available }}" = "true" ]; then
+            npx electron-builder --mac --arm64 --publish never
+          else
+            npx electron-builder --mac --arm64 --publish never -c.mac.identity=null
+          fi
 
       - name: Verify code signature
         if: ${{ steps.signing.outputs.available == 'true' }}
@@ -263,6 +269,7 @@ jobs:
 
   release:
     needs: [build-mac, build-linux, build-windows]
+    if: always() && !cancelled() && (needs.build-windows.result == 'success' || needs.build-linux.result == 'success' || needs.build-mac.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write

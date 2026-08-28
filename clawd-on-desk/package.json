@@ -106,7 +106,13 @@
       "entitlementsInherit": "build/entitlements.mac.inherit.plist",
       "extendInfo": {
         "LSUIElement": true
-      }
+      },
+      "extraResources": [
+        {
+          "from": "../minicpm-sidecar/bin/mac-arm64",
+          "to": "sidecar-bin"
+        }
+      ]
     },
     "win": {
       "icon": "assets/icon.ico",
@@ -117,6 +123,17 @@
           "arch": [
             "x64",
             "arm64"
+          ]
+        }
+      ],
+      "extraResources": [
+        {
+          "from": "../minicpm-sidecar/bin/win-x64",
+          "to": "sidecar-bin",
+          "filter": [
+            "**/llama-server.exe",
+            "**/minicpm-sidecar.exe",
+            "**/*.dll"
           ]
         }
       ]
@@ -138,6 +155,12 @@
           "arch": [
             "x64"
           ]
+        }
+      ],
+      "extraResources": [
+        {
+          "from": "../minicpm-sidecar/bin/linux-x64",
+          "to": "sidecar-bin"
         }
       ]
     },
@@ -183,15 +206,6 @@
         "to": "icon.ico"
       },
       {
-        "from": "../minicpm-sidecar/bin/win-x64",
-        "to": "sidecar-bin",
-        "filter": [
-          "**/llama-server.exe",
-          "**/minicpm-sidecar.exe",
-          "**/*.dll"
-        ]
-      },
-      {
         "from": "bin",
         "to": "bin",
         "filter": [
@@ -213,8 +227,7 @@
       {
         "provider": "github",
         "owner": "harshil342",
-        "repo": "J.A.R.V.I.S-Desk-Pet",
-        "releaseType": "release"
+        "repo": "J.A.R.V.I.S-Desk-Pet"
       }
     ]
   },
