@@ -1,0 +1,42 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="jarvisCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#35E8F7" />
+      <stop offset="100%" stop-color="#818CF8" />
+    </linearGradient>
+    <linearGradient id="jarvisGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#35E8F7" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.3" />
+    </linearGradient>
+    <filter id="coreGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Orbital Dashed Ring -->
+  <circle cx="200" cy="200" r="170" fill="none" stroke="#35E8F7" stroke-width="3" opacity="0.35" stroke-dasharray="14,10" />
+  
+  <!-- Outer Segmented Arcs -->
+  <path d="M 90 200 A 110 110 0 0 1 310 200" fill="none" stroke="url(#jarvisCyan)" stroke-width="6" stroke-linecap="round" opacity="0.85" filter="url(#coreGlow)" />
+  <path d="M 120 260 A 110 110 0 0 0 280 260" fill="none" stroke="url(#jarvisCyan)" stroke-width="6" stroke-linecap="round" opacity="0.85" filter="url(#coreGlow)" />
+
+  <!-- Inner Tech Ring -->
+  <circle cx="200" cy="200" r="120" fill="#0B1120" stroke="#1E293B" stroke-width="4" />
+  <circle cx="200" cy="200" r="105" fill="none" stroke="#38BDF8" stroke-width="3" opacity="0.6" stroke-dasharray="24,8" />
+  
+  <!-- Core Triangle Reactor -->
+  <polygon points="200,125 265,245 135,245" fill="none" stroke="url(#jarvisCyan)" stroke-width="8" stroke-linejoin="round" filter="url(#coreGlow)" />
+  <polygon points="200,155 240,230 160,230" fill="url(#jarvisGlow)" stroke="#35E8F7" stroke-width="3" stroke-linejoin="round" />
+
+  <!-- Center Focal Spark -->
+  <circle cx="200" cy="205" r="8" fill="#FFFFFF" filter="url(#coreGlow)" />
+  <circle cx="200" cy="205" r="4" fill="#35E8F7" />
+
+  <!-- Accent Detail Ticks -->
+  <line x1="200" y1="50" x2="200" y2="70" stroke="#35E8F7" stroke-width="4" stroke-linecap="round" />
+  <line x1="200" y1="330" x2="200" y2="350" stroke="#35E8F7" stroke-width="4" stroke-linecap="round" />
+  <line x1="50" y1="200" x2="70" y2="200" stroke="#35E8F7" stroke-width="4" stroke-linecap="round" />
+  <line x1="330" y1="200" x2="350" y2="200" stroke="#35E8F7" stroke-width="4" stroke-linecap="round" />
+</svg>

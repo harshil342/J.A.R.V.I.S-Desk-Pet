@@ -3,6 +3,10 @@
 </p>
 
 <p align="center">
+  <img src="assets/logo.svg" alt="J.A.R.V.I.S. Emblem" width="90">
+</p>
+
+<p align="center">
   <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><img src="https://img.shields.io/badge/Release-v0.11.0%20(Production)-blue?style=for-the-badge&logo=github" alt="Latest Release"></a>
   <img src="https://img.shields.io/badge/Privacy-100%25%20Offline%20%26%20Air--Gapped-success?style=for-the-badge&logo=shield" alt="100% Offline">
   <img src="https://img.shields.io/badge/Protocol-Native%20MCP%20Engine-orange?style=for-the-badge&logo=json" alt="Native MCP">
