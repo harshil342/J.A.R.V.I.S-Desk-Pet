@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080B10" />
+      <stop offset="50%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#05080E" />
+    </linearGradient>
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#35E8F7" />
+      <stop offset="100%" stop-color="#818CF8" />
+    </linearGradient>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#35E8F7" stop-opacity="0" />
+      <stop offset="30%" stop-color="#35E8F7" stop-opacity="0.8" />
+      <stop offset="70%" stop-color="#818CF8" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#818CF8" stop-opacity="0" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="360" rx="16" fill="url(#bg)" stroke="#1E293B" stroke-width="2" />
+  
+  <!-- Subtle Grid Lines -->
+  <g stroke="#334155" stroke-width="0.5" opacity="0.15">
+    <line x1="0" y1="60" x2="1200" y2="60" />
+    <line x1="0" y1="120" x2="1200" y2="120" />
+    <line x1="0" y1="180" x2="1200" y2="180" />
+    <line x1="0" y1="240" x2="1200" y2="240" />
+    <line x1="0" y1="300" x2="1200" y2="300" />
+    <line x1="200" y1="0" x2="200" y2="360" />
+    <line x1="400" y1="0" x2="400" y2="360" />
+    <line x1="600" y1="0" x2="600" y2="360" />
+    <line x1="800" y1="0" x2="800" y2="360" />
+    <line x1="1000" y1="0" x2="1000" y2="360" />
+  </g>
+
+  <!-- HUD Orb Graphic -->
+  <g transform="translate(140, 180)">
+    <circle r="70" fill="none" stroke="#35E8F7" stroke-width="1.5" opacity="0.3" stroke-dasharray="6,4" />
+    <circle r="56" fill="#0F172A" stroke="#38BDF8" stroke-width="2.5" filter="url(#glow)" />
+    <circle r="44" fill="none" stroke="#818CF8" stroke-width="1.5" stroke-dasharray="12,6" />
+    <!-- Core Triangle Emblem -->
+    <polygon points="0,-24 22,14 -22,14" fill="none" stroke="#35E8F7" stroke-width="3" stroke-linejoin="round" />
+    <polygon points="0,-12 11,8 -11,8" fill="#35E8F7" opacity="0.8" />
+    <circle cx="0" cy="0" r="4" fill="#FFFFFF" />
+  </g>
+
+  <!-- Title & Branding -->
+  <text x="250" y="145" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="46" font-weight="900" fill="#FFFFFF" letter-spacing="1.5">
+    J.A.R.V.I.S. <tspan fill="url(#cyanGlow)">DESK PET</tspan>
+  </text>
+  
+  <text x="252" y="188" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="500" fill="#94A3B8" letter-spacing="0.5">
+    Autonomous On-Device AI Companion • 100% Offline • Sub-15ms Perception • Open MCP
+  </text>
+
+  <!-- Pill Badges -->
+  <g transform="translate(252, 220)">
+    <!-- Badge 1: 100% Offline -->
+    <rect x="0" y="0" width="130" height="32" rx="16" fill="#1E293B" stroke="#334155" stroke-width="1" />
+    <circle cx="16" cy="16" r="4" fill="#10B981" />
+    <text x="28" y="21" font-family="sans-serif" font-size="12" font-weight="600" fill="#E2E8F0">100% Offline</text>
+
+    <!-- Badge 2: Local 1B LLM -->
+    <rect x="142" y="0" width="136" height="32" rx="16" fill="#1E293B" stroke="#334155" stroke-width="1" />
+    <circle cx="158" cy="16" r="4" fill="#35E8F7" />
+    <text x="170" y="21" font-family="sans-serif" font-size="12" font-weight="600" fill="#E2E8F0">Local Edge LLM</text>
+
+    <!-- Badge 3: Native MCP -->
+    <rect x="290" y="0" width="120" height="32" rx="16" fill="#1E293B" stroke="#334155" stroke-width="1" />
+    <circle cx="306" cy="16" r="4" fill="#F59E0B" />
+    <text x="318" y="21" font-family="sans-serif" font-size="12" font-weight="600" fill="#E2E8F0">Native MCP</text>
+
+    <!-- Badge 4: $0 Tokens -->
+    <rect x="422" y="0" width="110" height="32" rx="16" fill="#1E293B" stroke="#334155" stroke-width="1" />
+    <circle cx="438" cy="16" r="4" fill="#8B5CF6" />
+    <text x="450" y="21" font-family="sans-serif" font-size="12" font-weight="600" fill="#E2E8F0">$0 / Free</text>
+  </g>
+
+  <!-- Accent Bottom Border -->
+  <line x1="0" y1="358" x2="1200" y2="358" stroke="url(#accentLine)" stroke-width="3" />
+</svg>

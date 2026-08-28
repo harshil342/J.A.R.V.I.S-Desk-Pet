@@ -6,19 +6,19 @@ const electron = require("electron");
 const productMetadata = require("./product-metadata");
 
 const RELEASES_LATEST_URL = productMetadata.releasesLatestUrl
-  || "https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases/latest";
+  || "https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest";
 const GITHUB_RELEASES_API_PATH = productMetadata.githubReleasesApiPath
-  || "/repos/OpenBMB/MiniCPM-Desk-Pet/releases/latest";
+  || "/repos/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest";
 const GITHUB_RELEASES_WEB_PATH = (() => {
-  const repo = productMetadata.repoUrl || "https://github.com/OpenBMB/MiniCPM-Desk-Pet";
+  const repo = productMetadata.repoUrl || "https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet";
   try {
     const u = new URL(repo);
     return `${u.pathname.replace(/\/$/, "")}/releases/latest`;
   } catch {
-    return "/OpenBMB/MiniCPM-Desk-Pet/releases/latest";
+    return "/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest";
   }
 })();
-const UPDATE_USER_AGENT = productMetadata.userAgent || "MiniCPM-Desk-Pet";
+const UPDATE_USER_AGENT = productMetadata.userAgent || "Deskpet-Assistant";
 
 function makeTranslate(ctx) {
   return (key, fallback) => {

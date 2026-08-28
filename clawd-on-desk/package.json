@@ -1,7 +1,7 @@
 {
   "name": "deskpet",
   "version": "0.11.0",
-  "description": "Deskpet Assistant — local-first desktop pet powered by MiniCPM5. Forked from clawd-on-desk.",
+  "description": "Deskpet Assistant — local-first AI desktop companion & J.A.R.V.I.S. for your developer workflow.",
   "main": "src/main.js",
   "scripts": {
     "start": "node launch.js",
@@ -70,9 +70,9 @@
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/OpenBMB/MiniCPM-Desk-Pet.git"
+    "url": "https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet.git"
   },
-  "homepage": "https://github.com/OpenBMB/MiniCPM-Desk-Pet",
+  "homepage": "https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet",
   "upstreamRepository": "https://github.com/rullerzhou-afk/clawd-on-desk",
   "type": "commonjs",
   "build": {

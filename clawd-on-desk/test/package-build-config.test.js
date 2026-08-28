@@ -265,8 +265,8 @@ describe("package build config", () => {
 
     it("resolves product metadata repository and publish configuration", () => {
       const productMetadata = require("../src/product-metadata");
-      assert.strictEqual(productMetadata.githubOwner, "OpenBMB");
-      assert.strictEqual(productMetadata.githubRepo, "MiniCPM-Desk-Pet");
+      assert.strictEqual(productMetadata.githubOwner, "harshil342");
+      assert.strictEqual(productMetadata.githubRepo, "J.A.R.V.I.S-Desk-Pet");
       assert.deepStrictEqual(pkg.build.publish, [
         {
           provider: "github",

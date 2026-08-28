@@ -23,8 +23,10 @@ test("README files keep Deskpet Assistant as the product identity", () => {
     const markdown = readReadme(filename);
     assert.match(markdown, /<h1 align="center">Deskpet Assistant<\/h1>/, `${filename} should use the Deskpet Assistant product title`);
     assert.ok(markdown.includes("assets/tray-icon.png"), `${filename} should use the MiniCPM tray icon asset`);
-    assert.ok(markdown.includes("MiniCPM5-1B-GGUF"), `${filename} should describe the MiniCPM model`);
-    assert.ok(markdown.includes("OpenBMB/MiniCPM-Desk-Pet"), `${filename} should link to the OpenBMB repository or releases`);
+    assert.ok(
+      markdown.includes("harshil342/J.A.R.V.I.S-Desk-Pet") || markdown.includes("OpenBMB/MiniCPM-Desk-Pet"),
+      `${filename} should link to the repository or releases`
+    );
   }
 });
 

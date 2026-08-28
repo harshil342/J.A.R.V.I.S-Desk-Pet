@@ -12,7 +12,7 @@
   <a href="README.ja-JP.md">日本語</a>
 </p>
 <p align="center">
-  <a href="https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases"><img src="https://img.shields.io/github/v/release/OpenBMB/MiniCPM-Desk-Pet" alt="Version"></a>
+  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases"><img src="https://img.shields.io/badge/Release-v0.11.0-blue" alt="Version"></a>
   <img src="https://img.shields.io/badge/model-MiniCPM5--1B--GGUF-blue" alt="Model">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
   <img src="https://img.shields.io/badge/license-AGPL--3.0--only-green" alt="License">
