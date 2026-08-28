@@ -213,7 +213,8 @@
       {
         "provider": "github",
         "owner": "harshil342",
-        "repo": "J.A.R.V.I.S-Desk-Pet"
+        "repo": "J.A.R.V.I.S-Desk-Pet",
+        "releaseType": "release"
       }
     ]
   },
