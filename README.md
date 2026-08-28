@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/logo.svg" alt="J.A.R.V.I.S. Emblem" width="90">
+  <img src="assets/logo.png" alt="J.A.R.V.I.S. Logo" width="220">
 </p>
 
 <p align="center">
