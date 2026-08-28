@@ -182,6 +182,10 @@ contextBridge.exposeInMainWorld("minicpmSettings", {
   uploadAdapter: (payload) => ipcRenderer.invoke("minicpm-settings:upload-adapter", payload || {}),
   renameAdapter: (payload) => ipcRenderer.invoke("minicpm-settings:rename-adapter", payload || {}),
   removeAdapter: (payload) => ipcRenderer.invoke("minicpm-settings:remove-adapter", payload || {}),
+  listMcpServers: () => ipcRenderer.invoke("minicpm:mcp-list"),
+  addMcpServer: (serverConfig) => ipcRenderer.invoke("minicpm:mcp-add", { serverConfig }),
+  removeMcpServer: (name) => ipcRenderer.invoke("minicpm:mcp-remove", { name }),
+  reloadMcpServer: (name) => ipcRenderer.invoke("minicpm:mcp-reload", { name }),
 });
 
 contextBridge.exposeInMainWorld("doctor", {

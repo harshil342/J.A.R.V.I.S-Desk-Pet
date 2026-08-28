@@ -183,7 +183,8 @@
         "from": "../minicpm-sidecar/bin/win-x64",
         "to": "sidecar-bin",
         "filter": [
-          "**/*.exe",
+          "**/llama-server.exe",
+          "**/minicpm-sidecar.exe",
           "**/*.dll"
         ]
       },

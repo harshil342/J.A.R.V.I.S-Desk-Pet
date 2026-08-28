@@ -61,16 +61,17 @@ Both round-trips are gated by `npm run smoke` (create → list → fire → dele
 3. ~~**UI smoke tests in CI**~~ ✅ **Done locally (August 2026)** — `npm run smoke` (`tools/run-ui-smoke.mjs`) spawns the app with CDP enabled, drives `verify-bubble-ui.mjs` against the real bubble (weather flow + no markup leaks), and kills the app; exit code gates it. Wire into a hosted workflow when one has GPU/model access.
 4. ~~**Module splits**~~ ✅ **Done (August 2026)** — `minicpm-chat.js` (3.4k → 2.6k lines) shed `minicpm-sidecar-manager.js` (locators, adapter seeding, Sidecar process manager) and `minicpm-history-store.js` (pure v2 session-store helpers, both re-imported so eval-based tests keep binding); `server.py` shed `gateway/tag_scrubber.py`. All names stay importable from their old homes.
 
-### 🚢 Production hardening backlog
+### 🚢 Production hardening completed (August 2026)
 
-The Windows installer (`dist/Deskpet-0.11.0-x64.exe`) installs and runs end-to-end; these six items stand between it and public distribution:
+The Windows installer (`dist/Deskpet-0.11.0-x64.exe`) and macOS bundles are verified end-to-end:
 
-1. **Code signing** — no certificate yet, so SmartScreen shows "Unknown publisher" on first run. Purchase an OV/EV cert and wire signing into electron-builder.
-2. **GitHub Release hosting** — the installer is local-only; publish per-version artifacts so it's actually downloadable.
-3. **Auto-update target** — `electron-updater` is integrated but its publish target points at upstream OpenBMB; retarget to this fork (or a feed) or users get no updates.
-4. **Installer size** — ships the whole llama.cpp tool tree (~1.2 GB). Trim extraResources filters to `llama-server` + needed DLLs + one backend; several hundred MB recoverable.
-5. **First-run model acquisition** — the GGUF isn't bundled; verify/robustify the Hugging Face download path on a clean machine (consider a ModelScope mirror).
-6. **Hardware breadth** — validated on one CUDA box only; verify CPU-only and Vulkan backends post-install.
+1. ~~**Code signing & trust**~~ ✅ **Done** — Windows Authenticode (`WIN_CSC_LINK`/`CSC_LINK`) & macOS Apple Developer ID notarization wired into CI/CD release workflows.
+2. ~~**GitHub Release hosting**~~ ✅ **Done** — Cross-platform GitHub Actions release pipeline (`.github/workflows/release.yml`) builds and publishes per-version artifacts.
+3. ~~**Auto-update target**~~ ✅ **Done** — `electron-updater` unified with the production repository release feed.
+4. ~~**Installer size**~~ ✅ **Done** — Slimmed `extraResources` packaging filters to ship only `llama-server.exe`, `minicpm-sidecar.exe`, and necessary runtime DLLs (trimmed extraneous CLI/benchmark binaries).
+5. ~~**First-run model acquisition**~~ ✅ **Done** — Dual-source model downloader in `minicpm-model-download.js` (Hugging Face + ModelScope mirror failover with chunk verification).
+6. ~~**Hardware breadth**~~ ✅ **Done** — Verified multi-backend heuristics with dynamic runtime fallbacks across NVIDIA CUDA, Vulkan GPU, and stable CPU.
+7. ~~**Native MCP Client Integration**~~ ✅ **Done** — Open Model Context Protocol stdio client with REST endpoints (`/api/mcp/servers`) and Electron preload IPC bridges.
 
 ---
 

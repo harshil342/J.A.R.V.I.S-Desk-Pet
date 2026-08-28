@@ -19,6 +19,9 @@ jobs:
       - run: npm run fetch:sidecars -- --target windows-x64,windows-arm64
       - run: node scripts/verify-sidecar-binaries.js prebuild:win:all
       - run: npx electron-builder --win --publish never
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK || secrets.CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD || secrets.CSC_KEY_PASSWORD }}
       - uses: actions/upload-artifact@v4
         with:
           name: windows-installer

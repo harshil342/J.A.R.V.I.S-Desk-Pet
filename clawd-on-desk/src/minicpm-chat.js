@@ -1979,6 +1979,32 @@ module.exports = function initMinicpmChat(ctx) {
     return q ? gw("POST", "/api/memory/search", { query: q }, 6000) : Promise.resolve({ ok: false });
   });
 
+  // ── MCP Server Management IPC (proxy to /api/mcp/servers) ─────────────
+  // ponytail: thin REST proxies to the sidecar gateway's MCP engine
+  try { ipcMain.removeHandler("minicpm:mcp-list"); } catch {}
+  ipcMain.handle("minicpm:mcp-list", () => gw("GET", "/api/mcp/servers"));
+
+  try { ipcMain.removeHandler("minicpm:mcp-add"); } catch {}
+  ipcMain.handle("minicpm:mcp-add", (_e, p) => {
+    const s = (p && p.serverConfig) || p || {};
+    if (!s.name || !s.command) {
+      return Promise.resolve({ ok: false, error: "name and command are required" });
+    }
+    return gw("POST", "/api/mcp/servers", s, 10000);
+  });
+
+  try { ipcMain.removeHandler("minicpm:mcp-remove"); } catch {}
+  ipcMain.handle("minicpm:mcp-remove", (_e, p) => {
+    const name = String((p && p.name) || "").trim();
+    return name ? gw("DELETE", `/api/mcp/servers/${encodeURIComponent(name)}`) : Promise.resolve({ ok: false });
+  });
+
+  try { ipcMain.removeHandler("minicpm:mcp-reload"); } catch {}
+  ipcMain.handle("minicpm:mcp-reload", (_e, p) => {
+    const name = String((p && p.name) || "").trim();
+    return name ? gw("POST", `/api/mcp/servers/${encodeURIComponent(name)}/reload`, {}, 10000) : Promise.resolve({ ok: false });
+  });
+
   // ── Settings-window facing IPC ────────────────────────────────────────
   // Surface the MiniCPM panel state to the main Settings window.
   const settingsHandlers = {

@@ -26,8 +26,18 @@ function extractCopyrightShort(copyright) {
   return "\u00a9 2026 Deskpet Assistant";
 }
 
-const repoUrl = normalizeRepoUrl(pkg.homepage) || normalizeRepoUrl(pkg.repository && pkg.repository.url);
-const githubRepo = parseGitHubRepo(repoUrl);
+// ponytail: check explicit repo url first, then homepage, then build.publish target
+const publishGithub = Array.isArray(pkg.build && pkg.build.publish)
+  ? pkg.build.publish.find((p) => p && p.provider === "github" && p.owner && p.repo)
+  : null;
+
+const repoUrl = normalizeRepoUrl(pkg.homepage)
+  || normalizeRepoUrl(pkg.repository && pkg.repository.url)
+  || (publishGithub ? `https://github.com/${publishGithub.owner}/${publishGithub.repo}` : null);
+
+const githubRepo = parseGitHubRepo(repoUrl)
+  || (publishGithub ? { owner: publishGithub.owner, repo: publishGithub.repo } : null);
+
 const upstreamRepoUrl = normalizeRepoUrl(pkg.upstreamRepository) || DEFAULT_UPSTREAM_URL;
 const upstreamMatch = parseGitHubRepo(upstreamRepoUrl);
 const productName = (pkg.build && pkg.build.productName) || "Deskpet Assistant";

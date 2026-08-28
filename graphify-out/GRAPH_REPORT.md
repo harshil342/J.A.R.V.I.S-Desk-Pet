@@ -1,16 +1,16 @@
-# Graph Report - Deskpet  (2026-08-24)
+# Graph Report - Deskpet  (2026-08-28)
 
 ## Corpus Check
-- 648 files · ~809,943 words
+- 651 files · ~817,865 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 9670 nodes · 18147 edges · 461 communities (430 shown, 31 thin omitted)
-- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 1634 edges (avg confidence: 0.85)
+- 9739 nodes · 18301 edges · 467 communities (435 shown, 32 thin omitted)
+- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 1646 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0f6a3621`
+- Built from commit: `4b99bb99`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -43,13 +43,13 @@
 - settings-doctor-modal.js
 - settings-tab-minicpm.js
 - bubble-renderer.js
-- MCPServerProcess
+- MCPManager
 - install.js
 - initMobilePreviewServer
 - antigravity-hook.js
 - createPetWindowRuntime
 - server-route-permission.js
-- cleanup-integrations.js
+- readJsonFile
 - agent-integrations.js
 - index.mjs
 - ._bindConnection
@@ -89,7 +89,7 @@
 - createRemoteSshRuntime
 - updater.py
 - registry.js
-- theme-assets-cache.js
+- cleanup-integrations.js
 - copilot-install.js
 - index.js
 - pi-install.js
@@ -117,10 +117,10 @@
 - createThemeRuntime
 - CodexLogMonitor
 - launch-claude.js
-- resolvePermissionEntry
+- permLog
 - codex-subagent-fields.js
 - agent-descriptors.js
-- telegram-approval-settings.js
+- initTelegramMigrationController
 - session-hud-renderer.js
 - update-bubble.js
 - json-utils.js
@@ -134,7 +134,7 @@
 - createSystemWakeRecovery
 - TelegramApprovalSidecar
 - theme-metadata.js
-- setState
+- applyState
 - log-rotate.test.js
 - auto-start.js
 - gemini-hook.js
@@ -162,8 +162,8 @@
 - state-priority.js
 - LlamaServer
 - FakeBrowserWindow
-- get_logger
-- build_app
+- __main__.py
+- test_discover_adapters.py
 - test_adapter_endpoints.py
 - codex-remote-monitor.js
 - hermes-install.js
@@ -174,20 +174,20 @@
 - validate-theme.js
 - menu.js
 - server-hook-management.test.js
-- server-permission-utils.js
+- server-permission-state-cleanup.test.js
 - telegram-migration-state.js
 - server-config.test.js
 - wayland-smoke.sh
 - minicpm-onboarding-renderer.js
 - settings-tab-remote-ssh.js
-- dismissPassiveNotify
+- schedulePassiveNotifyAutoExpire
 - tick.js
 - focus-cmux.test.js
 - renderer-low-power.test.js
-- applyState
+- enableDoNotDisturb
 - codex-log-monitor.js
 - codex-debug-hook.test.js
-- showPermissionBubble
+- telegram-approval-settings.js
 - agent-installation-detector.test.js
 - route_tools
 - LlamaServerManager
@@ -206,7 +206,7 @@
 - settings-ipc.test.js
 - FakeBrowserWindow
 - ClawdBridge
-- test_backend_selection.py
+- build_app
 - ThinkBlockFilter
 - copilot-doctor.test.js
 - doctor-logs.js
@@ -226,13 +226,13 @@
 - settings-theme-importer.js
 - state-visual-resolver.js
 - telegram-native-client.test.js
-- .appendChild
+- task_dispatcher.py
 - visible-margins.js
 - codex-pet-importer.test.js
 - telegram-native-runner.test.js
 - openclaw-plugin.test.js
 - state.test.js
-- cursor-install.js
+- test_lora_injection.py
 - preload-settings.js
 - codex-assistant-output.js
 - telegram-approval-settings.test.js
@@ -242,25 +242,25 @@
 - permission-update-bubble-ipc.test.js
 - settings-animation-overrides-main.test.js
 - test_durable_reminders.py
-- windows-uninstall-cleanup.test.js
+- install.test.js
 - openclaw-plugin/package.json
 - files
 - opencode-entry-validator.js
 - doctor-ipc.js
 - hit-geometry.js
 - createMacHideController
-- cleanStaleSessions
+- opencode-install.js
 - buildAnimationAssetPreview
 - telegram-fetch-transport.test.js
-- keepOutOfTaskbar
-- codebuddy-install.test.js
+- server-permission-utils.js
+- MCPServerProcess
 - codex-remote-monitor.test.js
 - main-mac-dock-icon.test.js
 - go.sh
 - Codex + WSL Clarification
 - buildSettingsAgentOrderExports
 - buildSettingsAnimOverridesMergeExports
-- settings-window-icon.test.js
+- settings-window-icon.js
 - minicpm-adapter-reconcile.test.js
 - tick.test.js
 - Codex + WSL 현황 정리
@@ -270,7 +270,7 @@
 - FallbackMemoryQuickCommandSink
 - hit-renderer.js
 - login-item.js
-- state-hitbox-resolver.test.js
+- refreshTheme
 - EVENTS
 - package-build-config.test.js
 - permission-auto-approve.test.js
@@ -298,7 +298,7 @@
 - loopFirst
 - topmost-runtime.test.js
 - codex-log-monitor.test.js
-- context-usage.js
+- maybeStartRemoteApproval
 - mac
 - open
 - swapToFile
@@ -331,7 +331,7 @@
 - KimiLogMonitor
 - doctor-local-server.test.js
 - linux-ozone.test.js
-- shared-process.test.js
+- test_native_tools.py
 - settings-tab-anim-map.js
 - settings-tab-shortcuts.js
 - focusDashboardSession
@@ -348,9 +348,9 @@
 - monitor-clawd-power.ps1
 - monitor-clawd-resources.sh
 - hardware-buddy-settings.js
-- product-metadata.js
+- test_task_dispatcher_persistence.py
 - attachEyeTracking
-- antigravity-hook.test.js
+- tool_registry.py
 - settings-tab-mobile.js
 - TelegramOwnerManager
 - bubble-elicitation-overflow.test.js
@@ -358,7 +358,7 @@
 - test-macos.sh
 - permission-telegram-approval.test.js
 - readme-contributors.test.js
-- scheduleSwapVisibilityRescue
+- createPetGeometryMain
 - FakeClassList
 - state-display-svg.test.js
 - capture.js
@@ -366,7 +366,7 @@
 - extension.js
 - locale-resolver.test.js
 - minicpm-chat-context.test.js
-- permLog
+- test_llama_client_payload.py
 - permission-reposition.test.js
 - applyCloudlingPointerBridge
 - state-session-events.test.js
@@ -409,7 +409,7 @@
 - notarize.js
 - remote-deploy.sh
 - llmService.js
-- state-startup-recovery-detect.test.js
+- test_mcp_endpoints.py
 - Agent Runtime Architecture
 - doctor-ipc.test.js
 - elicitation.test.js
@@ -417,7 +417,7 @@
 - test-oneshot-gate.sh
 - registry-kimi.test.js
 - registry.test.js
-- parseYamlPluginEnabled
+- scheduleSwapVisibilityRescue
 - FakeChild
 - settings-icons.js
 - sw.js
@@ -429,21 +429,23 @@
 - run-dev.sh
 - minicpm-sidecar-gateway
 - README.zh-CN.md
-- doctor-find-hook-commands.test.js
+- discover_models
 - 开发者指南
-- update-bubble-position.test.js
+- inspectPngSpritesheet
 - buildAnimationOverrideSections
 - README.md
 - listAnimationOverrideAssets
 - FakeIpcMain
 - Remote SSH Guide
 - registerSettingsAnimationOverridesIpc
-- loadAnimOverridesTabForTest
+- openclaw-entry-validator.js
 - 配置指南
 - 远程 SSH 操作指南
 - clawd-on-desk/README.md
+- settings-actions-agents.test.js
 - minicpm-sidecar
 - Setup Guide
+- parseYamlPluginEnabled
 - devDependencies
 - 功能介绍
 - verify-bubble-ui.mjs
@@ -452,14 +454,18 @@
 - Core State Specs
 - State Mapping
 - Telegram Approval
+- settings-validators.test.js
+- 快速开始
 - 🎯 Key Use Cases
 - 状态映射
 - Release Process
+- probe-tasks-tmp.mjs
 - Special / Long-Idle State Specs
+- theme-schema.test.js
+- update-bubble-position.test.js
 - Copilot CLI — permissionRequest diagnostic harness
-- 打包：从源码到 dmg
+- minicpm-mcp-ipc.test.js
 - 💻 Getting Started
-- codex-subagent-classifier.test.js
 - DeskPet — Agent Guidance
 - known-limitations.md
 - known-limitations.zh-CN.md
@@ -469,10 +475,10 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `initUpdater()` - 62 edges
-2. `scripts` - 54 edges
+2. `scripts` - 56 edges
 3. `createSettingsAnimationOverridesMain()` - 53 edges
-4. `createPetWindowRuntime()` - 49 edges
-5. `route_tools()` - 44 edges
+4. `route_tools()` - 52 edges
+5. `createPetWindowRuntime()` - 49 edges
 6. `createWindow()` - 43 edges
 7. `updateSession()` - 41 edges
 8. `createTelegramNativeRunner()` - 37 edges
@@ -494,14 +500,15 @@
 ## Import Cycles
 - None detected.
 
-## Communities (461 total, 31 thin omitted)
+## Communities (467 total, 32 thin omitted)
 
 ### Community 0 - "main.js"
 Cohesion: 0.01
-Nodes (145): allowEdgePinningCached, anySessionInProgress(), { app, BrowserWindow, screen, ipcMain, globalShortcut, nativeTheme, dialog, shell, nativeImage, powerSaveBlocker, powerMonitor, clipboard, Notification }, {
+Nodes (155): allowEdgePinningCached, anySessionInProgress(), { app, BrowserWindow, screen, ipcMain, globalShortcut, nativeTheme, dialog, shell, nativeImage, powerSaveBlocker, powerMonitor, clipboard, Notification }, {
   applyWindowsAppUserModelId,
+  registerAumidForToasts,
   shouldOpenSettingsWindowFromArgv,
-}, ASSISTANT_PREF_WRITE_KEYS, autoStartWithClaude, beginSettingsSizePreviewProtection(), bringPetToPrimaryDisplay() (+137 more)
+}, ASSISTANT_PREF_WRITE_KEYS, autoStartWithClaude, beginSettingsSizePreviewProtection(), bringPetToPrimaryDisplay() (+147 more)
 
 ### Community 1 - "initUpdater"
 Cohesion: 0.05
@@ -516,24 +523,24 @@ Cohesion: 0.07
 Nodes (93): appendAnimationPreviewMedia(), appendAnimationPreviewPending(), applyPendingAnimationOverrideEdit(), applyPendingAnimOverrideCard(), applyPendingEditToThemeOverrides(), applyPendingWideHitboxEditToThemeOverrides(), applyPendingWideHitboxOverrideEdit(), buildAnimationPreviewUrl() (+85 more)
 
 ### Community 4 - "gemini-install.js"
-Cohesion: 0.05
-Nodes (62): registerCodeBuddyHooks(), registerCursorHooks(), buildGeminiHookCommand(), buildGeminiHookEntry(), DEFAULT_CONFIG_PATH, DEFAULT_PARENT_DIR, fs, GEMINI_HOOK_EVENTS (+54 more)
+Cohesion: 0.10
+Nodes (22): buildGeminiHookCommand(), buildGeminiHookEntry(), DEFAULT_CONFIG_PATH, DEFAULT_PARENT_DIR, fs, GEMINI_HOOK_EVENTS, isClawdHookCommand(), isDesiredGeminiHookEntry() (+14 more)
 
 ### Community 5 - "state.js"
 Cohesion: 0.06
-Nodes (48): ackSessionCompletion(), broadcastSessionSnapshot(), buildSessionSnapshot(), {
+Nodes (57): getAgentIconUrl(), buildSessionSnapshot(), {
   buildStateBindings,
   hasOwnVisualFiles: hasOwnVisualFilesWithBindings,
   resolveVisualBinding: resolveVisualBindingWithBindings,
   getSvgOverride: getSvgOverrideWithDeps,
-}, cancelClaudeTranscriptCompletionProbe(), cancelCompletionDebounce(), clearPermissionNotification(), {
+}, cancelClaudeTranscriptCompletionProbe(), cancelCompletionDebounce(), cancelPermissionSuspect(), clearCodexExitProbe(), {
   createHitboxRuntime,
   resolveHitBoxForSvg: resolveHitBoxForSvgWithRuntime,
-} (+40 more)
+} (+49 more)
 
 ### Community 6 - "minicpm-chat-renderer.js"
-Cohesion: 0.06
-Nodes (79): applyAssistantPrefs(), applyLang(), ASSISTANT_PREF_DEFAULTS, assistantPrefs, autoresize(), autoresizeFixed(), bootstrapAssistantPrefs(), bootstrapI18n() (+71 more)
+Cohesion: 0.05
+Nodes (93): addMemoryFromBox(), applyAssistantPrefs(), applyLang(), ASSISTANT_PREF_DEFAULTS, assistantPrefs, autoresize(), autoresizeFixed(), bootstrapAssistantPrefs() (+85 more)
 
 ### Community 7 - "settings-tab-general.js"
 Cohesion: 0.06
@@ -541,7 +548,7 @@ Nodes (76): buildBubbleCategoryControl(), clearSecondsCommitTimer(), currentEnab
 
 ### Community 8 - "test_lifecycle.py"
 Cohesion: 0.06
-Nodes (51): cleanup_stale_llama_server(), clear_pid_file(), default_pid_file_path(), ParentWatchdog, pdeathsig_preexec(), _pid_alive(), _pid_alive_windows(), _process_name_matches() (+43 more)
+Nodes (54): cleanup_stale_llama_server(), clear_pid_file(), default_pid_file_path(), ParentWatchdog, pdeathsig_preexec(), _pid_alive(), _pid_alive_windows(), _process_name_matches() (+46 more)
 
 ### Community 9 - "settings-ui-core.js"
 Cohesion: 0.06
@@ -568,16 +575,16 @@ Nodes (60): buildCodexDebugHookCommand(), {
 }, registerCodexHooks() (+52 more)
 
 ### Community 11 - "tools.py"
-Cohesion: 0.08
-Nodes (41): bind_bridge(), clipboard_assist(), create_document(), _doc_template(), docs_dir(), _find_start_menu_shortcut(), _geocode(), _geolocate_ip() (+33 more)
+Cohesion: 0.07
+Nodes (45): clipboard_assist(), _clipboard_has_image(), convert_currency(), create_document(), _doc_template(), docs_dir(), fetch_page(), _find_start_menu_shortcut() (+37 more)
 
 ### Community 12 - "shared-process.js"
-Cohesion: 0.05
-Nodes (51): main(), config, { createPidResolver, readStdinJson, getPlatformConfig }, finish(), HOOK_MAP, { postStateToRunningServer, readHostPrefix }, resolve, writeStdoutOnce() (+43 more)
+Cohesion: 0.04
+Nodes (48): config, { createPidResolver, readStdinJson, getPlatformConfig }, finish(), HOOK_MAP, { postStateToRunningServer, readHostPrefix }, resolve, writeStdoutOnce(), config (+40 more)
 
 ### Community 13 - "createWindow"
-Cohesion: 0.06
-Nodes (58): applyPetWindowBounds(), applyTextScaleNow(), beginDragSnapshot(), bumpAnimationOverridePreviewPosterGeneration(), callRuntimeMethod(), captureCurrentDisplaySnapshot(), clampToScreenVisual(), clearDragSnapshot() (+50 more)
+Cohesion: 0.07
+Nodes (49): applyPetWindowBounds(), applyTextScaleNow(), beginDragSnapshot(), bumpAnimationOverridePreviewPosterGeneration(), clampToScreenVisual(), clearDragSnapshot(), computeFinalDragBounds(), createWindow() (+41 more)
 
 ### Community 14 - "minicpm-model-download.js"
 Cohesion: 0.05
@@ -588,8 +595,8 @@ Cohesion: 0.05
 Nodes (40): Additional Common States, Advanced: Full SVG + CSS Animations (Unlimited), As a GitHub repository, As a zip file, Asset Guidelines, Beginner: Swap Art + GIF Animations (Hours), Canvas Size, Capability Switches (+32 more)
 
 ### Community 16 - "settings-actions.js"
-Cohesion: 0.04
-Nodes (50): {
+Cohesion: 0.05
+Nodes (48): {
   ANIMATION_OVERRIDES_EXPORT_VERSION,
   ONESHOT_OVERRIDE_STATES,
   importAnimationOverrides,
@@ -616,25 +623,25 @@ Nodes (50): {
   setAgentPermissionMode,
   uninstallAgentIntegration,
   repairAgentIntegration,
-}, clearDismissedAgentCleanupHints(), { CURRENT_VERSION }, { EVENTS: TELEGRAM_MIGRATION_EVENTS } (+42 more)
+}, clearDismissedAgentCleanupHints(), { CURRENT_VERSION }, { EVENTS: TELEGRAM_MIGRATION_EVENTS } (+40 more)
 
 ### Community 17 - "settings-actions-agents.js"
-Cohesion: 0.06
-Nodes (54): getCodexPermissionMode(), isAgentEnabled(), isAgentIntegrationInstalled(), isAgentNotificationHookEnabled(), isAgentPermissionsEnabled(), isAgentSubagentPermissionsEnabled(), isCodexNativeNotificationSoundEnabled(), isCodexPermissionInterceptEnabled() (+46 more)
+Cohesion: 0.07
+Nodes (50): getCodexPermissionMode(), isAgentEnabled(), isAgentIntegrationInstalled(), isAgentNotificationHookEnabled(), isAgentPermissionsEnabled(), isAgentSubagentPermissionsEnabled(), isCodexNativeNotificationSoundEnabled(), isCodexPermissionInterceptEnabled() (+42 more)
 
 ### Community 18 - "theme-schema.js"
-Cohesion: 0.08
-Nodes (51): basenameOnly(), buildCapabilities(), deepMergeObject(), DEFAULT_EYE_TRACKING, DEFAULT_HITBOXES, DEFAULT_LAYOUT, DEFAULT_OBJECT_SCALE, DEFAULT_SOUNDS (+43 more)
+Cohesion: 0.10
+Nodes (48): basenameOnly(), buildCapabilities(), deepMergeObject(), DEFAULT_EYE_TRACKING, DEFAULT_HITBOXES, DEFAULT_LAYOUT, DEFAULT_OBJECT_SCALE, DEFAULT_SOUNDS (+40 more)
 
 ### Community 19 - "prefs.js"
 Cohesion: 0.05
-Nodes (49): {
+Nodes (48): {
   cloneDefaultTelegramApproval,
   normalizeTelegramApproval,
 }, {
   DEFAULT_HARDWARE_BUDDY_SETTINGS,
   normalizeHardwareBuddySettings,
-}, DEFAULT_INTEGRATION_INSTALLED_SET, { DEFAULT_THEME_ID }, defaultFor(), fs, getDefaults(), isDefaultIntegrationInstalled() (+41 more)
+}, DEFAULT_INTEGRATION_INSTALLED_SET, { DEFAULT_THEME_ID }, defaultFor(), fs, getDefaults(), isDefaultIntegrationInstalled() (+40 more)
 
 ### Community 20 - "session-hud.js"
 Cohesion: 0.09
@@ -654,7 +661,7 @@ Nodes (48): clawdPiExtension(), addToolFields(), api, attach(), handleToolCall()
 
 ### Community 24 - "scripts"
 Cohesion: 0.04
-Nodes (54): scripts, build, build:all, build:linux, build:mac, build:mac:mvp, build:mac:mvp:notarize, build:mac:notarize (+46 more)
+Nodes (56): scripts, build, build:all, build:linux, build:mac, build:mac:mvp, build:mac:mvp:notarize, build:mac:notarize (+48 more)
 
 ### Community 25 - "settings-doctor-modal.js"
 Cohesion: 0.12
@@ -668,37 +675,49 @@ Nodes (48): armFastProbes(), buildAdvancedRow(), buildAssistantAccentRow(), appl
 Cohesion: 0.08
 Nodes (49): applyElicitationViewport(), btnAllow, btnDeny, BUBBLE_STRINGS, bubbleText(), card, collectElicitationAnswers(), commandBlock (+41 more)
 
-### Community 28 - "MCPServerProcess"
-Cohesion: 0.07
-Nodes (26): MCPManager, MCPServerConfig, MCPServerProcess, Any, Terminate the server process and unregister its tools., Send JSON-RPC request and await response., Send JSON-RPC notification (no id, no reply expected)., Continuously read newline-delimited JSON-RPC messages from stdout. (+18 more)
+### Community 28 - "MCPManager"
+Cohesion: 0.12
+Nodes (17): MCPManager, MCPServerConfig, Model Context Protocol (MCP) Client Engine for DeskPet Jarvis. Enables DeskPet…, Coordinates multiple MCP servers, handles persistence and auto-connection., Read saved MCP server configs from disk., Write MCP configs back to disk in standard format., Load configs and start all enabled servers., Stop all running MCP servers. (+9 more)
 
 ### Community 29 - "install.js"
-Cohesion: 0.05
-Nodes (64): buildCommandHookSpec(), { buildPermissionUrl, DEFAULT_SERVER_PORT, PERMISSION_PATH, readRuntimePort, REMOTE_HOOK_HTTP_TIMEOUT_MS, resolveNodeBin, resolveNodeBinAsync, SERVER_PORTS }, childProcess, CLAUDE_PACKAGE_JSON_SEGMENTS, CORE_HOOKS, DEFAULT_CONFIG_PATH, DEFAULT_PARENT_DIR, DEPRECATED_CORE_HOOKS (+56 more)
+Cohesion: 0.08
+Nodes (49): buildCommandHookSpec(), { buildPermissionUrl, DEFAULT_SERVER_PORT, PERMISSION_PATH, readRuntimePort, REMOTE_HOOK_HTTP_TIMEOUT_MS, resolveNodeBin, resolveNodeBinAsync, SERVER_PORTS }, childProcess, CLAUDE_PACKAGE_JSON_SEGMENTS, CORE_HOOKS, DEFAULT_CONFIG_PATH, DEFAULT_PARENT_DIR, DEPRECATED_CORE_HOOKS (+41 more)
 
 ### Community 30 - "initMobilePreviewServer"
 Cohesion: 0.07
 Nodes (40): buildMessage(), crypto, fs, http, initMobilePreviewServer(), broadcast(), broadcastState(), buildPayload() (+32 more)
 
 ### Community 31 - "antigravity-hook.js"
-Cohesion: 0.10
-Nodes (36): buildAntigravityNoDecisionOutput(), buildPermissionBody(), buildStateBody(), config, { createPidResolver, readStdinJson, getPlatformConfig }, fs, getAntigravityHookDebugLogPath(), getAntigravityPermissionTimeoutMs() (+28 more)
+Cohesion: 0.07
+Nodes (44): buildAntigravityNoDecisionOutput(), buildPermissionBody(), buildStateBody(), config, { createPidResolver, readStdinJson, getPlatformConfig }, fs, getAntigravityHookDebugLogPath(), getAntigravityPermissionTimeoutMs() (+36 more)
 
 ### Community 32 - "createPetWindowRuntime"
-Cohesion: 0.11
-Nodes (31): createPetWindowRuntime(), applyPetWindowBounds(), applyPetWindowPosition(), beginDragSnapshot(), beginSettingsSizePreviewProtection(), bringPetToPrimaryDisplay(), clampToScreen(), clampToScreenVisual() (+23 more)
+Cohesion: 0.09
+Nodes (40): createPetWindowRuntime(), applyPetWindowBounds(), applyPetWindowPosition(), beginDragSnapshot(), beginSettingsSizePreviewProtection(), bringPetToPrimaryDisplay(), clampToScreen(), clampToScreenVisual() (+32 more)
 
 ### Community 33 - "server-route-permission.js"
 Cohesion: 0.09
-Nodes (46): normalizeCodexPermissionToolInput(), normalizePermissionSuggestions(), truncateDeep(), addPendingPermission(), applyTmuxSessionOptions(), arePermissionBubblesEnabled(), buildCodexPermissionSessionOptions(), buildCopilotPermissionSessionOptions() (+38 more)
+Nodes (43): addPendingPermission(), applyTmuxSessionOptions(), arePermissionBubblesEnabled(), buildCodexPermissionSessionOptions(), buildCopilotPermissionSessionOptions(), buildHermesPermissionSessionOptions(), buildQwenCodePermissionSessionOptions(), {
+  CLAWD_SERVER_HEADER,
+  CLAWD_SERVER_ID,
+} (+35 more)
 
-### Community 34 - "cleanup-integrations.js"
-Cohesion: 0.04
-Nodes (80): AGENT_CLEANERS, AGENT_DISPLAY_NAMES, backupPathsFromResult(), buildCleanupOptionsForHome(), buildTargetEnv(), changedFromResult(), cleanupIntegrations(), CODEX_MARKERS (+72 more)
+### Community 34 - "readJsonFile"
+Cohesion: 0.06
+Nodes (47): CODEBUDDY_HOOK_EVENTS, DEFAULT_CONFIG_PATH, DEFAULT_PARENT_DIR, fs, isManagedPermissionUrl(), os, path, {
+  readJsonFile,
+  writeJsonAtomic,
+  writeJsonAtomicWithBackup,
+  asarUnpackedPath,
+  commandMatchesMarker,
+  extractExistingNodeBin,
+  removeMatchingCommandHooks,
+  removeMatchingHttpHooks,
+} (+39 more)
 
 ### Community 35 - "agent-integrations.js"
-Cohesion: 0.07
-Nodes (65): findHookCommands(), { ANTIGRAVITY_HOOK_EVENTS, HOOK_GROUP_ID: ANTIGRAVITY_HOOK_GROUP_ID }, applyAntigravitySupplementary(), applyGeminiSupplementary(), applyQwenSupplementary(), checkAgent(), checkAntigravityHooksMode(), checkCodewhaleHooksTomlMode() (+57 more)
+Cohesion: 0.08
+Nodes (57): { ANTIGRAVITY_HOOK_EVENTS, HOOK_GROUP_ID: ANTIGRAVITY_HOOK_GROUP_ID }, applyAntigravitySupplementary(), applyGeminiSupplementary(), applyQwenSupplementary(), checkAgent(), checkAntigravityHooksMode(), checkCodewhaleHooksTomlMode(), { checkCodexHookTrust, checkCodexHooksFeature } (+49 more)
 
 ### Community 36 - "index.mjs"
 Cohesion: 0.09
@@ -709,12 +728,12 @@ Cohesion: 0.09
 Nodes (12): App, ConnectionManager, esc(), eventIcon(), eventLabel(), formatAgo(), icon(), log() (+4 more)
 
 ### Community 38 - "codex-pet-adapter.js"
-Cohesion: 0.09
-Nodes (47): ATLAS, ATLAS_ROWS, buildMarker(), buildPngAlphaValidationCache(), buildThemeJson(), clampText(), collectManagedMarkersByPackagePath(), crypto (+39 more)
+Cohesion: 0.10
+Nodes (40): ATLAS, ATLAS_ROWS, buildMarker(), buildPngAlphaValidationCache(), buildThemeJson(), clampText(), collectManagedMarkersByPackagePath(), crypto (+32 more)
 
 ### Community 39 - "codex-hook.js"
 Cohesion: 0.08
-Nodes (40): applyCodexSessionMetaFields(), applyCodexUpstreamFields(), applyLocalProcessFields(), buildCodexNoDecisionOutput(), buildCodexPermissionOutput(), buildPermissionBody(), buildStateBody(), buildToolInputFingerprint() (+32 more)
+Nodes (41): applyCodexSessionMetaFields(), applyCodexUpstreamFields(), applyLocalProcessFields(), buildCodexNoDecisionOutput(), buildCodexPermissionOutput(), buildPermissionBody(), buildStateBody(), buildToolInputFingerprint() (+33 more)
 
 ### Community 40 - "settings-tab-telegram-approval.js"
 Cohesion: 0.13
@@ -725,16 +744,16 @@ Cohesion: 0.07
 Nodes (41): ANTIGRAVITY_HOOK_EVENTS, buildAntigravityHookCommand(), buildAntigravityHooks(), buildHookHandler(), buildWindowsAntigravityHookCommand(), buildWindowsEncodedFailOpenNodeHookCommand(), collectHookCommandsFromEntries(), DEFAULT_CONFIG_PATH (+33 more)
 
 ### Community 42 - "copilot-hook.js"
-Cohesion: 0.08
-Nodes (41): buildPermissionBody(), buildResolver(), buildStateBody(), capToolInput(), { createPidResolver, readStdinJson, getPlatformConfig }, dirHasPermissionHookJson(), enforceBodySizeCap(), EVENT_TO_STATE (+33 more)
+Cohesion: 0.07
+Nodes (42): buildPermissionBody(), buildResolver(), buildStateBody(), capToolInput(), { createPidResolver, readStdinJson, getPlatformConfig }, dirHasPermissionHookJson(), enforceBodySizeCap(), EVENT_TO_STATE (+34 more)
 
 ### Community 43 - "test_runtime_config.py"
 Cohesion: 0.07
-Nodes (41): datetime, jarvis_system_prompt(), prune_history(), Jarvis persona + conversation memory (F3 / docs §23, §30). The persona ships as…, Return the Jarvis system prompt with the addressing word filled in. `address`…, Keep the most recent turns that fit in `budget_chars`. The Electron renderer…, get(), Any (+33 more)
+Nodes (38): datetime, jarvis_system_prompt(), prune_history(), Jarvis persona + conversation memory (F3 / docs §23, §30). The persona ships as…, Return the Jarvis system prompt with the addressing word filled in. `address`…, Keep the most recent turns that fit in `budget_chars`. The Electron renderer…, get(), Any (+30 more)
 
 ### Community 44 - "qwen-code-install.js"
-Cohesion: 0.06
-Nodes (38): decodeWindowsEncodedCommand(), QODER_HOOK_EVENTS, buildQwenCodeHookCommand(), buildQwenCodeHookEntry(), DEFAULT_CONFIG_PATH, DEFAULT_PARENT_DIR, fs, isClawdHookCommand() (+30 more)
+Cohesion: 0.04
+Nodes (77): registerCodeBuddyHooks(), registerCursorHooks(), registerGeminiHooks(), asarUnpackedPath(), decodeWindowsEncodedCommand(), extractExistingNodeBin(), formatNodeHookCommand(), writeJsonAtomic() (+69 more)
 
 ### Community 45 - "fetch-sidecar-binaries.js"
 Cohesion: 0.08
@@ -745,8 +764,8 @@ Cohesion: 0.12
 Nodes (43): buildAgentCleanupHintBanner(), buildAgentDetailRows(), buildAgentGroup(), buildAgentInstallHintBanner(), buildAgentIntegrationActionButton(), meta, buildAgentMasterRow(), buildAgentSwitchRow() (+35 more)
 
 ### Community 47 - "server-config.js"
-Cohesion: 0.09
-Nodes (42): compareVersionNamesDesc(), discoverClawdPort(), extractAbsolutePathFromShellOutput(), fs, getManagedNodeCandidatesAsync(), getManagedNodeCandidatesSync(), getPermissionProbeTimeoutMs(), getPortCandidates() (+34 more)
+Cohesion: 0.10
+Nodes (41): compareVersionNamesDesc(), extractAbsolutePathFromShellOutput(), fs, getManagedNodeCandidatesAsync(), getManagedNodeCandidatesSync(), getPortCandidates(), getShellCandidates(), getStatePostTimeoutMs() (+33 more)
 
 ### Community 48 - "createAgentRuntimeMain"
 Cohesion: 0.07
@@ -762,7 +781,7 @@ Nodes (38): ASSISTANT_PREF_DEFAULTS, attemptSidecarRestart(), broadcastSidecarSt
 
 ### Community 50 - "telegram-approval-runtime-status.js"
 Cohesion: 0.09
-Nodes (39): buildTelegramStatusCommandText(), getPendingTelegramApprovalCount(), getTelegramApprovalClient(), getTelegramNativeRunnerStatus(), handleTelegramNativeCommand(), ageSeconds(), buildHealth(), buildNativeTelegramApprovalStatus() (+31 more)
+Nodes (40): buildTelegramStatusCommandText(), getPendingTelegramApprovalCount(), getTelegramApprovalClient(), getTelegramNativeRunnerStatus(), handleTelegramNativeCommand(), ageSeconds(), buildHealth(), buildNativeTelegramApprovalStatus() (+32 more)
 
 ### Community 51 - "createThemeFadeSequencer"
 Cohesion: 0.09
@@ -795,8 +814,8 @@ Cohesion: 0.07
 Nodes (45): getCodexThreadId(), getCodexThreadUrl(), getFocusableLocalHudSessionIds(), getSessionFocusTarget(), isFocusableLocalHudSession(), normalizeOsPlatform(), normalizeString(), buildWindowsPasteShortcutScript() (+37 more)
 
 ### Community 56 - "clawd-hook.js"
-Cohesion: 0.09
-Nodes (36): API_ERROR_TYPES, assistantEntryIsTurnBoundary(), assistantEntryLooksSubagent(), assistantEntryMatchesSession(), assistantTextFromEntry(), assistantTextPartsFromContent(), buildStateBody(), buildToolInputFingerprint() (+28 more)
+Cohesion: 0.06
+Nodes (52): API_ERROR_TYPES, assistantEntryIsTurnBoundary(), assistantEntryLooksSubagent(), assistantEntryMatchesSession(), assistantTextFromEntry(), assistantTextPartsFromContent(), buildStateBody(), buildToolInputFingerprint() (+44 more)
 
 ### Community 57 - "fetch-adapters.js"
 Cohesion: 0.10
@@ -808,11 +827,11 @@ Nodes (38): adapter, crypto, derivePackageDirName(), dns, { domainToASCII }, dow
 
 ### Community 59 - "codewhale-install.js"
 Cohesion: 0.08
-Nodes (28): {
+Nodes (31): {
   asarUnpackedPath,
   extractExistingNodeBinFromCommands,
   formatNodeHookCommand,
-}, buildClawdHookSections(), buildHookEntry(), CODEWHALE_CONFIG_PATH, ensureHooksEnabled(), envConfigPath(), fs, hasExplicitConfigPath() (+20 more)
+}, buildClawdHookSections(), buildHookEntry(), CODEWHALE_CONFIG_PATH, ensureHooksEnabled(), envConfigPath(), extractExistingCodewhaleNodeBin(), fs (+23 more)
 
 ### Community 60 - "createIntegrationSyncRuntime"
 Cohesion: 0.11
@@ -835,8 +854,8 @@ Cohesion: 0.08
 Nodes (21): createShortcutRuntime(), broadcastFailures(), clearFailure(), getFailures(), getPersistentHandler(), getSnapshotShortcuts(), registerPersistentShortcutsFromSettings(), reportFailure() (+13 more)
 
 ### Community 65 - "ToolRegistry"
-Cohesion: 0.09
-Nodes (19): Path, _filter_known_kwargs(), Any, Central registry for all native micro-tools and dynamic MCP tools., Register all built-in micro-tools with formal JSON schemas., Drop model-invented kwargs the handler does not declare. Small models sometimes…, Execute a tool by name with arguments (supports sync and async handlers)., Synchronous tool execution wrapper (for sync endpoints). (+11 more)
+Cohesion: 0.13
+Nodes (10): Path, _filter_known_kwargs(), Any, Central registry for all native micro-tools and dynamic MCP tools., Register all built-in micro-tools with formal JSON schemas., Drop model-invented kwargs the handler does not declare. Small models sometimes…, Execute a tool by name with arguments (supports sync and async handlers)., Synchronous tool execution wrapper (for sync endpoints). (+2 more)
 
 ### Community 66 - "screen_context.py"
 Cohesion: 0.10
@@ -844,7 +863,7 @@ Nodes (30): ActiveWindowInfo, _extract_filename_from_title(), extract_screen_tex
 
 ### Community 67 - "qwen-code-hook.js"
 Cohesion: 0.12
-Nodes (32): appendHookDebug(), applyLocalProcessFields(), buildPermissionBody(), buildQwenNoDecisionOutput(), buildQwenPermissionOutput(), buildStateBody(), buildToolInputFingerprint(), { createPidResolver, readStdinJson, getPlatformConfig } (+24 more)
+Nodes (31): appendHookDebug(), applyLocalProcessFields(), buildPermissionBody(), buildQwenNoDecisionOutput(), buildQwenPermissionOutput(), buildStateBody(), buildToolInputFingerprint(), { createPidResolver, readStdinJson, getPlatformConfig } (+23 more)
 
 ### Community 68 - "animation-cycle.js"
 Cohesion: 0.08
@@ -874,9 +893,9 @@ Nodes (14): _atomic_move(), _Backend, FileBackend, HFGGUFBackend, MockBackend, M
 Cohesion: 0.06
 Nodes (19): AGENT_MAP, AGENTS, antigravityCli, claudeCode, codebuddy, codewhale, codex, copilotCli (+11 more)
 
-### Community 74 - "theme-assets-cache.js"
-Cohesion: 0.12
-Nodes (20): copyRasterToCache(), emptyCacheMeta(), externalAssetsSourceDir(), fs, isPathInsideDir(), isPlainObject(), normalizeCacheMeta(), path (+12 more)
+### Community 74 - "cleanup-integrations.js"
+Cohesion: 0.05
+Nodes (41): AGENT_CLEANERS, AGENT_DISPLAY_NAMES, backupPathsFromResult(), buildCleanupOptionsForHome(), buildTargetEnv(), changedFromResult(), cleanupIntegrations(), CODEX_MARKERS (+33 more)
 
 ### Community 75 - "copilot-install.js"
 Cohesion: 0.10
@@ -887,8 +906,8 @@ Cohesion: 0.11
 Nodes (32): AGENT_ID, CLAWD_DIR, createOpenClawRuntime(), buildPayload(), clearPendingStop(), handleHook(), register(), scheduleStop() (+24 more)
 
 ### Community 77 - "pi-install.js"
-Cohesion: 0.10
-Nodes (32): { asarUnpackedPath, writeJsonAtomic }, buildMarker(), childProcess, commandExists(), DEFAULT_EXTENSION_DIR, DEFAULT_EXTENSIONS_DIR, DEFAULT_PARENT_DIR, dirExists() (+24 more)
+Cohesion: 0.09
+Nodes (33): { asarUnpackedPath, writeJsonAtomic }, buildMarker(), childProcess, commandExists(), DEFAULT_EXTENSION_DIR, DEFAULT_EXTENSIONS_DIR, DEFAULT_PARENT_DIR, dirExists() (+25 more)
 
 ### Community 78 - "claude-settings-watcher.js"
 Cohesion: 0.09
@@ -935,15 +954,12 @@ Cohesion: 0.07
 Nodes (22): checkThemeHealth(), { DEFAULT_THEME_ID }, { validateThemeShape }, init(), assert, { DEFAULT_THEME_ID }, { describe, it, before, after, afterEach, mock }, fs (+14 more)
 
 ### Community 89 - "permission.js"
-Cohesion: 0.11
-Nodes (28): armPermissionAutoCloseTimer(), { BrowserWindow, globalShortcut }, buildAntigravityPermissionResponseBody(), buildAutoApproveElicitationAnswers(), buildElicitationUpdatedInput(), captureFrontApp(), { clampTextScale, scaleWidth, scaleHeight, applyZoomToWindow }, {
-  CLAWD_SERVER_HEADER,
-  CLAWD_SERVER_ID,
-} (+20 more)
+Cohesion: 0.08
+Nodes (48): armPermissionAutoCloseTimer(), { BrowserWindow, globalShortcut }, buildAntigravityPermissionResponseBody(), buildAutoApproveElicitationAnswers(), buildCodexPermissionResponseBody(), buildCopilotPermissionResponseBody(), buildElicitationUpdatedInput(), buildPermissionBubblePayload() (+40 more)
 
 ### Community 90 - "settings-actions-theme-overrides.js"
-Cohesion: 0.12
-Nodes (30): buildThemeOverrideMap(), cloneAutoReturnOverrides(), cloneFileKeyedMap(), cloneHitboxOverrides(), cloneIdleAnimationOverrides(), cloneReactionOverrides(), cloneSoundOverrides(), cloneStateOverrides() (+22 more)
+Cohesion: 0.13
+Nodes (29): buildThemeOverrideMap(), cloneAutoReturnOverrides(), cloneFileKeyedMap(), cloneHitboxOverrides(), cloneIdleAnimationOverrides(), cloneReactionOverrides(), cloneSoundOverrides(), cloneStateOverrides() (+21 more)
 
 ### Community 91 - "settings-tab-theme.js"
 Cohesion: 0.16
@@ -962,11 +978,11 @@ Nodes (29): createThemeContext, { DEFAULT_THEME_ID }, discoverThemes(), fs, getA
 
 ### Community 94 - "test_semantic_memory.py"
 Cohesion: 0.07
-Nodes (25): MemoryItem, Any, Path, Add or update a fact in the semantic memory store., Delete a memory item by ID., List all stored memory items, optionally filtered by category., Clear all memory items., Categorical semantic memory store with local JSON persistence. (+17 more)
+Nodes (29): _compute_similarity(), _get_ngrams(), MemoryItem, Any, Path, Semantic Episodic Memory Store for DeskPet Jarvis. Provides long-term…, Add or update a fact in the semantic memory store., Delete a memory item by ID. (+21 more)
 
 ### Community 95 - "server.py"
-Cohesion: 0.09
-Nodes (47): BaseModel, accumulate_tool_calls(), Stitch OpenAI streamed ``tool_calls`` deltas into complete calls. Input: the…, _blocking_chat(), _build_messages(), _canned_stream(), _chat_temperature(), ChatMessage (+39 more)
+Cohesion: 0.16
+Nodes (29): BaseModel, _blocking_chat(), _build_messages(), _chat_temperature(), ChatMessage, ChatRequest, _effective_max_new_tokens(), MCPServerAddRequest (+21 more)
 
 ### Community 96 - "renderer.js"
 Cohesion: 0.08
@@ -974,7 +990,7 @@ Nodes (23): applyMiniFlip(), applyObjectScaleStyle(), _audioCache, clawdEl, clip
 
 ### Community 97 - "settings-renderer-browser-env.test.js"
 Cohesion: 0.06
-Nodes (23): assert, { describe, it }, DOCTOR_IPC, fs, MAIN_PROCESS, path, PRELOAD_SETTINGS, SETTINGS_ANIM_OVERRIDES_MERGE (+15 more)
+Nodes (32): assert, createQueuedRaf(), { describe, it }, DOCTOR_IPC, fs, loadAgentsTabForTest(), renderContent(), loadGeneralTabForTest() (+24 more)
 
 ### Community 98 - "kiro-install.js"
 Cohesion: 0.09
@@ -988,48 +1004,48 @@ Nodes (13): callMethod(), createThemeRuntime(), activateTheme(), buildThemeConte
 Cohesion: 0.12
 Nodes (25): buildClaudeArgs(), buildCmdLaunchCommand(), buildShellTerminalCandidates(), buildTerminalCandidates(), execFileAsync, findClaudeCmd(), fs, launchClaudeSession() (+17 more)
 
-### Community 102 - "resolvePermissionEntry"
+### Community 102 - "permLog"
 Cohesion: 0.15
-Nodes (22): buildCodexPermissionResponseBody(), buildCopilotPermissionResponseBody(), buildQwenCodePermissionResponseBody(), cancelRemoteApproval(), cleanup(), dismissInteractivePermissionBubbles(), dismissInteractivePermissionWithoutDecision(), resolvePermissionEntry() (+14 more)
+Nodes (31): addPendingPermission(), applyPermissionSuggestion(), buildPermissionFocusEntry(), cancelRemoteApproval(), cleanup(), clearCodexNotifyBubbles(), clearKimiNotifyBubbles(), dismissInteractivePermissionWithoutDecision() (+23 more)
 
 ### Community 103 - "codex-subagent-fields.js"
-Cohesion: 0.17
-Nodes (13): CodexSubagentClassifier, {
+Cohesion: 0.14
+Nodes (16): CodexSubagentClassifier, {
   ROLE_ROOT,
   ROLE_SUBAGENT,
   ROLE_UNKNOWN,
   classifyHookPayload,
   classifySessionMeta,
   normalizeRole,
-}, resolveCodexSessionRole(), classifyHookPayload(), classifySessionMeta(), classifySource(), isObject(), normalizeRole() (+5 more)
+}, resolveCodexSessionRole(), classifyHookPayload(), classifySessionMeta(), classifySource(), isObject(), normalizeRole() (+8 more)
 
 ### Community 104 - "agent-descriptors.js"
 Cohesion: 0.07
 Nodes (24): AGENT_DESCRIPTORS, antigravity, claude, codebuddy, codewhale, codex, copilot, cursor (+16 more)
 
-### Community 105 - "telegram-approval-settings.js"
-Cohesion: 0.08
-Nodes (51): applySettingsUpdateOrThrow(), attachTelegramSidecarStatusBridge(), buildTelegramApprovalSignature(), deleteTelegramApprovalTokenFile(), getTelegramApprovalPaths(), getTelegramApprovalPrefs(), getTelegramApprovalStatus(), getTelegramApprovalTokenInfo() (+43 more)
+### Community 105 - "initTelegramMigrationController"
+Cohesion: 0.15
+Nodes (28): applySettingsUpdateOrThrow(), attachTelegramSidecarStatusBridge(), buildTelegramApprovalSignature(), deleteTelegramApprovalTokenFile(), getTelegramApprovalPaths(), getTelegramApprovalPrefs(), getTelegramApprovalStatus(), getTelegramApprovalTokenInfo() (+20 more)
 
 ### Community 106 - "session-hud-renderer.js"
 Cohesion: 0.14
 Nodes (27): createFoldedRow(), createPinButton(), createRowForSession(), EVENT_CHIP_MAP, focusUnavailableTooltip(), formatElapsed(), formatTokenCount(), hudEl (+19 more)
 
 ### Community 107 - "update-bubble.js"
-Cohesion: 0.15
-Nodes (30): scaleHeight(), { BrowserWindow }, { clampTextScale, scaleWidth, scaleHeight, applyZoomToWindow }, cleanup(), clearAutoCloseTimer(), computeAutoCloseRemainingMs(), computeBounds(), computeUpdateBubbleBounds() (+22 more)
+Cohesion: 0.16
+Nodes (29): { BrowserWindow }, { clampTextScale, scaleWidth, scaleHeight, applyZoomToWindow }, cleanup(), clearAutoCloseTimer(), computeAutoCloseRemainingMs(), computeBounds(), computeUpdateBubbleBounds(), deferMacFloatingVisibility() (+21 more)
 
 ### Community 108 - "json-utils.js"
 Cohesion: 0.05
-Nodes (52): extractExistingCodewhaleNodeBin(), buildWindowsEncodedNodeHookCommand(), cleanupBackupPath(), createBackup(), createBackupAsync(), extractExistingNodeBinFromCommands(), fs, isAbsoluteCommandToken() (+44 more)
+Nodes (54): buildWindowsEncodedNodeHookCommand(), cleanupBackupPath(), createBackup(), createBackupAsync(), findHookCommands(), fs, path, quoteHookCommandArg() (+46 more)
 
 ### Community 109 - "create-theme.js"
 Cohesion: 0.11
 Nodes (24): copyTemplateDir(), createThemeScaffold(), formatHelp(), formatSuccess(), fs, getDefaultThemesRoot(), guessAuthor(), humanizeThemeId() (+16 more)
 
 ### Community 110 - "createTranslator"
-Cohesion: 0.12
-Nodes (17): createTranslator(), assert, { createTranslator }, defaultTheme, { describe, it, beforeEach, afterEach, mock }, makeCtx(), path, themeLoader (+9 more)
+Cohesion: 0.08
+Nodes (24): createTranslator(), assert, { createTranslator }, defaultTheme, { describe, it, beforeEach, afterEach, mock }, makeCtx(), path, themeLoader (+16 more)
 
 ### Community 111 - "Sidecar"
 Cohesion: 0.17
@@ -1048,14 +1064,14 @@ Cohesion: 0.22
 Nodes (25): buildSidecarSpawnOptions(), createHardwareBuddyAdapter(), applySettingsChange(), cleanupStartedParts(), clearAutoConnectTimer(), clearRestartTimer(), clearStateNotifyTimer(), connectFirstMatchingDevice() (+17 more)
 
 ### Community 115 - "server-route-state.js"
-Cohesion: 0.12
-Nodes (23): findPendingPermissionForStateEvent(), normalizeHookToolUseId(), {
+Cohesion: 0.13
+Nodes (22): findPendingPermissionForStateEvent(), normalizeHookToolUseId(), {
   CLAWD_SERVER_HEADER,
   CLAWD_SERVER_ID,
 }, handleStatePost(), normalizeAssistantLastOutput(), normalizeContextUsage(), {
   normalizeHookToolUseId,
   findPendingPermissionForStateEvent,
-}, normalizeHwndString() (+15 more)
+}, normalizeHwndString() (+14 more)
 
 ### Community 116 - "createSystemWakeRecovery"
 Cohesion: 0.12
@@ -1069,9 +1085,9 @@ Nodes (5): buildSidecarEnv(), parseHandshakeLine(), splitLines(), summarizeError
 Cohesion: 0.13
 Nodes (21): buildPreviewUrl(), buildThemeMetadata(), buildVariantMetadata(), buildVariantPreviewUrl(), computePreviewContentOffsetPct(), computePreviewContentRatio(), fileUrl(), fs (+13 more)
 
-### Community 119 - "setState"
-Cohesion: 0.16
-Nodes (22): applyResolvedDisplayState(), cancelPermissionSuspect(), clearPendingStateTimer(), clearSessionsByAgent(), dismissSession(), disposeKimiSessionState(), getSvgOverride(), hasPermissionAnimationLock() (+14 more)
+### Community 119 - "applyState"
+Cohesion: 0.14
+Nodes (29): ackSessionCompletion(), applyResolvedDisplayState(), applyState(), broadcastSessionSnapshot(), cancelCodexExitProbe(), cleanStaleSessions(), clearPendingStateTimer(), clearSessionsByAgent() (+21 more)
 
 ### Community 120 - "log-rotate.test.js"
 Cohesion: 0.10
@@ -1079,7 +1095,7 @@ Nodes (19): fs, rotatedAppend(), formatLocalTimestamp(), pad(), focusLog(), sess
 
 ### Community 121 - "auto-start.js"
 Cohesion: 0.09
-Nodes (17): { buildElectronLaunchConfig }, { discoverClawdPort }, launchApp(), main(), path, { spawn }, waitForClawdPort(), buildElectronLaunchConfig() (+9 more)
+Nodes (18): { buildElectronLaunchConfig }, { discoverClawdPort }, launchApp(), main(), path, { spawn }, waitForClawdPort(), discoverClawdPort() (+10 more)
 
 ### Community 122 - "gemini-hook.js"
 Cohesion: 0.12
@@ -1104,8 +1120,8 @@ Nodes (23): applyStationaryCollectionBehavior(), delegateWindowToStationarySpace
 }, createTopmostRuntime() (+15 more)
 
 ### Community 127 - "clampTextScale"
-Cohesion: 0.20
-Nodes (15): effectiveTextScaleForKey(), getTextScaleForPetWindows(), showResumeInput(), setTextScaleForDisplay(), applyZoomToWindow(), clampTextScale(), isValidTextScale(), normalizeTextScaleByDisplay() (+7 more)
+Cohesion: 0.23
+Nodes (14): effectiveTextScaleForKey(), setTextScaleForDisplay(), applyZoomToWindow(), clampTextScale(), isValidTextScale(), normalizeTextScaleByDisplay(), resolveTextScaleForKey(), scaleHeight() (+6 more)
 
 ### Community 128 - "readAdapterManifest"
 Cohesion: 0.14
@@ -1128,8 +1144,8 @@ Cohesion: 0.10
 Nodes (19): createThemeContext(), buildFileUrl(), getExternalAssetsSourceDir(), getPreviewSoundUrl(), getRendererAssetsPath(), getRendererConfig(), getRendererSourceAssetsPath(), getSoundUrl() (+11 more)
 
 ### Community 132 - "theme-sanitizer.js"
-Cohesion: 0.15
-Nodes (23): collectCssUrlRefs(), collectSafeRasterRefs(), visit(), containsUnsafeCssUrl(), DANGEROUS_TAGS, decodeResourceTarget(), hasUnsafeResourcePattern(), HREF_ATTRS (+15 more)
+Cohesion: 0.07
+Nodes (43): copyRasterToCache(), emptyCacheMeta(), externalAssetsSourceDir(), fs, isPathInsideDir(), isPlainObject(), normalizeCacheMeta(), path (+35 more)
 
 ### Community 133 - "codex-pet-adapter.test.js"
 Cohesion: 0.10
@@ -1140,8 +1156,8 @@ Cohesion: 0.11
 Nodes (20): AWAIT_EVENTS, buildPayload(), clearCachedSessionId(), EVENT_MAP, fs, main(), os, path (+12 more)
 
 ### Community 135 - "hermes-plugin/__init__.py"
-Cohesion: 0.09
-Nodes (62): _add_process_meta(), _append_log(), _cached_process_meta(), _debug_enabled(), _detect_editor(), _ensure_process_meta_resolver_started(), _event_extra(), _finish_session_boundary() (+54 more)
+Cohesion: 0.11
+Nodes (59): _add_process_meta(), _append_log(), _cached_process_meta(), _debug_enabled(), _detect_editor(), _ensure_process_meta_resolver_started(), _event_extra(), _finish_session_boundary() (+51 more)
 
 ### Community 136 - "qoder-hook.js"
 Cohesion: 0.14
@@ -1178,8 +1194,8 @@ Cohesion: 0.24
 Nodes (23): build(), buildHardwareBuddyChannelHeader(), buildHardwareBuddyStatusRow(), buildHardwareBuddySwitchRow(), buildHardwareBuddyTestRow(), buildHardwareBuddyTextRow(), commit(), buildOptionList() (+15 more)
 
 ### Community 143 - "state-agent-icons.test.js"
-Cohesion: 0.11
-Nodes (20): AGENT_ICON_DIR, AGENT_ICON_EXTENSIONS, _agentIconCache, _agentIconUrlCache, fs, getAgentIcon(), getAgentIconPath(), getAgentIconUrl() (+12 more)
+Cohesion: 0.10
+Nodes (19): AGENT_ICON_DIR, AGENT_ICON_EXTENSIONS, _agentIconCache, _agentIconUrlCache, fs, getAgentIcon(), getAgentIconPath(), path (+11 more)
 
 ### Community 144 - "state-priority.js"
 Cohesion: 0.16
@@ -1189,24 +1205,24 @@ Nodes (20): {
 }, createStatePriorityConstants(), getStatePriority(), normalizeSessionsIterable(), ONESHOT_STATE_NAMES, ONESHOT_STATES, resolveDisplayStateFromSessions(), resolveDominantSessionState() (+12 more)
 
 ### Community 145 - "LlamaServer"
-Cohesion: 0.07
-Nodes (30): LlamaServer, Any, Owns one llama-server subprocess + an httpx client that talks to it., Final teardown (app shutdown): stop llama-server AND permanently disarm the…, Restart llama-server with a different `--model`., Restart llama-server with a different `--lora` set. Used when the user drops a…, Yield ``(kind, text)`` tuples from llama-server's OpenAI stream. `kind` is one…, Fire one tiny non-streaming completion. Used by /api/warmup. (+22 more)
+Cohesion: 0.10
+Nodes (16): _find_free_port(), LlamaServer, Any, Path, Owns one llama-server subprocess + an httpx client that talks to it., (Re)start the background watchdog task. Safe to call repeatedly., Pick an available localhost port in a small range so logs / firewall rules stay…, Final teardown (app shutdown): stop llama-server AND permanently disarm the… (+8 more)
 
 ### Community 146 - "FakeBrowserWindow"
 Cohesion: 0.09
 Nodes (8): assert, createFakeApp(), createFakeTimers(), createRuntime(), createSettingsWindowRuntime, FakeBrowserWindow, path, test
 
-### Community 147 - "get_logger"
-Cohesion: 0.05
-Nodes (42): Logger, _find_free_port(), (Re)start the background watchdog task. Safe to call repeatedly., Pick an available localhost port in a small range so logs / firewall rules stay…, Populate `_adapter_index` from the live llama-server state. llama-server…, get_logger(), init_logging(), install_broken_pipe_guard() (+34 more)
+### Community 147 - "__main__.py"
+Cohesion: 0.17
+Nodes (15): Logger, init_logging(), install_broken_pipe_guard(), Configure the gateway logger once. Subsequent calls return the same logger., Swap stdout for /dev/null on BrokenPipeError so a dead parent can't kill us., main(), parse_args(), _port_bindable() (+7 more)
 
-### Community 148 - "build_app"
-Cohesion: 0.08
-Nodes (36): FastAPI, build_app(), _default_adapter_roots(), _default_model_roots(), discover_adapters(), discover_models(), _manifest_by_resolved_path(), _persona_for() (+28 more)
+### Community 148 - "test_discover_adapters.py"
+Cohesion: 0.14
+Nodes (22): _default_adapter_roots(), discover_adapters(), _manifest_by_resolved_path(), _persona_for(), Path, Where to scan for `*.gguf` LoRA adapters when no `MINICPM_ADAPTER_DIR` env is…, Return [{name, path, persona}] for every `*.gguf` LoRA under `roots`. Skips…, Pick the canonical writable adapter dir for `/api/load-adapter` "open in… (+14 more)
 
 ### Community 149 - "test_adapter_endpoints.py"
-Cohesion: 0.06
-Nodes (20): MiniCPM sidecar gateway. Thin FastAPI shim that talks to a bundled llama.cpp…, adapter_dir(), app_with_stub_llama(), model_path(), fixture, End-to-end-ish test of /api/adapters + /api/load-adapter against a real FastAPI…, A corrupted mirror file must not 500 the endpoint — we treat it as if there…, The dot-prefixed mirror file lives alongside .gguf weights but must not pollute… (+12 more)
+Cohesion: 0.09
+Nodes (15): adapter_dir(), app_with_stub_llama(), model_path(), fixture, End-to-end-ish test of /api/adapters + /api/load-adapter against a real FastAPI…, A corrupted mirror file must not 500 the endpoint — we treat it as if there…, The dot-prefixed mirror file lives alongside .gguf weights but must not pollute…, When llama-server was booted with `--lora <X>` and the user switches back to… (+7 more)
 
 ### Community 150 - "codex-remote-monitor.js"
 Cohesion: 0.11
@@ -1217,7 +1233,7 @@ Nodes (22): args, buildPostStateBody(), {
 
 ### Community 151 - "hermes-install.js"
 Cohesion: 0.11
-Nodes (32): { asarUnpackedPath }, copyManagedPluginFiles(), DEFAULT_PARENT_DIR, DEFAULT_PLUGIN_DIR, discoverHermesProfileHomes(), formatHermesCommand(), fs, hermesCommandCandidates() (+24 more)
+Nodes (31): { asarUnpackedPath }, copyManagedPluginFiles(), DEFAULT_PARENT_DIR, DEFAULT_PLUGIN_DIR, discoverHermesProfileHomes(), formatHermesCommand(), fs, hermesCommandCandidates() (+23 more)
 
 ### Community 152 - "settings-ipc.js"
 Cohesion: 0.14
@@ -1240,24 +1256,19 @@ Cohesion: 0.09
 Nodes (15): args, assetsDirExists, capabilities, fallbackEntries, fs, jsonPath, normalizedStates, path (+7 more)
 
 ### Community 157 - "menu.js"
-Cohesion: 0.16
-Nodes (19): { app, BrowserWindow, screen, Menu, Tray, nativeImage, dialog }, buildAutoApproveMenuItem(), buildBringToPrimaryDisplayMenuItem(), buildContextMenu(), buildDisplaySubmenu(), buildMiniModeMenuItem(), buildTrayMenu(), { createTranslator } (+11 more)
+Cohesion: 0.11
+Nodes (25): { app, BrowserWindow, screen, Menu, Tray, nativeImage, dialog }, buildAutoApproveMenuItem(), buildBringToPrimaryDisplayMenuItem(), buildContextMenu(), buildDisplaySubmenu(), buildMiniModeMenuItem(), buildTrayMenu(), { createTranslator } (+17 more)
 
 ### Community 158 - "server-hook-management.test.js"
 Cohesion: 0.13
 Nodes (15): classifyCodexOfficialSession(), getCodexOfficialTurnKey(), hasCodexAssistantCompletionOutput(), pruneCodexOfficialTurns(), resolveCodexOfficialHookState(), resolveCodexOfficialStopState(), assert, { describe, it } (+7 more)
 
-### Community 159 - "server-permission-utils.js"
-Cohesion: 0.13
-Nodes (16): buildToolInputFingerprint(), clampPreviewText(), crypto, normalizeElicitationToolInput(), normalizeToolMatchValue(), assert, { describe, it }, {
-  truncateDeep,
-  normalizePermissionSuggestions,
-  normalizeElicitationToolInput,
-  normalizeHookToolUseId,
-  normalizeCodexPermissionToolInput,
-  normalizeToolMatchValue,
+### Community 159 - "server-permission-state-cleanup.test.js"
+Cohesion: 0.21
+Nodes (8): assert, {
   buildToolInputFingerprint,
-} (+8 more)
+  findPendingPermissionForStateEvent,
+}, { describe, it }, { EventEmitter }, initServer, makeCtx(), makeFakeHttp(), startServer()
 
 ### Community 160 - "telegram-migration-state.js"
 Cohesion: 0.19
@@ -1286,9 +1297,9 @@ Nodes (19): applyLang(), applyStaticTranslations(), basename(), bootstrapI18n(),
 Cohesion: 0.25
 Nodes (20): callCommand(), ensureRuntimeListeners(), findProfile(), formatTimeAgo(), init(), listProfiles(), render(), renderEditForm() (+12 more)
 
-### Community 165 - "dismissPassiveNotify"
-Cohesion: 0.13
-Nodes (21): addPendingPermission(), buildPermissionBubblePayload(), clearCodexNotifyBubbles(), clearKimiNotifyBubbles(), computePassiveNotifyRemainingMs(), dismissPassiveNotify(), findCodexNotifyEntryBySession(), getPassiveNotifyAgentId() (+13 more)
+### Community 165 - "schedulePassiveNotifyAutoExpire"
+Cohesion: 0.20
+Nodes (13): computePassiveNotifyRemainingMs(), findCodexNotifyEntryBySession(), getPassiveNotifyAgentId(), getPolicy(), isPassiveNotifyEntry(), refreshPassiveNotifyAutoClose(), schedulePassiveNotifyAutoExpire(), shouldSuppressCodexNotifyBubble() (+5 more)
 
 ### Community 166 - "tick.js"
 Cohesion: 0.16
@@ -1302,9 +1313,9 @@ Nodes (14): assert, { describe, it }, fs, { loadFocusWithMock }, os, path, asser
 Cohesion: 0.10
 Nodes (11): assert, createRendererHarness(), { describe, it }, FakeElement, fs, MAIN, path, PRELOAD (+3 more)
 
-### Community 169 - "applyState"
-Cohesion: 0.16
-Nodes (21): applyDndSleepState(), applyState(), cleanup(), clearAllClaudeTranscriptCompletionProbes(), clearAllCompletionDebounces(), clearWakePollStartTimer(), disableDoNotDisturb(), disposeAllKimiPermissionState() (+13 more)
+### Community 169 - "enableDoNotDisturb"
+Cohesion: 0.20
+Nodes (14): applyDndSleepState(), cleanup(), clearAllClaudeTranscriptCompletionProbes(), clearAllCompletionDebounces(), clearWakePollStartTimer(), disposeAllKimiPermissionState(), enableDoNotDisturb(), isWakePollState() (+6 more)
 
 ### Community 170 - "codex-log-monitor.js"
 Cohesion: 0.14
@@ -1317,9 +1328,9 @@ Nodes (18): BACKFILL_SNAPSHOT_STATES, {
 Cohesion: 0.14
 Nodes (17): appendDebugEntry(), buildDebugEntry(), DEFAULT_LOG_PATH, fs, main(), os, parsePayload(), path (+9 more)
 
-### Community 172 - "showPermissionBubble"
-Cohesion: 0.20
-Nodes (16): clampBubbleHeight(), deferMacFloatingVisibility(), dismissPermissionsByAgent(), dismissPermissionsForDnd(), estimateBubbleHeight(), getAnchorWorkArea(), getBubbleWidth(), getTextScale() (+8 more)
+### Community 172 - "telegram-approval-settings.js"
+Cohesion: 0.15
+Nodes (23): telegramApprovalSetToken(), buildBridgeConfigToml(), buildTokenEnvFile(), cloneDefaultTelegramApproval(), COMPLETION_OUTPUT_MODES, DEFAULT_TG_APPROVAL, defaultBridgeConfigPath(), defaultTokenEnvFilePath() (+15 more)
 
 ### Community 173 - "agent-installation-detector.test.js"
 Cohesion: 0.14
@@ -1328,16 +1339,16 @@ Nodes (12): getAgentDescriptor(), assert, { describe, it, afterEach }, {
 }, fs, { getAgentDescriptor }, mkdirp(), os (+4 more)
 
 ### Community 174 - "route_tools"
-Cohesion: 0.10
-Nodes (29): canned_reply(), convert_currency(), fetch_page(), get_time(), lock_workstation(), media_control(), open_url(), Wikipedia summary for a topic phrase, ignoring interrogative framing ('how did… (+21 more)
+Cohesion: 0.09
+Nodes (40): canned_reply(), media_control(), open_url(), Wikipedia summary for a topic phrase, ignoring interrogative framing ('how did…, Topic lookup that digs into the article body when the question asks something…, Scan the user's latest message, run matched tools, return (label, result) pairs…, Fixed Jarvis-voice line for a tool result, or None → model composes., route_tools() (+32 more)
 
 ### Community 175 - "LlamaServerManager"
 Cohesion: 0.16
 Nodes (8): { app }, fs, http, httpJson(), LlamaServerManager, path, resolveGgufPath(), { spawn, execFile }
 
 ### Community 176 - "handleSettingsChange"
-Cohesion: 0.17
-Nodes (12): applyDockVisibility(), createSettingsEffectRouter(), handleSettingsChange(), handleShortcutsChange(), start(), MENU_AFFECTING_KEYS, requiredDependency(), safeCall() (+4 more)
+Cohesion: 0.16
+Nodes (13): applyDockVisibility(), dismissInteractivePermissionBubbles(), createSettingsEffectRouter(), handleSettingsChange(), handleShortcutsChange(), start(), MENU_AFFECTING_KEYS, requiredDependency() (+5 more)
 
 ### Community 177 - "minicpm-i18n.js"
 Cohesion: 0.17
@@ -1414,9 +1425,9 @@ Nodes (7): assert, createHarness(), { describe, it, afterEach, mock }, FakeBrows
 Cohesion: 0.15
 Nodes (11): _candidate_ports(), ClawdBridge, _default_event_for(), Best-effort bridge that pushes pet states to a running clawd-on-desk server.…, Try the runtime port first (whatever is alive right now), then the rest., Thread-friendly state pusher with one persistent session_id per chat turn., _Capture, Proactive reminder/briefing pushes must use the deskpet-proactive session… (+3 more)
 
-### Community 191 - "test_backend_selection.py"
-Cohesion: 0.14
-Nodes (17): _candidate_binary_paths(), detect_backend(), _normalise_device(), _platform_triple(), Path, Match electron-builder's `${os}-${arch}` so packaged binaries land where…, Best-effort report of which acceleration backend the llama-server binary likely…, Return the llama-server LoRA id for a given local path, or None if the adapter… (+9 more)
+### Community 191 - "build_app"
+Cohesion: 0.12
+Nodes (22): FastAPI, _candidate_binary_paths(), detect_backend(), _normalise_device(), _platform_triple(), Match electron-builder's `${os}-${arch}` so packaged binaries land where…, Best-effort report of which acceleration backend the llama-server binary likely…, Where to look for llama-server, in priority order. 1. $MINICPM_LLAMA_SERVER… (+14 more)
 
 ### Community 192 - "ThinkBlockFilter"
 Cohesion: 0.22
@@ -1431,8 +1442,8 @@ Cohesion: 0.16
 Nodes (16): DEFAULT_LOG_BASENAMES, fs, getAllowedLogDirs(), getLogMtime(), isAllowedLogBasename(), openClawdLog(), os, path (+8 more)
 
 ### Community 195 - "work-area.js"
-Cohesion: 0.12
-Nodes (23): computeFinalDragBounds(), getAllDisplays(), getNearestDisplayBottomInset(), getPrimaryWorkAreaFallback(), hasStoredPositionThemeMismatch(), looseClampPetToDisplays(), needsFinalClampAdjustment(), resolveStartupPlacement() (+15 more)
+Cohesion: 0.18
+Nodes (16): captureCurrentDisplaySnapshot(), normalizePositionDisplay(), boundsMatch(), buildDisplaySnapshot(), computeLooseClamp(), findMatchingDisplay(), findNearestWorkArea(), getDisplayInsets() (+8 more)
 
 ### Community 196 - "telegram-native-runner.js"
 Cohesion: 0.18
@@ -1457,12 +1468,12 @@ Cohesion: 0.11
 Nodes (9): assert, createHarness(), { describe, it }, FakeArea, fs, HIT_RENDERER, path, SOURCE (+1 more)
 
 ### Community 200 - "FakeElement"
-Cohesion: 0.14
-Nodes (4): FakeElement, findAncestorByClass(), loadGeneralLanguageRowForTest(), renderLanguageOnly()
+Cohesion: 0.11
+Nodes (7): FakeElement, findAncestorByClass(), loadAnimMapTabForTest(), loadAnimOverridesTabForTest(), loadGeneralLanguageRowForTest(), renderLanguageOnly(), loadTelegramApprovalTabForTest()
 
 ### Community 201 - "test_tag_scrubber.py"
-Cohesion: 0.17
-Nodes (13): Cross-chunk safe stripper for leaked tool-call markup. ``_RE_FUNCTION_TAG``…, _TagScrubber, _fed(), Cross-chunk safety of the leaked tool-call markup scrubber. The 1B model…, test_flush_releases_held_fragment(), test_opener_without_closer_swallows_rest_of_stream(), test_plain_angle_bracket_text_passes_through(), test_stray_closer_alone_is_stripped() (+5 more)
+Cohesion: 0.15
+Nodes (14): Cross-chunk safe stripper for leaked tool-call markup. Extracted verbatim from…, Cross-chunk safe stripper for leaked tool-call markup. ``_RE_FUNCTION_TAG``…, _TagScrubber, _fed(), Cross-chunk safety of the leaked tool-call markup scrubber. The 1B model…, test_flush_releases_held_fragment(), test_opener_without_closer_swallows_rest_of_stream(), test_plain_angle_bracket_text_passes_through() (+6 more)
 
 ### Community 202 - "gemini-log-monitor.test.js"
 Cohesion: 0.12
@@ -1504,13 +1515,16 @@ Nodes (15): buildStateBindings(), countActiveSessionsByStates(), getJugglingSvg(
 Cohesion: 0.17
 Nodes (11): classifyError(), DEFAULT_RETRY_OPTS, ERROR_CLASSES, pollWithConflictRetry(), TelegramApiError, assert, { createFakeTelegramServer }, fakeTokenStore() (+3 more)
 
-### Community 211 - ".appendChild"
-Cohesion: 0.21
-Nodes (11): createQueuedRaf(), loadAgentsTabForTest(), renderContent(), loadAnimMapTabForTest(), loadGeneralTabForTest(), renderContent(), loadSettingsI18nBundleForTest(), loadSettingsI18nForTest() (+3 more)
+### Community 211 - "task_dispatcher.py"
+Cohesion: 0.10
+Nodes (25): bind_bridge(), _load_store_unlocked(), _persist_remove(), _persist_task(), Any, Path, Proactive Background Task & Reminder Dispatcher for DeskPet Jarvis. Allows…, Async background task scheduler for proactive alerts and reminders. (+17 more)
 
 ### Community 212 - "visible-margins.js"
-Cohesion: 0.12
-Nodes (29): createPetGeometryMain(), getAssetPointerPayload(), getCurrentFile(), getFullAssetRect(), getFullHitRect(), getHitRectScreen(), getObjRect(), getSessionHudAnchorRect() (+21 more)
+Cohesion: 0.16
+Nodes (20): getSessionHudAnchorRect(), defaultHitGeometry, {
+  getThemeMarginBox: defaultGetThemeMarginBox,
+  computeThemeAnchorRect: defaultComputeThemeAnchorRect,
+}, collectThemeEnvelopeFiles(), computeStableVisibleContentMargins(), computeThemeAnchorRect(), getCappedEdgePinBottom(), getCappedOffRubberBandTop() (+12 more)
 
 ### Community 213 - "codex-pet-importer.test.js"
 Cohesion: 0.12
@@ -1528,18 +1542,9 @@ Nodes (12): assert, bumpMtime(), { describe, it }, FORBIDDEN_POST_FIELDS, fs, ne
 Cohesion: 0.14
 Nodes (14): assert, bootQwenAfterPostToolUse(), _calicoTheme, { createTranslator }, _defaultTheme, { describe, it, beforeEach, afterEach, mock }, finishAntigravityTurn(), fs (+6 more)
 
-### Community 217 - "cursor-install.js"
-Cohesion: 0.09
-Nodes (20): buildCursorHookCommand(), CURSOR_HOOK_EVENTS, DEFAULT_CONFIG_PATH, DEFAULT_PARENT_DIR, fs, os, path, {
-  readJsonFile,
-  writeJsonAtomic,
-  writeJsonAtomicWithBackup,
-  asarUnpackedPath,
-  commandMatchesMarker,
-  extractExistingNodeBin,
-  formatNodeHookCommand,
-  removeMatchingCommandHooks,
-} (+12 more)
+### Community 217 - "test_lora_injection.py"
+Cohesion: 0.20
+Nodes (14): _drain(), _make_server(), asyncio, Request, Response, Verify the gateway injects a per-request `lora` array into llama-server's chat…, `--lora` flag must appear once per adapter so llama-server pre-loads them all…, _Recorder (+6 more)
 
 ### Community 218 - "preload-settings.js"
 Cohesion: 0.22
@@ -1574,12 +1579,12 @@ Cohesion: 0.14
 Nodes (10): assert, createRuntimeHarness(), createSettingsAnimationOverridesMain, FakeBrowserWindow, FakeIpcMain, fs, makeTheme(), os (+2 more)
 
 ### Community 226 - "test_durable_reminders.py"
-Cohesion: 0.17
-Nodes (16): _arm_reminder(), cancel_reminders(), _load_reminders_unlocked(), Boot-time recovery: re-arm future reminders, fire overdue ones. `now` lets…, _reminders_file(), restore_reminders(), _save_reminders_unlocked(), set_reminder() (+8 more)
+Cohesion: 0.13
+Nodes (19): _arm_reminder(), cancel_reminders(), _load_reminders_unlocked(), Boot-time recovery: re-arm future reminders, fire overdue ones. `now` lets…, restore_reminders(), _save_reminders_unlocked(), set_reminder(), env() (+11 more)
 
-### Community 227 - "windows-uninstall-cleanup.test.js"
-Cohesion: 0.11
-Nodes (15): SERVER_PORTS, assert, childProcess, CLEANUP_SCRIPT, { describe, it }, fs, makeFixture(), NSIS_INCLUDE (+7 more)
+### Community 227 - "install.test.js"
+Cohesion: 0.05
+Nodes (29): SERVER_PORTS, assert, { buildPermissionUrl, SERVER_PORTS }, { describe, it, afterEach }, fs, getClawdCommands(), getCommandHookEntries(), getHttpHookEntries() (+21 more)
 
 ### Community 228 - "openclaw-plugin/package.json"
 Cohesion: 0.13
@@ -1590,8 +1595,8 @@ Cohesion: 0.16
 Nodes (16): asarUnpack, files, agents/**/*, assets/dock-icon.png, assets/icon.ico, assets/icons/**/*, assets/icons/agents/**/*, assets/sounds/**/* (+8 more)
 
 ### Community 230 - "opencode-entry-validator.js"
-Cohesion: 0.21
-Nodes (9): fs, hasNamedExport(), isAbsoluteAnyPlatform(), path, validateOpencodeEntry(), assert, { describe, it }, path (+1 more)
+Cohesion: 0.16
+Nodes (12): checkOpencodeSettings(), describeOpencodeEntryIssue(), findOpencodePluginEntry(), fs, hasNamedExport(), isAbsoluteAnyPlatform(), path, validateOpencodeEntry() (+4 more)
 
 ### Community 231 - "doctor-ipc.js"
 Cohesion: 0.20
@@ -1605,9 +1610,9 @@ Nodes (14): basenameOnly(), fitViewBoxIntoRect(), getAssetPointerPayload(), getA
 Cohesion: 0.21
 Nodes (11): createMacHideController(), appIsHidden(), applyWithMiniRetry(), onActivate(), onHiddenStateChange(), poll(), start(), assert (+3 more)
 
-### Community 234 - "cleanStaleSessions"
-Cohesion: 0.26
-Nodes (14): cancelCodexExitProbe(), cleanStaleSessions(), clearCodexExitProbe(), debugSession(), describeSession(), detectRunningAgentProcesses(), formatPidChain(), isProcessAlive() (+6 more)
+### Community 234 - "opencode-install.js"
+Cohesion: 0.09
+Nodes (21): DEFAULT_CONFIG_PATH, DEFAULT_PARENT_DIR, entryIsExactManagedPlugin(), fs, normalizePluginEntry(), os, path, { readJsonFile, writeJsonAtomic, writeJsonAtomicWithBackup, asarUnpackedPath } (+13 more)
 
 ### Community 235 - "buildAnimationAssetPreview"
 Cohesion: 0.36
@@ -1621,18 +1626,13 @@ Nodes (8): createTelegramFetchTransport(), ensureSession(), probeProxyType(), re
   sanitizeProxy,
 }, test
 
-### Community 237 - "keepOutOfTaskbar"
-Cohesion: 0.31
-Nodes (6): keepOutOfTaskbar(), keepOutOfTaskbarForPlatform(), shouldKeepOutOfTaskbar(), assert, { describe, it }, { keepOutOfTaskbar, __test }
+### Community 237 - "server-permission-utils.js"
+Cohesion: 0.27
+Nodes (11): buildToolInputFingerprint(), clampPreviewText(), crypto, normalizeCodexPermissionToolInput(), normalizeElicitationToolInput(), normalizePermissionSuggestions(), normalizeToolMatchValue(), truncateDeep() (+3 more)
 
-### Community 238 - "codebuddy-install.test.js"
-Cohesion: 0.17
-Nodes (8): CODEBUDDY_HOOK_EVENTS, assert, { describe, it, afterEach }, fs, os, path, {
-  registerCodeBuddyHooks,
-  unregisterCodeBuddyHooks,
-  CODEBUDDY_HOOK_EVENTS,
-  __test,
-}, tempDirs
+### Community 238 - "MCPServerProcess"
+Cohesion: 0.14
+Nodes (10): MCPServerProcess, Any, Terminate the server process and unregister its tools., Send JSON-RPC request and await response., Send JSON-RPC notification (no id, no reply expected)., Continuously read newline-delimited JSON-RPC messages from stdout., Query tools/list and register tools into the global ToolRegistry., Execute a tool via MCP tools/call. (+2 more)
 
 ### Community 239 - "codex-remote-monitor.test.js"
 Cohesion: 0.14
@@ -1658,9 +1658,9 @@ Nodes (11): buildSettingsAgentOrderExports(), compareAgentNames(), compareAgentP
 Cohesion: 0.25
 Nodes (11): buildSettingsAnimOverridesMergeExports(), applyAnimationPosterPayload(), getAnimationDataThemeId(), getCachedPosterFor(), isPlainObject(), isValidAnimationPreviewPosterPayload(), mergePosterCacheIntoAnimationData(), patchAssetWithPoster() (+3 more)
 
-### Community 245 - "settings-window-icon.test.js"
-Cohesion: 0.23
-Nodes (11): applyWindowsAppUserModelId(), getSettingsWindowIconPath(), getSettingsWindowTaskbarDetails(), getWindowsShellIconPath(), path, quoteWindowsCommandArg(), shouldOpenSettingsWindowFromArgv(), assert (+3 more)
+### Community 245 - "settings-window-icon.js"
+Cohesion: 0.21
+Nodes (12): applyWindowsAppUserModelId(), getSettingsWindowIconPath(), getSettingsWindowTaskbarDetails(), getWindowsShellIconPath(), path, quoteWindowsCommandArg(), registerAumidForToasts(), shouldOpenSettingsWindowFromArgv() (+4 more)
 
 ### Community 246 - "minicpm-adapter-reconcile.test.js"
 Cohesion: 0.14
@@ -1694,12 +1694,9 @@ Nodes (8): area, canPlayReactionNow(), clearQueuedDragMove(), endDragReaction(),
 Cohesion: 0.17
 Nodes (9): AUTOSTART_DIR, AUTOSTART_FILE, fs, getLoginItemSettings(), os, path, assert, { describe, it } (+1 more)
 
-### Community 255 - "state-hitbox-resolver.test.js"
-Cohesion: 0.38
-Nodes (5): createHitboxRuntime(), resolveHitBoxForSvg(), assert, {
-  createHitboxRuntime,
-  resolveHitBoxForSvg,
-}, { describe, it }
+### Community 255 - "refreshTheme"
+Cohesion: 0.20
+Nodes (10): createHitboxRuntime(), resolveHitBoxForSvg(), refreshTheme(), refreshUpdateVisualOverride(), resolveHitBoxForSvg(), setUpdateVisualState(), STATE_SVGS(), assert (+2 more)
 
 ### Community 256 - "EVENTS"
 Cohesion: 0.23
@@ -1709,8 +1706,8 @@ Nodes (10): EVENTS, createTelegramSidecarStatusBridge(), decideSidecarRuntimeEve
 }, { EVENTS } (+2 more)
 
 ### Community 257 - "package-build-config.test.js"
-Cohesion: 0.15
-Nodes (7): assert, { describe, it }, fs, { minimatch }, path, pkg, ROOT
+Cohesion: 0.11
+Nodes (12): normalizeRepoUrl(), parseGitHubRepo(), pkg, upstreamMatch, userAgent, assert, { describe, it }, fs (+4 more)
 
 ### Community 258 - "permission-auto-approve.test.js"
 Cohesion: 0.15
@@ -1730,8 +1727,8 @@ Cohesion: 0.11
 Nodes (18): 1. Clawd 以 official hooks 为主，JSONL 轮询兜底, 1. Codex 官方支持 WSL2, 1. README 的说法容易让人默认联想到“所有 WSL 组合都覆盖了”, 2. Clawd 当前没有自动“安装到 WSL home”的逻辑, 2. setup guide 的 WSL 章节正文主要在讲 Claude Code, 2. WSL1 已不再支持, 3. Clawd 仓库里有远程/旁路方案，但不是 WSL 开箱即用方案, 3. Codex hooks 仍是 feature flag (+10 more)
 
 ### Community 261 - "run-ui-smoke.mjs"
-Cohesion: 0.50
-Nodes (4): app, cdpReady(), root, waitCdp()
+Cohesion: 0.38
+Nodes (6): app, bubbleTargetPresent(), cdpReady(), root, waitBubble(), waitCdp()
 
 ### Community 262 - "verify-sidecar-binaries.js"
 Cohesion: 0.27
@@ -1817,9 +1814,9 @@ Nodes (5): assert, createTopmostRuntime, { describe, it }, { EventEmitter }, Fak
 Cohesion: 0.18
 Nodes (7): assert, codexConfig, CodexLogMonitor, { describe, it, beforeEach, afterEach }, fs, os, path
 
-### Community 283 - "context-usage.js"
+### Community 283 - "maybeStartRemoteApproval"
 Cohesion: 0.31
-Nodes (9): computeClaudeUsageFromEntry(), entryLooksSubagent(), entryMatchesSession(), extractClaudeContextUsageFromEntries(), normalizeUsageNumber(), resolveClaudeContextLimit(), assert, { describe, it } (+1 more)
+Nodes (11): basenameForDisplay(), buildRemoteApprovalPayload(), buildRemoteApprovalSummary(), buildRemoteSuggestionButtons(), buildRemoteSuggestionLabel(), compactRemoteApprovalText(), getTelegramApprovalClient(), isRemoteApprovalActionable() (+3 more)
 
 ### Community 284 - "mac"
 Cohesion: 0.18
@@ -1844,16 +1841,8 @@ Cohesion: 0.42
 Nodes (10): buildAboutLicenseRow(), buildAboutLinkRow(), createCleanupFooterAction(), fetchAboutInfo(), formatCleanupSummary(), formatVersionForMessage(), handleAboutLogoClick(), init() (+2 more)
 
 ### Community 289 - "state-stale-cleanup.test.js"
-Cohesion: 0.31
-Nodes (8): getStaleSessionDecision(), isLocalCodexWorkingLikeSession(), isWorkingLikeState(), NOTE: requiresCompletionAck does NOT hold a session out of stale cleanup., assert, decision(), { describe, it }, {
-  SESSION_STALE_MS,
-  WORKING_STALE_MS,
-  DETACHED_IDLE_STALE_MS,
-  CODEX_LOCAL_WORKING_STALE_FLOOR_MS,
-  isWorkingLikeState,
-  isLocalCodexWorkingLikeSession,
-  getStaleSessionDecision,
-}
+Cohesion: 0.24
+Nodes (10): clearPermissionNotification(), getStaleSessionDecision(), isLocalCodexWorkingLikeSession(), isWorkingLikeState(), NOTE: requiresCompletionAck does NOT hold a session out of stale cleanup., takeTrailingPermissionRequest(), assert, decision() (+2 more)
 
 ### Community 290 - "createTelegramMigrationController"
 Cohesion: 0.42
@@ -1955,14 +1944,9 @@ Nodes (7): parseOzonePlatformFromArgv(), planXWaylandRelaunch(), resolveLinuxOzo
   planXWaylandRelaunch,
 }
 
-### Community 316 - "shared-process.test.js"
-Cohesion: 0.24
-Nodes (6): loadSharedProcessWithMock(), assert, { describe, it, beforeEach, mock }, {
-  getPlatformConfig,
-  createPidResolver,
-  readStdinJson,
-  buildElectronLaunchConfig,
-}, snapshotEnvelopeJson(), snapshotJson()
+### Community 316 - "test_native_tools.py"
+Cohesion: 0.18
+Nodes (18): accumulate_tool_calls(), Stitch OpenAI streamed ``tool_calls`` deltas into complete calls. Input: the…, _canned_stream(), Serve a deterministic canned tool reply over the same SSE shape., _resolve_tool_mode(), asyncio, Tests for tool-mode resolution and native tool-call plumbing., _req() (+10 more)
 
 ### Community 317 - "settings-tab-anim-map.js"
 Cohesion: 0.47
@@ -2031,17 +2015,17 @@ Nodes (5): collect_pid_tree(), find_target_pids(), sample_once(), monitor-clawd-
 Cohesion: 0.39
 Nodes (7): cleanString(), DEFAULT_HARDWARE_BUDDY_SETTINGS, HARDWARE_BUDDY_BACKENDS, hardwareBuddySettingsEqual(), isPlainObject(), normalizeHardwareBuddySettings(), validateHardwareBuddySettings()
 
-### Community 333 - "product-metadata.js"
-Cohesion: 0.29
-Nodes (6): githubRepo, normalizeRepoUrl(), parseGitHubRepo(), pkg, upstreamMatch, userAgent
+### Community 333 - "test_task_dispatcher_persistence.py"
+Cohesion: 0.19
+Nodes (13): MiniCPM sidecar gateway. Thin FastAPI shim that talks to a bundled llama.cpp…, fresh_dispatcher(), fixture, Unified reminder-store tests for TaskDispatcher. The dispatcher and tools.py…, Point BOTH modules' shared file at a temp path., _read_store(), store_file(), test_cancel_purges_store_and_memory() (+5 more)
 
 ### Community 334 - "attachEyeTracking"
 Cohesion: 0.29
 Nodes (8): applyEyeMove(), attachEyeTracking(), _getLayerTarget(), _initLayeredTracking(), _layerNeedsAnimation(), _startLayerAnimLoop(), tick(), _wrapSvgElement()
 
-### Community 335 - "antigravity-hook.test.js"
-Cohesion: 0.22
-Nodes (7): assert, { describe, it }, fs, os, path, { spawnSync }, { __test }
+### Community 335 - "tool_registry.py"
+Cohesion: 0.20
+Nodes (10): Tool Registry and Schema Engine for DeskPet Jarvis. Provides OpenAI/MCP JSON-…, ToolCallResult, asyncio, fixture, Unit tests for tool_registry.py. Verifies schema generation, native tool…, registry(), test_dynamic_mcp_tool_lifecycle(), test_execute_native_tool_calculate() (+2 more)
 
 ### Community 336 - "settings-tab-mobile.js"
 Cohesion: 0.50
@@ -2067,9 +2051,9 @@ Nodes (5): assert, createMockResponse(), { describe, it }, initPermission, makeP
 Cohesion: 0.25
 Nodes (6): ALL_READMES, assert, fs, path, ROOT, test
 
-### Community 343 - "scheduleSwapVisibilityRescue"
-Cohesion: 0.29
-Nodes (8): clearSwapVisibilityRescueTimer(), forceImageChannelReload(), forceVisiblePetElement(), getPetMediaElements(), getSwapVisibilityRescueDelay(), hasVisiblePetElement(), isVisiblyOpaque(), scheduleSwapVisibilityRescue()
+### Community 343 - "createPetGeometryMain"
+Cohesion: 0.46
+Nodes (8): createPetGeometryMain(), getAssetPointerPayload(), getCurrentFile(), getFullAssetRect(), getFullHitRect(), getHitRectScreen(), getObjRect(), getUpdateBubbleAnchorRect()
 
 ### Community 345 - "state-display-svg.test.js"
 Cohesion: 0.25
@@ -2105,9 +2089,9 @@ Nodes (5): estimateTokens(), trimHistoryForContext(), assert, {
   trimHistoryForContext,
 }, { describe, it }
 
-### Community 351 - "permLog"
-Cohesion: 0.21
-Nodes (17): applyPermissionSuggestion(), basenameForDisplay(), buildPermissionFocusEntry(), buildRemoteApprovalPayload(), buildRemoteApprovalSummary(), buildRemoteSuggestionButtons(), buildRemoteSuggestionLabel(), compactRemoteApprovalText() (+9 more)
+### Community 351 - "test_llama_client_payload.py"
+Cohesion: 0.25
+Nodes (8): asyncio, Request, Response, Lock down the request body shape llama_client.stream_chat sends to llama-…, Records the JSON body of POST /v1/chat/completions and returns a tiny canned…, _Recorder, test_stream_chat_passes_enable_thinking_false(), test_stream_chat_passes_enable_thinking_true()
 
 ### Community 352 - "permission-reposition.test.js"
 Cohesion: 0.29
@@ -2265,9 +2249,9 @@ Nodes (3): { execFileSync }, { notarize }, path
 Cohesion: 0.67
 Nodes (3): executeTool(), runChatLoop(), { search }
 
-### Community 394 - "state-startup-recovery-detect.test.js"
-Cohesion: 0.25
-Nodes (7): assert, childProcess, { createTranslator }, defaultTheme, { describe, it, beforeEach, afterEach }, path, themeLoader
+### Community 394 - "test_mcp_endpoints.py"
+Cohesion: 0.18
+Nodes (4): fixture, Unit tests for tool and MCP endpoints in server.py. Verifies /api/tools,…, Build a test client for FastAPI with mocked LlamaServer., test_client()
 
 ### Community 395 - "Agent Runtime Architecture"
 Cohesion: 0.14
@@ -2289,33 +2273,33 @@ Nodes (3): assert, { describe, it }, registry
 Cohesion: 0.50
 Nodes (3): assert, { describe, it }, registry
 
-### Community 402 - "parseYamlPluginEnabled"
-Cohesion: 0.40
-Nodes (6): parseYamlPluginEnabled(), stripYamlComment(), unquoteYamlScalar(), yamlIndent(), yamlInlineListContains(), yamlScalarEquals()
+### Community 402 - "scheduleSwapVisibilityRescue"
+Cohesion: 0.29
+Nodes (8): clearSwapVisibilityRescueTimer(), forceImageChannelReload(), forceVisiblePetElement(), getPetMediaElements(), getSwapVisibilityRescueDelay(), hasVisiblePetElement(), isVisiblyOpaque(), scheduleSwapVisibilityRescue()
 
 ### Community 422 - "README.zh-CN.md"
 Cohesion: 0.18
 Nodes (8): Notices, OpenClaw Pixel Lobster Icon, 已知限制, 开发者说明, 致谢, 许可证, 路线图, 项目亮点
 
-### Community 423 - "doctor-find-hook-commands.test.js"
-Cohesion: 0.50
-Nodes (3): assert, { describe, it }, { findHookCommands }
+### Community 423 - "discover_models"
+Cohesion: 0.43
+Nodes (7): discover_models(), Return [{name, path}] for every *.gguf file under `roots`., Path, Exercise the discover_models helper used by /api/models., test_discover_accepts_direct_file(), test_discover_finds_gguf_recursively(), test_discover_skips_staging_and_backup()
 
 ### Community 424 - "开发者指南"
-Cohesion: 0.14
-Nodes (14): Onboarding 流程的开发要点, 仓库结构, 完全重置用户数据（小心，会丢失模型和对话历史）, 完成标志（sentinel）, 工具调用模式（tool_mode）, 常用调试技巧, 开发者指南, 快速上手 (dev 模式) (+6 more)
+Cohesion: 0.10
+Nodes (21): Onboarding 流程的开发要点, Windows 打包（x64，已支持）, Windows 打包验证清单, 仅重打 dmg（不重跑 PyInstaller）, 仓库结构, 单步出包, 国内网络打包注意事项, 完全重置用户数据（小心，会丢失模型和对话历史） (+13 more)
 
-### Community 425 - "update-bubble-position.test.js"
-Cohesion: 0.50
-Nodes (3): assert, { describe, it }, updateBubble
+### Community 425 - "inspectPngSpritesheet"
+Cohesion: 0.29
+Nodes (7): inspectPngSpritesheet(), inspectSpritesheet(), inspectWebpSpritesheet(), paeth(), readUint24LE(), unfilterPngScanline(), validatePngAtlasAlpha()
 
 ### Community 426 - "buildAnimationOverrideSections"
 Cohesion: 0.22
 Nodes (10): buildAnimationOverrideData(), buildAnimationOverrideSections(), buildSoundOverrideSlots(), computeCardHitboxInfo(), enqueueAnimationPreviewPosterJob(), hasOwnStateFiles(), pushSection(), readCurrentThemeOverrideMap() (+2 more)
 
 ### Community 427 - "README.md"
-Cohesion: 0.15
-Nodes (12): 🧩 Architectural Overview, 🏰 Architectural & Product Moats, 🛠️ Built-in Tool Catalog & MCP Support, 🔌 Developer REST API, 🚀 Highlights & Capabilities, 📄 License, Model Context Protocol (MCP), Native Tools (+4 more)
+Cohesion: 0.13
+Nodes (14): 🧩 Architectural Overview, 🏰 Architectural & Product Moats, 🛠️ Built-in Tool Catalog & MCP Support, 🔌 Developer REST API, 🚀 Highlights & Capabilities, 📄 License, Model Context Protocol (MCP), Native Tools (+6 more)
 
 ### Community 428 - "listAnimationOverrideAssets"
 Cohesion: 0.29
@@ -2329,6 +2313,10 @@ Nodes (11): Doctor vs. remote boundary, In-app flow, Key concepts, No remote ses
 Cohesion: 0.33
 Nodes (6): exportAnimationOverrides(), getSettingsDialogParent(), importAnimationOverrides(), previewReaction(), registerSettingsAnimationOverridesIpc(), requiredDependency()
 
+### Community 432 - "openclaw-entry-validator.js"
+Cohesion: 0.50
+Nodes (4): fs, isAbsoluteAnyPlatform(), path, validateOpenClawEntry()
+
 ### Community 433 - "配置指南"
 Cohesion: 0.18
 Nodes (8): Agent 配置说明, Linux 说明, macOS 说明, Windows 说明, WSL（Windows Subsystem for Linux）, WSL 网络与 Hook 注册（替代方案）, 远程 SSH 模式（Claude Code, Codex CLI & Copilot CLI）, 配置指南
@@ -2341,6 +2329,10 @@ Nodes (11): Dashboard 中没有远端 session, Doctor 与远端的边界, 仍想
 Cohesion: 0.20
 Nodes (6): Acknowledgments, Development Notes, Highlights, Quick Start, Safety Gate, Supported Agents
 
+### Community 436 - "settings-actions-agents.test.js"
+Cohesion: 0.40
+Nodes (4): agentCommands, assert, prefs, test
+
 ### Community 437 - "minicpm-sidecar"
 Cohesion: 0.20
 Nodes (10): API, LoRA 适配器协议, minicpm-sidecar, Official llama.cpp Release, 与 llama-server 的 thinking 协议, 实测性能（M4 Pro / 18 GB / Metal）, 开发态启动, 生产构建 (+2 more)
@@ -2349,13 +2341,17 @@ Nodes (10): API, LoRA 适配器协议, minicpm-sidecar, Official llama.cpp Relea
 Cohesion: 0.22
 Nodes (9): Agent Setup, Linux Notes, macOS Notes, Remote SSH (Claude Code, Codex CLI & Copilot CLI), Setup Guide, Telegram Approval, Windows Notes, WSL Networking & Hook Registration (Alternative Approach) (+1 more)
 
+### Community 439 - "parseYamlPluginEnabled"
+Cohesion: 0.40
+Nodes (6): parseYamlPluginEnabled(), stripYamlComment(), unquoteYamlScalar(), yamlIndent(), yamlInlineListContains(), yamlScalarEquals()
+
 ### Community 440 - "devDependencies"
 Cohesion: 0.22
 Nodes (9): devDependencies, electron, electron-builder, @electron/notarize, playwright-core, electron, electron-builder, @electron/notarize (+1 more)
 
 ### Community 441 - "功能介绍"
-Cohesion: 0.19
-Nodes (9): 人格适配器, 功能介绍, 和本地桌宠聊天, 安装, 工作时的状态反应, 快速开始, 模型管理, 系统要求 (+1 more)
+Cohesion: 0.40
+Nodes (5): 人格适配器, 功能介绍, 和本地桌宠聊天, 工作时的状态反应, 模型管理
 
 ### Community 442 - "verify-bubble-ui.mjs"
 Cohesion: 0.29
@@ -2381,6 +2377,14 @@ Nodes (6): Click Reactions, Gemini CLI Hook Notes, Kimi Code CLI (Kimi-CLI) Hook
 Cohesion: 0.29
 Nodes (6): Native Migration Dogfood, Release Notes, Runtime Behavior, Setup, Supported Paths, Telegram Approval
 
+### Community 448 - "settings-validators.test.js"
+Cohesion: 0.50
+Nodes (3): assert, test, validators
+
+### Community 449 - "快速开始"
+Cohesion: 0.50
+Nodes (4): 安装, 快速开始, 系统要求, 首次启动
+
 ### Community 450 - "🎯 Key Use Cases"
 Cohesion: 0.29
 Nodes (7): 1. Zero-Copy Terminal & Error Debugging, 2. Context-Aware Pair Programming, 3. Ambient Agent Supervision, 4. Long-Term Knowledge & Semantic Fact Recall, 5. Proactive Background Tasks & Timers, 6. Different Pets for Different People (PetDex), 🎯 Key Use Cases
@@ -2397,41 +2401,41 @@ Nodes (5): Before Tagging, Draft Release, Release Process, Sidecar Dependency, v
 Cohesion: 0.40
 Nodes (4): 404 error final spec ⭐ 锁定 2026-04-26 (激进彩蛋槽 1 / error 状态), cloud-plane orbit final spec ⭐ 锁定 2026-04-26 (激进彩蛋槽 2 + juggling 主状态复用 2026-04-29), long-idle cloud bush peek final spec ⭐ 锁定 2026-04-28 (long-idle 彩蛋 / idle-reading 候选), Special / Long-Idle State Specs
 
+### Community 455 - "theme-schema.test.js"
+Cohesion: 0.40
+Nodes (3): assert, { describe, it, afterEach, mock }, schema
+
+### Community 456 - "update-bubble-position.test.js"
+Cohesion: 0.50
+Nodes (3): assert, { describe, it }, updateBubble
+
 ### Community 457 - "Copilot CLI — permissionRequest diagnostic harness"
 Cohesion: 0.40
 Nodes (4): `capture.js` — re-run when Copilot CLI ships a new version, Copilot CLI — permissionRequest diagnostic harness, `e2e-hook.js` — run before shipping changes to copilot-hook.js, Mode table
-
-### Community 458 - "打包：从源码到 dmg"
-Cohesion: 0.40
-Nodes (5): 仅重打 dmg（不重跑 PyInstaller）, 单步出包, 国内网络打包注意事项, 当前打包限制 (MVP), 打包：从源码到 dmg
 
 ### Community 459 - "💻 Getting Started"
 Cohesion: 0.40
 Nodes (5): 💻 Getting Started, Installation, macOS, System Requirements, Windows
 
-### Community 460 - "codex-subagent-classifier.test.js"
-Cohesion: 0.50
-Nodes (3): assert, CodexSubagentClassifier, { describe, it }
-
 ## Knowledge Gaps
-- **2936 isolated node(s):** `fs`, `path`, `os`, `CodexSubagentClassifier`, `{ readCodexThreadName }` (+2931 more)
+- **2943 isolated node(s):** `fs`, `path`, `os`, `CodexSubagentClassifier`, `{ readCodexThreadName }` (+2938 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **31 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **32 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `electron` connect `electron` to `main.js`, `permission.js`, `initUpdater`, `tick.js`, `dashboard.js`, `update-bubble.js`, `minicpm-model-download.js`, `LlamaServerManager`, `minicpm-chat.js`, `session-hud.js`, `mini.js`, `minicpm-sidecar-manager.js`, `auto-start.js`, `preload-settings.js`, `export-agent-icons.js`, `menu.js`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+  _High betweenness centrality (0.066) - this node is a cross-community bridge._
+- **Why does `initTelegramMigrationController()` connect `initTelegramMigrationController` to `main.js`, `createTelegramMigrationController`, `telegram-native-runner.js`, `telegram-fetch-transport.test.js`, `telegram-token-store.test.js`, `telegram-approval-runtime-status.js`, `telegram-direct-send.js`, `createTelegramNativeRunner`, `telegram-companion.js`, `focusDashboardSession`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **Why does `scripts` connect `scripts` to `clawd-on-desk/package.json`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `initTelegramMigrationController()` connect `telegram-approval-settings.js` to `main.js`, `createTelegramMigrationController`, `telegram-native-runner.js`, `telegram-fetch-transport.test.js`, `telegram-token-store.test.js`, `telegram-approval-runtime-status.js`, `telegram-direct-send.js`, `createTelegramNativeRunner`, `telegram-companion.js`, `focusDashboardSession`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Are the 12 inferred relationships involving `initUpdater()` (e.g. with `checkForUpdates()` and `getPendingUpdateVersion()`) actually correct?**
   _`initUpdater()` has 12 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 16 inferred relationships involving `createSettingsAnimationOverridesMain()` (e.g. with `buildAnimationAssetPreview()` and `buildAnimationAssetProbe()`) actually correct?**
   _`createSettingsAnimationOverridesMain()` has 16 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 38 inferred relationships involving `createPetWindowRuntime()` (e.g. with `applyPetWindowBounds()` and `applyPetWindowPosition()`) actually correct?**
-  _`createPetWindowRuntime()` has 38 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 22 inferred relationships involving `route_tools()` (e.g. with `cancel_reminders()` and `clipboard_assist()`) actually correct?**
   _`route_tools()` has 22 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 38 inferred relationships involving `createPetWindowRuntime()` (e.g. with `applyPetWindowBounds()` and `applyPetWindowPosition()`) actually correct?**
+  _`createPetWindowRuntime()` has 38 INFERRED edges - model-reasoned connections that need verification._

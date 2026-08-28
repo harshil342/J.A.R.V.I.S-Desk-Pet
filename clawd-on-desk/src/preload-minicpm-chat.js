@@ -76,6 +76,12 @@ contextBridge.exposeInMainWorld("minicpm", {
   memoryDelete: (id) => ipcRenderer.invoke("minicpm:memory-delete", { id }),
   memorySearch: (q) => ipcRenderer.invoke("minicpm:memory-search", { q }),
 
+  // MCP server management
+  mcpList: () => ipcRenderer.invoke("minicpm:mcp-list"),
+  mcpAdd: (serverConfig) => ipcRenderer.invoke("minicpm:mcp-add", { serverConfig }),
+  mcpRemove: (name) => ipcRenderer.invoke("minicpm:mcp-remove", { name }),
+  mcpReload: (name) => ipcRenderer.invoke("minicpm:mcp-reload", { name }),
+
   // Messages from main → renderer
   onOpen:           (cb) => ipcRenderer.on("minicpm:cmd-open",            (_e, payload) => cb(payload || {})),
   onDismiss:        (cb) => ipcRenderer.on("minicpm:cmd-dismiss",         () => cb()),

@@ -22,6 +22,8 @@
     FileClose $0
   clawd_node_cleanup_home_done:
 
+  StrCpy $2 "$INSTDIR\Deskpet.exe"
+  IfFileExists "$2" clawd_node_cleanup_have_exe 0
   StrCpy $2 "$INSTDIR\MiniCPM Desk Pet.exe"
   IfFileExists "$2" clawd_node_cleanup_have_exe 0
   ; Legacy upstream executable name, kept only so uninstall cleanup can run

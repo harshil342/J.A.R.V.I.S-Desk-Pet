@@ -262,6 +262,19 @@ describe("package build config", () => {
       assert.ok(draftIndex > actionIndex, "tag releases should be created as drafts first");
       assert.ok(prereleaseIndex > actionIndex, "hyphenated tags should be marked prerelease");
     });
+
+    it("resolves product metadata repository and publish configuration", () => {
+      const productMetadata = require("../src/product-metadata");
+      assert.strictEqual(productMetadata.githubOwner, "OpenBMB");
+      assert.strictEqual(productMetadata.githubRepo, "MiniCPM-Desk-Pet");
+      assert.deepStrictEqual(pkg.build.publish, [
+        {
+          provider: "github",
+          owner: "harshil342",
+          repo: "J.A.R.V.I.S-Desk-Pet",
+        },
+      ]);
+    });
   });
 });
 

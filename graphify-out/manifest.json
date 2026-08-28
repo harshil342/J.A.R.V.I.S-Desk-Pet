@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "clawd-on-desk/package.json": {
-    "mtime": 1787585951.6536236,
-    "seen": 1787586058.7852907,
-    "ast_hash": "170d00a933bd2410de56e1ef821c62fc",
+    "mtime": 1787921863.296086,
+    "seen": 1787922056.3512373,
+    "ast_hash": "27f7b5c12a021975d4ba67bdd1a7459a",
     "semantic_hash": ""
   },
   "clawd-on-desk/perf/k6/clawdbot-stress.js": {
@@ -888,9 +888,9 @@
     "semantic_hash": "9e947acf418be6d14edb7af85ee42760"
   },
   "clawd-on-desk/src/main.js": {
-    "mtime": 1787496333.7697973,
-    "seen": 1787581467.588509,
-    "ast_hash": "73efc76fd582b0507b75dacdd0b8268f",
+    "mtime": 1787667390.3058255,
+    "seen": 1787921755.7235699,
+    "ast_hash": "ec6a87e71743bfd13db154ac74dc9387",
     "semantic_hash": ""
   },
   "clawd-on-desk/src/menu.js": {
@@ -912,22 +912,22 @@
     "semantic_hash": "5676f262f0061c58e0ccb64ec33801a9"
   },
   "clawd-on-desk/src/minicpm-chat-renderer.js": {
-    "mtime": 1787492001.4338083,
-    "seen": 1787494094.7317832,
-    "ast_hash": "714ebe94bfc1f5e4d0900f83a25ea265",
-    "semantic_hash": "714ebe94bfc1f5e4d0900f83a25ea265"
+    "mtime": 1787667821.1150656,
+    "seen": 1787921755.723576,
+    "ast_hash": "835bfcfb5e5735f717367b95ba4a6aa4",
+    "semantic_hash": ""
   },
   "clawd-on-desk/src/minicpm-chat.js": {
-    "mtime": 1787586661.5374532,
-    "seen": 1787587300.80219,
-    "ast_hash": "99f2cb661fb44c5af7703ea11abb1207",
+    "mtime": 1787921931.7883878,
+    "seen": 1787922056.3513353,
+    "ast_hash": "f651c58dfd963e5125e042b794d64840",
     "semantic_hash": ""
   },
   "clawd-on-desk/src/minicpm-i18n.js": {
-    "mtime": 1787479502.3771403,
-    "seen": 1787494094.7317843,
-    "ast_hash": "01ef2149bfe8bc0d4e931cafcc8bf07d",
-    "semantic_hash": "01ef2149bfe8bc0d4e931cafcc8bf07d"
+    "mtime": 1787667790.047448,
+    "seen": 1787921755.7235808,
+    "ast_hash": "9cc43eefde5956907fc198138a7afb1c",
+    "semantic_hash": ""
   },
   "clawd-on-desk/src/minicpm-model-download.js": {
     "mtime": 1784373289.6076605,
@@ -1002,10 +1002,10 @@
     "semantic_hash": "3517ca701a22a3915de860a6bb2b8e06"
   },
   "clawd-on-desk/src/preload-minicpm-chat.js": {
-    "mtime": 1787479113.9461975,
-    "seen": 1787494094.731794,
-    "ast_hash": "9ae6c32e37285c8d2fc0f278b3cc9671",
-    "semantic_hash": "9ae6c32e37285c8d2fc0f278b3cc9671"
+    "mtime": 1787921938.9779186,
+    "seen": 1787922056.351358,
+    "ast_hash": "78ecd969144ac3c1ba755d766a4f5af1",
+    "semantic_hash": ""
   },
   "clawd-on-desk/src/preload-minicpm-onboarding.js": {
     "mtime": 1784373289.6136594,
@@ -1020,10 +1020,10 @@
     "semantic_hash": "74772593932a16a620c1bbeaf4cec104"
   },
   "clawd-on-desk/src/preload-settings.js": {
-    "mtime": 1784373289.6146617,
-    "seen": 1787494094.7317965,
-    "ast_hash": "6d08f9dfbbfa054df7a09b7fa476dce0",
-    "semantic_hash": "6d08f9dfbbfa054df7a09b7fa476dce0"
+    "mtime": 1787921956.4394977,
+    "seen": 1787922056.3513618,
+    "ast_hash": "a17d589b5aadd4cc44466a75b6fbb1f9",
+    "semantic_hash": ""
   },
   "clawd-on-desk/src/preload-update-bubble.js": {
     "mtime": 1784373289.6146617,
@@ -1038,10 +1038,10 @@
     "semantic_hash": "d81e51a4220c95e06284f17cb50f07fc"
   },
   "clawd-on-desk/src/product-metadata.js": {
-    "mtime": 1787403494.3948662,
-    "seen": 1787494094.7317998,
-    "ast_hash": "e23803e4c344a22f1caf66766faab44b",
-    "semantic_hash": "e23803e4c344a22f1caf66766faab44b"
+    "mtime": 1787921564.4857128,
+    "seen": 1787921755.7236106,
+    "ast_hash": "5255680bd55aac929f12b9fe71719e6e",
+    "semantic_hash": ""
   },
   "clawd-on-desk/src/proxy-agent.js": {
     "mtime": 1784373289.6156602,
@@ -1392,10 +1392,10 @@
     "semantic_hash": "0126cc52a9c52c887232a24ce38e91e6"
   },
   "clawd-on-desk/src/settings-window-icon.js": {
-    "mtime": 1787402274.8754635,
-    "seen": 1787494094.73184,
-    "ast_hash": "25e7dcc2435c0e410beacbbe213fa6ba",
-    "semantic_hash": "25e7dcc2435c0e410beacbbe213fa6ba"
+    "mtime": 1787658545.3852644,
+    "seen": 1787921755.723698,
+    "ast_hash": "02b93d1dcfee5a6272a106e2fbaebf8f",
+    "semantic_hash": ""
   },
   "clawd-on-desk/src/settings-window.js": {
     "mtime": 1784373289.6424017,
@@ -2478,10 +2478,10 @@
     "semantic_hash": "c18288065e81ca18f4dc580b01fec885"
   },
   "clawd-on-desk/test/package-build-config.test.js": {
-    "mtime": 1786865996.124011,
-    "seen": 1787494094.7319608,
-    "ast_hash": "d1f6fc7c790a9c69ac3832cf6cc92fb9",
-    "semantic_hash": "d1f6fc7c790a9c69ac3832cf6cc92fb9"
+    "mtime": 1787921659.8348367,
+    "seen": 1787921755.7239847,
+    "ast_hash": "9c5ec49d3acedb012152209fff8952f8",
+    "semantic_hash": ""
   },
   "clawd-on-desk/test/permission-auto-approve.test.js": {
     "mtime": 1784373289.7167552,
@@ -3414,16 +3414,16 @@
     "semantic_hash": "c39e0b1c6b0e45aa40118b79df49f3aa"
   },
   "minicpm-sidecar/gateway/server.py": {
-    "mtime": 1787586438.3192143,
-    "seen": 1787587300.8025663,
-    "ast_hash": "d6181a0f69dcb0fd43ff2f38d4899087",
+    "mtime": 1787664092.7267175,
+    "seen": 1787921755.724232,
+    "ast_hash": "04360c8a25250aa863f40575abc3d1b0",
     "semantic_hash": ""
   },
   "minicpm-sidecar/gateway/task_dispatcher.py": {
-    "mtime": 1787149461.8146167,
-    "seen": 1787494094.732062,
-    "ast_hash": "ba0473d5a41bdd5361c447a1b07ee246",
-    "semantic_hash": "ba0473d5a41bdd5361c447a1b07ee246"
+    "mtime": 1787664058.9899726,
+    "seen": 1787921755.7242355,
+    "ast_hash": "c64b1205e9ca0b0bd02b807ee870f894",
+    "semantic_hash": ""
   },
   "minicpm-sidecar/gateway/think_filter.py": {
     "mtime": 1784373289.9637365,
@@ -3438,9 +3438,9 @@
     "semantic_hash": "f603c39907a46b135eb8ee2ff7c8e85d"
   },
   "minicpm-sidecar/gateway/tools.py": {
-    "mtime": 1787585784.1001544,
-    "seen": 1787586058.7857418,
-    "ast_hash": "f33d7e100f46616273ba92a89e2c8aca",
+    "mtime": 1787667168.9804292,
+    "seen": 1787921755.7242396,
+    "ast_hash": "9d94744d22133021b3e23c951abc150f",
     "semantic_hash": ""
   },
   "minicpm-sidecar/gateway/updater.py": {
@@ -3450,10 +3450,10 @@
     "semantic_hash": "2cf4d5fcc53d488fdeb697002e554910"
   },
   "minicpm-sidecar/pyproject.toml": {
-    "mtime": 1786801087.940512,
-    "seen": 1787494094.7320652,
-    "ast_hash": "6435a60821401ecbd3e7a7347823b5a0",
-    "semantic_hash": "6435a60821401ecbd3e7a7347823b5a0"
+    "mtime": 1787642248.2194557,
+    "seen": 1787921755.7242424,
+    "ast_hash": "1f959bcbc7e6300cdde599cfd0ca5d7c",
+    "semantic_hash": ""
   },
   "minicpm-sidecar/scripts/build-all.sh": {
     "mtime": 1784373289.964742,
@@ -3642,9 +3642,9 @@
     "semantic_hash": "0af9cc4bb58d39149b0a1c663b9a69c5"
   },
   "minicpm-sidecar/tests/test_tool_routing.py": {
-    "mtime": 1787582718.2354422,
-    "seen": 1787585496.361953,
-    "ast_hash": "6a6beb041aba52828c35f43a444f2190",
+    "mtime": 1787648543.9555838,
+    "seen": 1787921755.7242951,
+    "ast_hash": "bc7a358f4e48686c069b522d47e5db99",
     "semantic_hash": ""
   },
   "clawd-on-desk/tools/dump-dom.mjs": {
@@ -3660,9 +3660,9 @@
     "semantic_hash": ""
   },
   "clawd-on-desk/tools/verify-bubble-ui.mjs": {
-    "mtime": 1787502291.8194492,
-    "seen": 1787581467.5891402,
-    "ast_hash": "82a13e4929d07d1f30966415ea5550a0",
+    "mtime": 1787667559.9404695,
+    "seen": 1787921755.7242115,
+    "ast_hash": "85d69242145631fdc82b8d391bbb6c82",
     "semantic_hash": ""
   },
   "minicpm-sidecar/tests/test_durable_reminders.py": {
@@ -3690,9 +3690,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1787587179.8202515,
-    "seen": 1787587300.8026059,
-    "ast_hash": "f2e5507cea4f58bcfb6e71cd12e8bb37",
+    "mtime": 1787646390.828869,
+    "seen": 1787921755.7243028,
+    "ast_hash": "3464ef2ad9dd3500aeacea68412c4647",
     "semantic_hash": ""
   },
   "README.zh-CN.md": {
@@ -3876,9 +3876,9 @@
     "semantic_hash": ""
   },
   "clawd-on-desk/src/minicpm-chat.html": {
-    "mtime": 1787492191.2730055,
-    "seen": 1787581467.5893087,
-    "ast_hash": "6e9ddfd9a4aa4909f521f843513ac097",
+    "mtime": 1787645160.497949,
+    "seen": 1787921755.7243502,
+    "ast_hash": "36127469c2c36cb57dfcb3b87ffabaef",
     "semantic_hash": ""
   },
   "clawd-on-desk/src/minicpm-onboarding.html": {
@@ -3930,9 +3930,9 @@
     "semantic_hash": ""
   },
   "docs/development.md": {
-    "mtime": 1787323515.4517114,
-    "seen": 1787581467.58932,
-    "ast_hash": "9a0184b9ef4ca77790a6ee757a576556",
+    "mtime": 1787642604.3524725,
+    "seen": 1787921755.7243633,
+    "ast_hash": "c7e0e49f09af480a7b6c57ff96041d94",
     "semantic_hash": ""
   },
   "minicpm-sidecar/README.md": {
@@ -3948,9 +3948,9 @@
     "semantic_hash": ""
   },
   "clawd-on-desk/tools/run-ui-smoke.mjs": {
-    "mtime": 1787585886.201751,
-    "seen": 1787586058.7857237,
-    "ast_hash": "59caf1c5c6761b72d68741e72d66cf92",
+    "mtime": 1787665056.0981057,
+    "seen": 1787921755.724208,
+    "ast_hash": "2fa6007f08e0a7d2f789e3af917c182b",
     "semantic_hash": ""
   },
   "clawd-on-desk/src/minicpm-history-store.js": {
@@ -3969,6 +3969,30 @@
     "mtime": 1787586393.1953316,
     "seen": 1787587300.8025675,
     "ast_hash": "639a21689843d06240a79785fb5264ad",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/tools/probe-tasks-tmp.mjs": {
+    "mtime": 1787645720.0063195,
+    "seen": 1787921755.724206,
+    "ast_hash": "8c52a4d2aedeb6a94c6e6b041d86cdac",
+    "semantic_hash": ""
+  },
+  "minicpm-sidecar/tests/test_task_dispatcher_persistence.py": {
+    "mtime": 1787664218.3022268,
+    "seen": 1787921755.7242906,
+    "ast_hash": "6bcdfa669604c4751793a70d98ad1a1d",
+    "semantic_hash": ""
+  },
+  ".build-final.txt": {
+    "mtime": 1787664591.449466,
+    "seen": 1787921755.7242968,
+    "ast_hash": "9574a0933784d5ae75ef04b7c155b402",
+    "semantic_hash": ""
+  },
+  "clawd-on-desk/test/minicpm-mcp-ipc.test.js": {
+    "mtime": 1787921975.956887,
+    "seen": 1787922056.351674,
+    "ast_hash": "facf8261206d9b04c858477f535babf7",
     "semantic_hash": ""
   }
 }

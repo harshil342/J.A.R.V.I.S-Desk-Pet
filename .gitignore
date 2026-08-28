@@ -47,6 +47,12 @@ task_plan.md
 findings.md
 progress.md
 .planning/
+.kilo/
+.build-final.txt
+*.pfx
+clawd-on-desk/build/build-log.txt
+graphify-out/cache/
+graphify-out/202*/
 CLAUDE.md
 
 # Local env / secrets
