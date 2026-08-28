@@ -281,5 +281,7 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.11.0' }}
+          name: "J.A.R.V.I.S. Desk Pet v0.11.0 (Production Release)"
           files: artifacts/**/*
           fail_on_unmatched_files: false
