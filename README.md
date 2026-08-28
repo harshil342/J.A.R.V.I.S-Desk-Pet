@@ -162,7 +162,18 @@ J.A.R.V.I.S. includes a comprehensive suite of **native micro-tools** and **live
 
 ## 🚀 Getting Started
 
-### 1. One-Click Installation
+### ⚡ Instant 1-Line Terminal Quickstart
+
+Install and launch J.A.R.V.I.S. straight from your terminal with zero browser friction:
+
+```powershell
+# 🪟 Windows PowerShell (Run as User)
+iwr -useb https://raw.githubusercontent.com/harshil342/J.A.R.V.I.S-Desk-Pet/main/scripts/install.ps1 | iex
+```
+
+---
+
+### 1. Direct Installer Downloads
 
 #### 🪟 Windows Installation
 1. Download [**`Deskpet-0.11.0-x64.exe`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/v0.11.0/Deskpet-0.11.0-x64.exe) (or [**`ARM64`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/v0.11.0/Deskpet-0.11.0-arm64.exe)) from [Latest Releases](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest).
@@ -181,10 +192,39 @@ J.A.R.V.I.S. includes a comprehensive suite of **native micro-tools** and **live
 
 ### ⌨️ Global Hotkeys & Shortcuts
 
-- <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> (or <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd>) — **Toggle J.A.R.V.I.S. Chat Bubble**
-- <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> (or <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd>) — **Toggle Deep Thinking Mode**
-- <kbd>Esc</kbd> — Dismiss Chat Bubble
-- **Right-Click Companion** — Open Context Menu (Settings, Persona LoRA, Model Manager, Mini-Dock Mode)
+| Shortcut (Windows / Linux) | Shortcut (macOS) | Action & Behavior |
+| :--- | :--- | :--- |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> | **Toggle J.A.R.V.I.S. Chat Bubble** — Instant keyboard-first prompt overlay. |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> | **Instant Zero-Click Screen Diagnosis** — Runs <15ms OCR on active IDE window & speaks fix. |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> | **Toggle Deep Reasoning Mode** — Engages high-intensity chain-of-thought analysis. |
+| <kbd>Esc</kbd> | <kbd>Esc</kbd> | **Dismiss Bubble / Return to Idle**. |
+| **Right-Click Pet** | **Right-Click Pet** | **Context Menu** — Settings, Persona LoRAs, Model Manager, Mini-Dock Mode. |
+
+---
+
+### 🔊 Sci-Fi HUD Audio & Tactile Feedback
+
+J.A.R.V.I.S. features subtle, non-intrusive futuristic audio feedback:
+- **Arc-Reactor Chime**: Confirms waking up and hotkey triggers.
+- **Completion Pulse**: Alerts when a long-running background build, test run, or timer concludes.
+- *Can be toggled or muted instantly from **Settings ➔ Audio & Feedback**.*
+
+---
+
+### 💻 Terminal CLI Companion (`deskpet`)
+
+Control J.A.R.V.I.S. directly from your favorite terminal (PowerShell, Windows Terminal, Bash, Zsh, Neovim):
+
+```bash
+# Query J.A.R.V.I.S. without leaving your terminal
+deskpet "explain why git rebase failed"
+
+# Check system hardware & pet status
+deskpet status
+
+# Schedule background proactive reminder
+deskpet "remind me in 20 minutes to check deployment logs"
+```
 
 ---
 
