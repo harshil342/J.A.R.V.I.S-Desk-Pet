@@ -78,13 +78,47 @@
 
 ## 🐾 Meet The 3 J.A.R.V.I.S. Companions
 
-Choose from our three dedicated J.A.R.V.I.S. companion models—each handcrafted for specific developer workflows:
+Choose from our three dedicated J.A.R.V.I.S. companion models—each handcrafted for specific developer workflows with custom CSS-animated SVG vector models:
 
 | Companion Model | Vector Avatar | Role & Capabilities | Ideal Workflow |
 | :--- | :---: | :--- | :--- |
-| **Plain J.A.R.V.I.S.** | <img src="assets/pets/jarvis.svg" width="90" alt="Plain J.A.R.V.I.S."> | **The Core Intelligent Companion.** Holographic desktop sentinel equipped with instant screen OCR, active window context, background agent monitoring, and rapid stack trace diagnosis. | Daily coding, build monitoring, pair programming. |
-| **J.A.R.V.I.S. R** | <img src="assets/pets/jarvis-r.svg" width="90" alt="J.A.R.V.I.S. R"> | **The Deep Reasoning &amp; Research Specialist.** High-intensity thinking companion with brain-spark synthesis, deep chain-of-thought analysis, semantic memory recall, and research tools. | Architectural planning, complex debugging, deep reasoning. |
-| **J.A.R.V.I.S. Mark** | <img src="assets/pets/jarvis-mark.svg" width="90" alt="J.A.R.V.I.S. Mark"> | **The High-Velocity Action &amp; MCP Sentinel.** Tactical automation engine with wizard-grade execution for multi-step MCP tools, document generation, and system operations. | DevOps automation, script execution, high-velocity workflows. |
+| **Plain J.A.R.V.I.S.** | <img src="assets/pets/jarvis.svg" width="100" alt="Plain J.A.R.V.I.S. Arc Reactor"> | **The Core Intelligent Companion.** Holographic Arc-Reactor HUD desktop sentinel equipped with instant screen OCR, active window context, background agent monitoring, and rapid stack trace diagnosis. | Daily coding, build monitoring, pair programming. |
+| **J.A.R.V.I.S. R** | <img src="assets/pets/jarvis-r.svg" width="100" alt="J.A.R.V.I.S. R Reasoning HUD"> | **The Deep Reasoning &amp; Research Specialist.** High-intensity thinking companion with live `QUERY... / PARSE_MODE` telemetry, quantum core flare, deep chain-of-thought analysis, and semantic memory recall. | Architectural planning, complex debugging, deep reasoning. |
+| **J.A.R.V.I.S. Mark** | <img src="assets/pets/jarvis-mark.svg" width="100" alt="J.A.R.V.I.S. Mark Cyber-Drone"> | **The High-Velocity Action &amp; Tactical Sentinel.** MAKO-9 cyber-drone with dark gunmetal hull, cyan visor optics, and wizard-grade execution for multi-step MCP tools, document generation, and system operations. | DevOps automation, script execution, high-velocity workflows. |
+
+---
+
+### 🛸 All Project J.A.R.V.I.S. Themes & State Animations
+
+Explore the full collection of real-time animated vector themes created for this project:
+
+#### 1. Arc Reactor HUD Suite (`jarvis-arc`)
+| Idle Orbit | Deep Reasoning (`QUERY`) | Active Stream (`PROCESSING`) |
+| :---: | :---: | :---: |
+| <img src="assets/pets/jarvis-arc-idle.svg" width="110" alt="Arc Reactor Idle"> | <img src="assets/pets/jarvis-arc-thinking.svg" width="110" alt="Arc Reactor Thinking"> | <img src="assets/pets/jarvis-arc-working.svg" width="110" alt="Arc Reactor Working"> |
+| *Concentric spinning rings &amp; hex frame* | *High-speed dotted parse &amp; query orbit blip* | *Flared core, radar scanline &amp; data burst* |
+
+| Priority Focus (`ATTENTION`) | System Breach (`ALERT`) | Low-Power Standby (`SLEEP`) |
+| :---: | :---: | :---: |
+| <img src="assets/pets/jarvis-arc-attention.svg" width="110" alt="Arc Reactor Attention"> | <img src="assets/pets/jarvis-arc-error.svg" width="110" alt="Arc Reactor Error"> | <img src="assets/pets/jarvis-arc-sleeping.svg" width="110" alt="Arc Reactor Sleeping"> |
+| *Target lock scan with strobe telemetry* | *Crimson alert perimeter &amp; pulse flare* | *Low-frequency pulse &amp; dimmed energy grid* |
+
+#### 2. MAKO-9 Cyber-Drone Suite (`jarvis`)
+| Patrol Hover | Quantum Synthesis | High-Throughput Compute |
+| :---: | :---: | :---: |
+| <img src="assets/pets/jarvis-mako-idle.svg" width="110" alt="MAKO Drone Idle"> | <img src="assets/pets/jarvis-mako-thinking.svg" width="110" alt="MAKO Drone Thinking"> | <img src="assets/pets/jarvis-mako-working.svg" width="110" alt="MAKO Drone Working"> |
+| *Stabilizer fin motion &amp; arc aura* | *Holographic ring with orbiting data blocks* | *Dual particle discharge &amp; core glow* |
+
+| Target Lock (`ATTENTION`) | Diagnostic Breach (`ALERT`) | Low-Power Hibernate (`SLEEP`) |
+| :---: | :---: | :---: |
+| <img src="assets/pets/jarvis-mako-attention.svg" width="110" alt="MAKO Drone Attention"> | <img src="assets/pets/jarvis-mako-error.svg" width="110" alt="MAKO Drone Error"> | <img src="assets/pets/jarvis-mako-sleeping.svg" width="110" alt="MAKO Drone Sleeping"> |
+| *Optic visor focus with tactical targeting* | *Warning strobe &amp; hull telemetry breach* | *Dorsal beacon power-down &amp; grounded rest* |
+
+#### 3. J.A.R.V.I.S. Classic Interface (`jarvis-classic`)
+| Classic Arc Core | Classic Telemetry | High-Load Processing |
+| :---: | :---: | :---: |
+| <img src="assets/pets/jarvis-classic.svg" width="110" alt="J.A.R.V.I.S. Classic"> | <img src="assets/pets/jarvis-classic-thinking.svg" width="110" alt="Classic Thinking"> | <img src="assets/pets/jarvis-classic-working.svg" width="110" alt="Classic Working"> |
+| *10-point mechanical notch ring &amp; cyan core* | *Telemetry parse sweep &amp; rotating orbit* | *Multi-arc flare &amp; high-output core glow* |
 
 > 💡 **Custom Personas & Skins**: Switch companion styles, import custom `.zip` sprite packs, or load fine-tuned LoRA adapters directly in **Settings ➔ Deskpet Assistant**.
 
