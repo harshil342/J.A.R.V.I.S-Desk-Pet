@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld("minicpm", {
   hideWindow: () => ipcRenderer.invoke("minicpm:hide-window"),
   showWindow: () => ipcRenderer.invoke("minicpm:show-window"),
   focusWindow: () => ipcRenderer.invoke("minicpm:focus-window"),
-  openContextMenu: () => ipcRenderer.send("minicpm:open-context-menu"),
+  openContextMenu: (opts) => ipcRenderer.send("minicpm:open-context-menu", opts),
 
   // Updater
   updateStatus: () => ipcRenderer.invoke("minicpm:update-status"),

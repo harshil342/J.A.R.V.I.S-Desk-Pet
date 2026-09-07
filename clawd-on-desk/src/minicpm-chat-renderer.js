@@ -58,7 +58,21 @@ function refreshStaticUi() {
 document.body.addEventListener("contextmenu", (event) => {
   event.preventDefault();
   if (window.minicpm && typeof window.minicpm.openContextMenu === "function") {
-    window.minicpm.openContextMenu();
+    const selectedText = window.getSelection ? window.getSelection().toString() : "";
+    let lastReply = "";
+    const speakEl = document.querySelector(".speak");
+    if (speakEl) {
+      lastReply = speakEl.innerText || speakEl.textContent || "";
+    } else {
+      const lrEl = document.getElementById("last-reply-region");
+      if (lrEl) lastReply = lrEl.innerText || lrEl.textContent || "";
+    }
+    window.minicpm.openContextMenu({
+      x: Math.round(event.clientX),
+      y: Math.round(event.clientY),
+      selectedText,
+      lastReply,
+    });
   }
 });
 
@@ -938,7 +952,7 @@ function naturalAskWidth(text) {
   widthMeasurer.style.font = window.getComputedStyle(content).font;
   widthMeasurer.textContent = sample;
   const textW = widthMeasurer.offsetWidth;
-  return Math.max(80, Math.min(320, Math.round(textW + 32)));
+  return Math.max(160, Math.min(320, Math.round(textW + 32)));
 }
 
 // For fixed-text panels (command replies, errors, narration, speak phase, …)

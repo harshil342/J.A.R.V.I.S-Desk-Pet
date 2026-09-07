@@ -236,19 +236,8 @@ def web_search(query: str) -> str:
             if txt:
                 parts.append(txt)
     if not parts:
-        # DDG instant-answer miss — fall back to Wikipedia before giving
-        # up, so "search for X" gets a real answer instead of "rephrase
-        # or be more specific". _wiki_topic_lookup strips interrogative
-        # framing and trims progressively; wikipedia_summary now resolves
-        # misses via relevance-ranked search. Returned without the
-        # "Web search:" prefix so canned_reply relays wiki prose verbatim.
-        wiki = _wiki_topic_lookup(query) or (
-            wikipedia_summary(query.strip()) if len(query.split()) == 1 else None
-        )
-        if wiki:
-            return wiki
-        # Second fallback: query DuckDuckGo HTML search for live search snippets
-        # to ground the butler when instant answers miss.
+        # First fallback: query DuckDuckGo HTML search for live search snippets
+        # to ground the butler with actual web results on technical/specific queries.
         try:
             r_html = httpx.get(
                 "https://html.duckduckgo.com/html/",
@@ -256,8 +245,9 @@ def web_search(query: str) -> str:
                 headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) DeskPet/1.0"},
                 timeout=5,
             )
-            if r_html.status_code == 200:
-                raw_snippets = re.findall(r'result__snippet.*?>(.*?)</a>', r_html.text, re.DOTALL)
+            raw_html = getattr(r_html, "text", "") or ""
+            if r_html.status_code == 200 and raw_html:
+                raw_snippets = re.findall(r'result__snippet.*?>(.*?)</a>', raw_html, re.DOTALL)
                 clean_snippets = [
                     re.sub(r'<[^>]+>', '', s).strip() for s in raw_snippets if s.strip()
                 ]
@@ -265,6 +255,14 @@ def web_search(query: str) -> str:
                     return "Web search: " + " | ".join(clean_snippets[:3])[:1200]
         except Exception:
             pass
+
+        # Second fallback: Wikipedia topic lookup if live search yielded nothing
+        wiki = _wiki_topic_lookup(query) or (
+            wikipedia_summary(query.strip()) if len(query.split()) == 1 else None
+        )
+        if wiki:
+            return wiki
+
         return f"No instant answer found for '{query}'. Rephrase or be more specific."
     return "Web search: " + " | ".join(parts)[:1200]
 
@@ -1812,10 +1810,26 @@ def _parse_math(text: str) -> Optional[str]:
     if m:
         a, b = float(m.group(1)), float(m.group(2))
         return f"{a:g}% of {b:g} = {a * b / 100:g}"
-    m = _RE_MATHFN.search(text)
-    if m:
-        v = _math.sqrt(float(m.group(1)))
-        return f"sqrt({m.group(1)}) = {v:g}"
+    fn_m = _RE_MATHFN.search(text)
+    if fn_m:
+        fn_val = _math.sqrt(float(fn_m.group(1)))
+        # Check compound arithmetic: e.g. "what is sqrt(144) plus 50" -> "what is 12 plus 50"
+        replaced = text[:fn_m.start()] + f" {fn_val:g} " + text[fn_m.end():]
+        m_arith = _RE_ARITH.search(replaced)
+        if m_arith:
+            expr = m_arith.group(1)
+            if re.search(r"[-+*/^÷×]", expr) or _RE_CALC_HINT.search(text):
+                expr_clean = expr.replace(",", "").replace("×", "*").replace("÷", "/")
+                expr_clean = re.sub(r"\s*plus\s*", " + ", expr_clean, flags=re.IGNORECASE)
+                expr_clean = re.sub(r"\s*minus\s*", " - ", expr_clean, flags=re.IGNORECASE)
+                expr_clean = re.sub(r"\s*(?:times|multiplied\s+by|x)\s*", " * ", expr_clean, flags=re.IGNORECASE)
+                expr_clean = re.sub(r"\s*(?:divided\s+by|over)\s*", " / ", expr_clean, flags=re.IGNORECASE)
+                expr_clean = expr_clean.replace("^", "**")
+                expr_clean = re.sub(r"\s+", "", expr_clean)
+                val = _safe_eval(expr_clean)
+                if val is not None:
+                    return f"{expr_clean} = {val:g}"
+        return f"sqrt({fn_m.group(1)}) = {fn_val:g}"
     m = _RE_ARITH.search(text)
     if not m:
         return None
@@ -1954,6 +1968,48 @@ def _parse_lenient_reminder(text: str) -> tuple[float, str] | None:
             break
         task = stripped
     return (minutes, task or "your reminder")
+
+
+def _check_local_memory(text: str) -> Optional[str]:
+    """Check if the question matches any fact stored in notes.md."""
+    # Never hijack pronoun follow-ups or referential questions
+    if re.search(r"\b(?:he|she|him|her|they|them|his|hers)\b", text, re.I):
+        return None
+    f = _notes_file()
+    if not f.exists():
+        return None
+    try:
+        content = f.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    lines = [ln for ln in content.splitlines() if ln.startswith("- ")]
+    if not lines:
+        return None
+
+    stop = {
+        "what", "when", "where", "which", "who", "whom", "whose", "why", "how",
+        "is", "are", "was", "were", "the", "a", "an", "and", "or", "in", "on", "at",
+        "to", "for", "with", "about", "our", "your", "my", "tell", "show", "give",
+        "does", "did", "can", "could", "would", "should", "from", "into",
+        "he", "she", "it", "they", "them", "him", "her", "his", "their",
+    }
+    words = [w for w in re.sub(r"[^a-z0-9 ]", " ", text.lower()).split()
+             if len(w) > 2 and w not in stop]
+    if not words:
+        return None
+
+    hits = []
+    for ln in lines:
+        low = ln.lower()
+        matched = [w for w in words if w in low]
+        if len(matched) >= 2 or (len(words) == 1 and words[0] in low):
+            hits.append((len(matched), ln))
+
+    if hits:
+        hits.sort(key=lambda x: x[0], reverse=True)
+        clean_lines = [h[1] for h in hits[:5]]
+        return "From my memory:\n" + "\n".join(clean_lines)
+    return None
 
 
 def route_tools(
@@ -2349,6 +2405,13 @@ def route_tools(
                 return results
             run(web_search, q, label="web_search")
             return results
+
+    # 9a' — questions about facts stored in local memory (notes.md).
+    # Intercept queries matching saved facts before falling through to open search.
+    mem_hit = _check_local_memory(text)
+    if mem_hit:
+        results.append(("recall", mem_hit))
+        return results
 
     # 9b — knowledge lookup: bare topics AND open questions that name a
     # thing ("nikola tesla death", "how did nikola tesla die"). These are

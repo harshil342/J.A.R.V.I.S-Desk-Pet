@@ -366,6 +366,8 @@ def test_wikipedia_summary_resolves_misses_via_fulltext_search(monkeypatch):
         ("what is 15 percent of 240", "15% of 240 = 36"),
         ("square root of 144", "sqrt(144) = 12"),
         ("how much is 1,000 plus 250", "1000+250 = 1250"),
+        ("What is sqrt(144) plus 50", "12+50 = 62"),
+        ("sqrt(144) + 50", "12+50 = 62"),
     ],
 )
 def test_math_parse(text, expected):
@@ -688,5 +690,23 @@ def test_server_system_prompt_network_awareness():
         assert "Do NOT invent, speculate, or hallucinate" in sys_msg_off
     finally:
         tools.set_internet_connection_override(None)
+
+
+def test_local_memory_route_before_web_search(tmp_path, monkeypatch):
+    test_notes = tmp_path / "notes.md"
+    test_notes.write_text("# DeskPet Memory\n\n- our staging database port is 5433\n", encoding="utf-8")
+    monkeypatch.setattr(tools, "_notes_file", lambda: test_notes)
+
+    # In offline mode, web search would refuse. But local memory should intercept it.
+    tools.set_internet_connection_override(False)
+    try:
+        routed = tools.route_tools("What port is staging on?")
+        assert len(routed) == 1
+        label, content = routed[0]
+        assert label == "recall"
+        assert "5433" in content
+    finally:
+        tools.set_internet_connection_override(None)
+
 
 

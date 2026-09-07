@@ -25,7 +25,7 @@
 // has no torch / transformers / peft dependency and ships as a single
 // binary per platform alongside llama-server.
 
-const { BrowserWindow, ipcMain, screen, shell, Menu, app } = require("electron");
+const { BrowserWindow, ipcMain, screen, shell, Menu, app, clipboard } = require("electron");
 const { spawn, execFile } = require("child_process");
 const { promisify } = require("util");
 const execFileAsync = promisify(execFile);
@@ -1698,9 +1698,35 @@ module.exports = function initMinicpmChat(ctx) {
 
   // ── Context menu (right-click on bubble) ───────────────────────────────
 
-  async function openContextMenu() {
+  async function openContextMenu(opts = {}) {
+    const { x, y, selectedText, lastReply } = opts || {};
     const m = await sidecar.listModels();
     const items = [];
+
+    // Clipboard copy actions
+    if (selectedText && selectedText.trim()) {
+      items.push({
+        label: "Copy",
+        click: () => {
+          clipboard.writeText(selectedText);
+        },
+      });
+    } else {
+      items.push({
+        label: "Copy",
+        role: "copy",
+      });
+    }
+    if (lastReply && lastReply.trim()) {
+      items.push({
+        label: "Copy full response",
+        click: () => {
+          clipboard.writeText(lastReply.trim());
+        },
+      });
+    }
+    items.push({ type: "separator" });
+
     if (m && Array.isArray(m.items) && m.items.length) {
       for (const item of m.items) {
         items.push({
@@ -1725,7 +1751,7 @@ module.exports = function initMinicpmChat(ctx) {
     const updLabel = updateStatus
       ? (updateStatus.available
           ? `● Update available: ${updateStatus.remote_revision} → Update now`
-          : `Up to date (${updateStatus.local_revision || "?"})`)
+          : "Version: Up to date")
       : "Check for model updates";
     items.push({
       label: updLabel,
@@ -1753,7 +1779,7 @@ module.exports = function initMinicpmChat(ctx) {
 
     items.push({ type: "separator" });
     items.push({
-      label: `Pet narration (narrate on Stop / errors)`,
+      label: "Pet narration on agent errors",
       type: "checkbox",
       checked: narrationEnabled,
       click: (it) => { setNarrationEnabled(!!it.checked); },
@@ -1769,7 +1795,14 @@ module.exports = function initMinicpmChat(ctx) {
     });
 
     const menu = Menu.buildFromTemplate(items);
-    if (bubble && !bubble.isDestroyed()) menu.popup({ window: bubble });
+    if (bubble && !bubble.isDestroyed()) {
+      const popupOpts = { window: bubble };
+      if (typeof x === "number" && typeof y === "number") {
+        popupOpts.x = x;
+        popupOpts.y = y;
+      }
+      menu.popup(popupOpts);
+    }
   }
 
   // ── IPC ───────────────────────────────────────────────────────────────
@@ -1874,7 +1907,7 @@ module.exports = function initMinicpmChat(ctx) {
   }
 
   ipcMain.removeAllListeners("minicpm:open-context-menu");
-  ipcMain.on("minicpm:open-context-menu", () => { void openContextMenu(); });
+  ipcMain.on("minicpm:open-context-menu", (_evt, opts) => { void openContextMenu(opts); });
 
   try { ipcMain.removeHandler("minicpm:get-chat-params"); } catch {}
   ipcMain.handle("minicpm:get-chat-params", async () => getChatParams());
