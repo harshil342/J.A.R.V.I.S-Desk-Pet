@@ -960,6 +960,13 @@
     });
   }
 
+  const mountedControls = {
+    accent: null,
+    sliders: new Map(),
+    selects: new Map(),
+    address: null,
+  };
+
   function buildAssistantOptionList(rows) {
     const list = el("div", { className: "settings-option-list assistant-option-list" });
     for (const row of rows) {
@@ -1030,6 +1037,7 @@
     });
 
     repaint();
+    mountedControls.accent = { repaint, row };
     return row;
   }
 
@@ -1085,6 +1093,7 @@
       const ok = await commitPref(key, next);
       if (!ok) paint(currentValue());
     });
+    mountedControls.sliders.set(key, { paint, currentValue, row });
     return row;
   }
 
@@ -1111,6 +1120,7 @@
       const ok = await commitPref(key, next);
       if (!ok) select.value = String(snapPref(key, fallback));
     });
+    mountedControls.selects.set(key, { select, fallback, row });
     return row;
   }
 
@@ -1166,11 +1176,15 @@
       ev.preventDefault();
       void flushCommit().then(syncFromSnapshot);
     });
+    mountedControls.address = { syncFromSnapshot, input, row };
     return row;
   }
 
   function renderAssistantSection(box) {
     box.innerHTML = "";
+    mountedControls.sliders.clear();
+    mountedControls.selects.clear();
+    mountedControls.address = null;
     const section = helpers.buildSection("", []);
     const rows = section.querySelector(".section-rows");
 
@@ -1269,8 +1283,6 @@
     }));
 
     box.appendChild(section);
-
-    box.appendChild(section);
   }
 
   function buildAssistantBriefingHourRow() {
@@ -1299,6 +1311,66 @@
       fallback: 21,
       options,
     });
+  }
+
+  const ASSISTANT_IN_PLACE_KEYS = new Set([
+    "assistantAccent",
+    "accentPreset",
+    "bubbleOpacity",
+    "bubbleBlur",
+    "bubbleTextScale",
+    "bubbleDensity",
+    "typewriterEnabled",
+    "assistantAddress",
+    "briefingHour",
+    "recapHour",
+    "reminderChime",
+    "autoMemory",
+    "clarifyStrength",
+    "idleSleepSeconds",
+  ]);
+
+  function patchInPlace(changes) {
+    const keys = changes ? Object.keys(changes) : [];
+    if (keys.length === 0) return false;
+    if (!keys.every((key) => ASSISTANT_IN_PLACE_KEYS.has(key))) return false;
+
+    for (const key of keys) {
+      if (key === "assistantAccent" || key === "accentPreset") {
+        if (!mountedControls.accent || !document.body.contains(mountedControls.accent.row)) return false;
+      } else if (mountedControls.sliders.has(key)) {
+        const s = mountedControls.sliders.get(key);
+        if (!s || !document.body.contains(s.row)) return false;
+      } else if (mountedControls.selects.has(key)) {
+        const s = mountedControls.selects.get(key);
+        if (!s || !document.body.contains(s.row)) return false;
+      } else if (key === "assistantAddress") {
+        if (!mountedControls.address || !document.body.contains(mountedControls.address.row)) return false;
+      } else if (key === "typewriterEnabled" || key === "reminderChime" || key === "autoMemory") {
+        const meta = core.state.mountedControls.generalSwitches.get(key);
+        if (!meta || !document.body.contains(meta.element)) return false;
+      }
+    }
+
+    for (const key of keys) {
+      if (key === "assistantAccent" || key === "accentPreset") {
+        mountedControls.accent.repaint();
+      } else if (mountedControls.sliders.has(key)) {
+        const s = mountedControls.sliders.get(key);
+        s.paint(s.currentValue());
+      } else if (mountedControls.selects.has(key)) {
+        const s = mountedControls.selects.get(key);
+        s.select.value = String(snapPref(key, s.fallback));
+      } else if (key === "assistantAddress") {
+        mountedControls.address.syncFromSnapshot();
+      } else if (key === "typewriterEnabled" || key === "reminderChime" || key === "autoMemory") {
+        const meta = core.state.mountedControls.generalSwitches.get(key);
+        core.state.transientUiState.generalSwitches.delete(key);
+        const visualOn = !!(core.state.snapshot && core.state.snapshot[key]);
+        helpers.setSwitchVisual(meta.element, visualOn, { pending: false });
+      }
+    }
+    return true;
   }
 
   // ── Refresh + polling ─────────────────────────────────────────────────
@@ -1347,6 +1419,7 @@
 
   async function render(parent) {
     cleanupTimers();
+    const savedScrollTop = parent ? parent.scrollTop : 0;
     parent.innerHTML = "";
 
     const ctx = {
@@ -1396,6 +1469,15 @@
     parent.appendChild(ctx.adapterBox);
     parent.appendChild(ctx.advancedBox);
 
+    if (savedScrollTop > 0 && parent) {
+      parent.scrollTop = savedScrollTop;
+      requestAnimationFrame(() => {
+        if (parent && parent.scrollTop !== savedScrollTop) {
+          parent.scrollTop = savedScrollTop;
+        }
+      });
+    }
+
     mounted = true;
     visibilityHandler = () => {
       if (document.hidden || core.state.activeTab !== "minicpm") {
@@ -1416,6 +1498,9 @@
     document.addEventListener("visibilitychange", visibilityHandler);
 
     await refreshAll(ctx);
+    if (savedScrollTop > 0 && parent) {
+      parent.scrollTop = savedScrollTop;
+    }
     startHealthPolling(ctx);
   }
 
@@ -1425,6 +1510,7 @@
     ops = core.ops;
     core.tabs.minicpm = {
       render: (parent) => { void render(parent); },
+      patchInPlace,
     };
   }
 

@@ -201,4 +201,15 @@ describe("theme metadata facade helpers", () => {
     assert.deepStrictEqual(themes.map((theme) => theme.id), ["clawd", "user-cat"]);
     assert.strictEqual(themes.find((theme) => theme.id === "clawd").name, "Builtin Clawd");
   });
+
+  it("normalizes the 3 J.A.R.V.I.S. companion names consistently", () => {
+    const { normalizeThemeName } = require("../src/theme-metadata");
+    assert.strictEqual(normalizeThemeName("jarvis-arc", "J.A.R.V.I.S"), "J.A.R.V.I.S.");
+    assert.strictEqual(normalizeThemeName("jarvis-arc", "Plain J.A.R.V.I.S."), "J.A.R.V.I.S.");
+    assert.strictEqual(normalizeThemeName("jarvis-classic", "Jarvis Classic"), "jarvis-classic");
+    assert.strictEqual(normalizeThemeName("jarvis-classic", "jarvis-classic"), "jarvis-classic");
+    assert.strictEqual(normalizeThemeName("jarvis", "Jarvis Ã¢â‚¬â€  Mako Class"), "jarvis-Mako");
+    assert.strictEqual(normalizeThemeName("jarvis-mako", "MAKO-9"), "jarvis-Mako");
+    assert.strictEqual(normalizeThemeName("cybercat", "Cyber Cat"), "Cyber Cat");
+  });
 });

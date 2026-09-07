@@ -709,4 +709,52 @@ def test_local_memory_route_before_web_search(tmp_path, monkeypatch):
         tools.set_internet_connection_override(None)
 
 
+def test_division_by_zero_handling():
+    assert tools.calculate("100 / 0") == "Division by zero is undefined, sir."
+    assert tools.calculate("100 divided by 0") == "Division by zero is undefined, sir."
+    hits = tools.route_tools("100 divided by 0")
+    assert hits and hits[0][0] == "calculate"
+    assert "division by zero is undefined" in hits[0][1]
+    canned = tools.canned_reply("calculate", hits[0][1])
+    assert canned == "Division by zero is undefined, sir."
 
+
+def test_document_location_routing_and_reply(tmp_path, monkeypatch):
+    monkeypatch.setenv("DESKPET_DOCS_DIR", str(tmp_path))
+    # Test fallback before any doc created
+    loc = tools.get_document_location()
+    assert str(tmp_path) in loc
+
+    # Create a document
+    doc_res = tools.create_document("draft", "Great Wall of China")
+    assert "Great Wall of China" in doc_res
+
+    # Query location
+    loc_after = tools.get_document_location()
+    assert "great-wall" in loc_after.lower() or "draft" in loc_after.lower()
+
+    for query in [
+        "where is the document location",
+        "where was the document saved",
+        "document location",
+        "where did you save the document",
+    ]:
+        hits = tools.route_tools(query)
+        assert hits, f"Query '{query}' did not route"
+        assert hits[0][0] == "document_location"
+        assert str(tmp_path) in hits[0][1]
+        canned = tools.canned_reply("document_location", hits[0][1])
+        assert canned == hits[0][1]
+        assert "Wikipedia" not in canned
+
+
+def test_memory_recall_negative_hit_and_no_status():
+    # Negative recall query should not fall through to Wikipedia or system status
+    assert not tools._RE_STATUS.search("What did I say about my flight ticket?")
+    assert not tools._RE_STATUS.search("Did I mention anything about groceries?")
+
+    hits = tools.route_tools("What did I say about my flight ticket?")
+    assert hits and hits[0][0] == "recall"
+    canned = tools.canned_reply(hits[0][0], hits[0][1])
+    assert canned == "I don't have any notes saved about flight ticket, sir."
+    assert "system status" not in canned.lower()

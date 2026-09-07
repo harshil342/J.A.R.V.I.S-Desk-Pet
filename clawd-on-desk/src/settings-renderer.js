@@ -64,13 +64,26 @@ function renderPlaceholder(parent) {
 function renderContent() {
   const content = document.getElementById("content");
   if (!content) return;
+  const prevTab = content.dataset.renderedTab;
+  const currentTab = core.state.activeTab;
+  const savedScrollTop = (prevTab === currentTab) ? content.scrollTop : 0;
+
   core.ops.clearMountedControls();
   content.innerHTML = "";
+  content.dataset.renderedTab = currentTab;
   const tab = core.tabs[core.state.activeTab];
   if (tab && typeof tab.render === "function") {
     tab.render(content, core);
   } else {
     renderPlaceholder(content);
+  }
+  if (savedScrollTop > 0) {
+    content.scrollTop = savedScrollTop;
+    requestAnimationFrame(() => {
+      if (content.scrollTop !== savedScrollTop) {
+        content.scrollTop = savedScrollTop;
+      }
+    });
   }
 }
 

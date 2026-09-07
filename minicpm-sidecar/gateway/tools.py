@@ -702,6 +702,29 @@ def _tpl_document(topic: str, stamp: str) -> str:
 """
 
 
+_LAST_CREATED_DOC: Optional[str] = None
+
+
+def get_document_location(filename: str = "") -> str:
+    global _LAST_CREATED_DOC
+    directory = str(docs_dir())
+    if _LAST_CREATED_DOC and Path(_LAST_CREATED_DOC).exists():
+        return (f"Your documents are stored in: {directory}\n"
+                f"The latest generated document is: {_LAST_CREATED_DOC}")
+    try:
+        md_files = sorted(
+            [p for p in docs_dir().glob("*.md") if p.name not in ("notes.md", "todo.md")],
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if md_files:
+            return (f"Your documents are stored in: {directory}\n"
+                    f"The latest generated document is: {md_files[0]}")
+    except Exception:
+        pass
+    return f"Your documents are saved in: {directory}"
+
+
 def create_document(doc_type: str, topic: str) -> str:
     topic = (topic or "").strip()
     if not topic:
@@ -716,6 +739,8 @@ def create_document(doc_type: str, topic: str) -> str:
     fname = f"{_slug(kind)}-{_slug(topic) or 'draft'}-{datetime.now():%Y%m%d-%H%M}.md"
     path = docs_dir() / fname
     path.write_text(body, encoding="utf-8")
+    global _LAST_CREATED_DOC
+    _LAST_CREATED_DOC = str(path)
     return (f"Drafted a {kind.replace('_', ' ')} document about "
             f"'{topic or 'the topic'}' and saved it to {path}.")
 
@@ -1131,7 +1156,7 @@ _MATH_FUNCS = {
 _MATH_CONSTS = {"pi": _math.pi, "e": _math.e}
 
 
-def _safe_eval(expr: str) -> Optional[float]:
+def _safe_eval(expr: str, raise_zero_div: bool = False) -> Optional[float]:
     """Evaluate an arithmetic expression via AST — no eval(), no builtins."""
     try:
         tree = ast.parse(expr, mode="eval")
@@ -1170,6 +1195,10 @@ def _safe_eval(expr: str) -> Optional[float]:
         val = _eval(tree)
         if isinstance(val, (int, float)) and val == val and abs(val) != float("inf"):
             return float(val)
+    except ZeroDivisionError:
+        if raise_zero_div:
+            raise
+        return None
     except Exception:
         return None
     return None
@@ -1179,7 +1208,17 @@ def calculate(expr: str) -> str:
     expr = (expr or "").strip()
     if not expr:
         return "Nothing to calculate — give me an expression."
-    val = _safe_eval(expr)
+    expr_clean = expr.replace(",", "").replace("×", "*").replace("÷", "/")
+    expr_clean = re.sub(r"\s*plus\s*", " + ", expr_clean, flags=re.IGNORECASE)
+    expr_clean = re.sub(r"\s*minus\s*", " - ", expr_clean, flags=re.IGNORECASE)
+    expr_clean = re.sub(r"\s*(?:times|multiplied\s+by|x)\s*", " * ", expr_clean, flags=re.IGNORECASE)
+    expr_clean = re.sub(r"\s*(?:divided\s+by|over)\s*", " / ", expr_clean, flags=re.IGNORECASE)
+    expr_clean = expr_clean.replace("^", "**")
+    expr_clean = re.sub(r"\s+", "", expr_clean)
+    try:
+        val = _safe_eval(expr_clean, raise_zero_div=True)
+    except ZeroDivisionError:
+        return "Division by zero is undefined, sir."
     if val is None:
         return f"I could not evaluate '{expr}'. Give me plain arithmetic, sir."
     pretty = f"{val:g}"
@@ -1390,9 +1429,17 @@ def recall_fact(query: str = "", key: str = "", topic: str = "", term: str = "",
         return "I have nothing saved in my memory yet, sir."
     if not query:
         return "My memory contains:\n" + "\n".join(lines[-10:])
-    words = [w for w in re.sub(r"[^a-z0-9 ]", " ", query).split() if len(w) > 2]
+    stop = {
+        "what", "when", "where", "which", "who", "whom", "whose", "why", "how",
+        "is", "are", "was", "were", "the", "a", "an", "and", "or", "in", "on", "at",
+        "to", "for", "with", "about", "our", "your", "my", "tell", "show", "give",
+        "does", "did", "can", "could", "would", "should", "from", "into", "any", "anything",
+        "he", "she", "it", "they", "them", "him", "her", "his", "their", "me", "i", "we",
+        "you", "say", "said", "note", "notes", "remember", "recall", "know",
+    }
+    words = [w for w in re.sub(r"[^a-z0-9 ]", " ", query).split() if len(w) > 2 and w not in stop]
     hits = [ln for ln in lines
-            if any(w in ln.lower() for w in words) or query in ln.lower()]
+            if (words and any(w in ln.lower() for w in words)) or (query and query in ln.lower())]
     if not hits:
         return f"I have no memory matching '{query}'."
     return "From my memory:\n" + "\n".join(hits[:8])
@@ -1513,6 +1560,18 @@ _RE_TODO_ADD = re.compile(
     # "add to my todo: buy milk" | "add buy milk to my todo"
     r"\badd\s+(?:to\s+)?(?:my\s+)?(?:todo|to-do|todos|task\s*list)\b[:\s]*(.+)"
     r"|\badd\s+(.+?)\s+(?:to|on)\s+(?:my\s+)?(?:todo|to-do|todos|task\s*list|tasks)\b",
+    re.IGNORECASE,
+)
+_RE_DOC_LOCATION = re.compile(
+    r"\b(?:"
+    r"where\s+(?:is|are|was)\s+(?:the|my|this|that|a)?\s*(?:documents?|docs?|files?|notes?)(?:\s+(?:saved|stored|located|location))?|"
+    r"(?:what\s+is|tell\s+me|show\s+me|check)?\s*(?:the|my)?\s*(?:documents?|docs?|files?)\s+(?:location|path|directory|folder)|"
+    r"where\s+did\s+you\s+(?:save|put|store)\s+(?:the|it|that|this|my)(?:\s+(?:document|doc|file))?|"
+    r"where\s+(?:was|is)\s+it\s+saved|"
+    r"document\s+location|"
+    r"documents?\s+(?:directory|folder|path)|"
+    r"where\s+are\s+(?:my\s+)?documents"
+    r")\b",
     re.IGNORECASE,
 )
 _RE_DOC = re.compile(
@@ -1637,8 +1696,17 @@ _RE_MY_ATTR_Q = re.compile(
     re.IGNORECASE,
 )
 _RE_RECALL = re.compile(
-    r"\b(?:what\s+do\s+you\s+(?:remember|know)|do\s+you\s+remember|recall|"
-    r"remind\s+me\s+what)\b\s*(?:about\s+)?(.*)", re.IGNORECASE)
+    r"\b(?:"
+    r"what\s+do\s+you\s+(?:remember|know)|"
+    r"do\s+you\s+(?:remember|know)|"
+    r"what\s+did\s+i\s+(?:say|tell\s+you|mention|note|write)|"
+    r"did\s+i\s+(?:say|tell\s+you|mention)\s+anything|"
+    r"recall|"
+    r"remind\s+me\s+what|"
+    r"(?:search|check)\s+(?:my\s+)?(?:notes|memory)\s+for"
+    r")\b\s*(?:about\s+)?(.*)",
+    re.IGNORECASE,
+)
 _RE_DESTRUCTIVE = re.compile(
     r"\b(?:delete|remove|erase|format|wipe|destroy|nuke)\b.*"
     r"\b(?:system\s*32|windows\s+folder|hard\s*drive|ssd|disk|drive|"
@@ -1826,7 +1894,10 @@ def _parse_math(text: str) -> Optional[str]:
                 expr_clean = re.sub(r"\s*(?:divided\s+by|over)\s*", " / ", expr_clean, flags=re.IGNORECASE)
                 expr_clean = expr_clean.replace("^", "**")
                 expr_clean = re.sub(r"\s+", "", expr_clean)
-                val = _safe_eval(expr_clean)
+                try:
+                    val = _safe_eval(expr_clean, raise_zero_div=True)
+                except ZeroDivisionError:
+                    return f"{expr_clean}: division by zero is undefined"
                 if val is not None:
                     return f"{expr_clean} = {val:g}"
         return f"sqrt({fn_m.group(1)}) = {fn_val:g}"
@@ -1836,7 +1907,7 @@ def _parse_math(text: str) -> Optional[str]:
     expr = m.group(1)
     # Word-form operators need an explicit question hint so that ordinary
     # sentences containing 'x' or 'plus' never reach the evaluator.
-    if not re.search(r"[-+*/^÷×]", expr) and not _RE_CALC_HINT.search(text):
+    if not re.search(r"[-+*/^÷×]|divided\s+by|multiplied\s+by", expr, re.I) and not _RE_CALC_HINT.search(text):
         return None
     expr = expr.replace(",", "").replace("×", "*").replace("÷", "/")
     expr = re.sub(r"\s*plus\s*", " + ", expr, flags=re.IGNORECASE)
@@ -1845,7 +1916,10 @@ def _parse_math(text: str) -> Optional[str]:
     expr = re.sub(r"\s*(?:divided\s+by|over)\s*", " / ", expr, flags=re.IGNORECASE)
     expr = expr.replace("^", "**")
     expr = re.sub(r"\s+", "", expr)
-    val = _safe_eval(expr)
+    try:
+        val = _safe_eval(expr, raise_zero_div=True)
+    except ZeroDivisionError:
+        return f"{expr}: division by zero is undefined"
     if val is None:
         return None
     return f"{expr} = {val:g}"
@@ -1915,7 +1989,8 @@ _RE_TOPIC_BLOCKLIST = re.compile(
     r"write|draft|create|read|delete|remove|clear|add|mark|done|"
     r"summar\w+|translate|rewrite|convert|calculat\w+|comput\w+|"
     r"search|find|check|remember|recall|note|take|capture|lock|"
-    r"mute|unmute|increase|decrease|turn|send|schedule|list)\b",
+    r"mute|unmute|increase|decrease|turn|send|schedule|list|"
+    r"documents?|docs?|files?|folders?|location|directory|saved|path)\b",
     re.IGNORECASE,
 )
 
@@ -2166,6 +2241,11 @@ def route_tools(
     ures = _parse_units(text)
     if ures:
         results.append(("unit_convert", ures))
+        return results
+
+    # 2d — document location query ("where is the document location", "where was it saved")
+    if _RE_DOC_LOCATION.search(text):
+        run(get_document_location, label="document_location")
         return results
 
     # 3 — document drafting
@@ -2517,7 +2597,11 @@ def canned_reply(label: str, result: str) -> Optional[str]:
         if m:
             return f"Reminder set, sir — '{m.group(2)}' in {m.group(1)}. I will ping you."
     if label == "calculate":
+        if "division by zero is undefined" in result.lower():
+            return "Division by zero is undefined, sir."
         return f"As I compute it, {result}, sir."
+    if label == "document_location":
+        return result
     if label == "unit_convert":
         return f"By my reckoning, {result}, sir."
     if label == "open_url":
@@ -2542,6 +2626,11 @@ def canned_reply(label: str, result: str) -> Optional[str]:
     if label == "remember":
         return f"Noted, sir. I shall remember: '{result.replace('remembered: ', '')}'."
     if label == "recall":
+        if "I have no memory matching" in result or "nothing saved in my memory" in result:
+            m = re.search(r"matching '(.+?)'", result)
+            raw = m.group(1).strip() if m else "that"
+            target = re.sub(r"^(?:my|your|the|a|an)\s+", "", raw, flags=re.IGNORECASE).strip()
+            return f"I don't have any notes saved about {target or raw}, sir."
         return result
     if label == "safety_refusal":
         return result

@@ -108,11 +108,27 @@ function computePreviewContentOffsetPct(raw) {
   };
 }
 
+function normalizeThemeName(themeId, rawName) {
+  const id = (themeId || "").toLowerCase();
+  if (id === "jarvis-arc") return "J.A.R.V.I.S.";
+  if (id === "jarvis-classic") return "jarvis-classic";
+  if (id === "jarvis" || id === "jarvis-mako") return "jarvis-Mako";
+
+  if (typeof rawName === "string") {
+    const clean = rawName.trim();
+    if (clean.replace(/\./g, "").toUpperCase() === "JARVIS") return "J.A.R.V.I.S.";
+    if (clean.toLowerCase().includes("classic")) return "jarvis-classic";
+    if (clean.toLowerCase().includes("mako")) return "jarvis-Mako";
+    return clean;
+  }
+  return rawName || themeId;
+}
+
 function buildThemeMetadata(themeId, raw, isBuiltin, themeDir, options = {}) {
   if (!raw) return null;
   return {
     id: themeId,
-    name: raw.name || themeId,
+    name: normalizeThemeName(themeId, raw.name),
     builtin: !!isBuiltin,
     previewFileUrl: buildPreviewUrl(raw, themeDir, isBuiltin, options),
     previewContentRatio: computePreviewContentRatio(raw),
@@ -158,6 +174,7 @@ module.exports = {
   getThemeMetadata,
   listThemesWithMetadata,
   buildThemeMetadata,
+  normalizeThemeName,
   buildPreviewUrl,
   buildVariantPreviewUrl,
   buildVariantMetadata,

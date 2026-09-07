@@ -254,6 +254,22 @@ class ToolRegistry:
         )
 
         self.register_native(
+            name="get_document_location",
+            description="Get the file path and directory where created documents are stored.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Optional name of the document file to locate.",
+                    }
+                },
+                "required": [],
+            },
+            handler=tools.get_document_location,
+        )
+
+        self.register_native(
             name="set_reminder",
             description="Set a local timer/reminder that will ping the desktop pet when expired.",
             parameters={

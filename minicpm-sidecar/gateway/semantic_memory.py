@@ -64,16 +64,33 @@ def _get_ngrams(tokens: List[str], n: int = 2) -> Set[str]:
     return ngrams
 
 
+_STOP_WORDS = {
+    "what", "when", "where", "which", "who", "whom", "whose", "why", "how",
+    "is", "are", "was", "were", "the", "a", "an", "and", "or", "in", "on", "at",
+    "to", "for", "with", "about", "our", "your", "my", "tell", "show", "give",
+    "does", "did", "can", "could", "would", "should", "from", "into", "any", "anything",
+    "he", "she", "it", "they", "them", "him", "her", "his", "their", "me", "i", "we",
+    "you", "say", "said", "note", "notes", "remember", "recall", "know",
+}
+
+
 def _compute_similarity(query_tokens: List[str], query_ngrams: Set[str], doc_tokens: List[str], doc_ngrams: Set[str]) -> float:
     """Compute hybrid semantic cosine similarity between query and memory item."""
     if not query_tokens or not doc_tokens:
         return 0.0
 
+    q_content = [t for t in query_tokens if t not in _STOP_WORDS]
+    d_content = [t for t in doc_tokens if t not in _STOP_WORDS]
+    if q_content and d_content:
+        q_set = set(q_content)
+        d_set = set(d_content)
+    else:
+        q_set = set(query_tokens)
+        d_set = set(doc_tokens)
+
     # 1. Word token Jaccard & overlap
-    q_set = set(query_tokens)
-    d_set = set(doc_tokens)
     common_words = q_set & d_set
-    word_score = len(common_words) / math.sqrt(len(q_set) * len(d_set))
+    word_score = (len(common_words) / math.sqrt(len(q_set) * len(d_set))) if common_words else 0.0
 
     # 2. N-gram fuzzy character similarity
     if query_ngrams and doc_ngrams:
@@ -81,6 +98,9 @@ def _compute_similarity(query_tokens: List[str], query_ngrams: Set[str], doc_tok
         ngram_score = len(common_ngrams) / math.sqrt(len(query_ngrams) * len(doc_ngrams))
     else:
         ngram_score = 0.0
+
+    if not common_words and ngram_score < 0.35:
+        return 0.0
 
     # Combined score (weighted toward exact word overlap with n-gram fuzzy backing)
     return float(0.65 * word_score + 0.35 * ngram_score)

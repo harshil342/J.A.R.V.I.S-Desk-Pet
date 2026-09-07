@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <filter id="jvGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="jvBlur" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+  <style>
+    .txt { font: 6.5px Consolas, 'Courier New', monospace; letter-spacing: 2px; fill: #2AB8CA; text-anchor: middle; }
+    .blink { animation: jvBlink 1.1s steps(2, jump-none) infinite; }
+    @keyframes jvBlink { 0% {opacity:.9} 100% {opacity:.25} }
+    .coreflick { animation: jvCoreF 1.8s infinite; }
+    @keyframes jvCoreF { 0%,100% {opacity:1} 12% {opacity:.35} 22% {opacity:.9} 38% {opacity:.5} 52% {opacity:1} 70% {opacity:.3} 84% {opacity:.85} }
+  </style>
+
+  <!-- outer ring: slow, waiting -->
+  <g opacity="0.4">
+    <circle cx="100" cy="100" r="94" fill="none" stroke="#17C3D6" stroke-width="1.3" stroke-dasharray="12 7 3 9 20 11 5 13"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="40s" repeatCount="indefinite"/>
+  </g>
+  <!-- tick ring: deliberate pace -->
+  <g opacity="0.7" filter="url(#jvGlow)">
+    <circle cx="100" cy="100" r="82" fill="none" stroke="#2FE0F2" stroke-width="7" stroke-dasharray="1.6 3.4"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="18s" repeatCount="indefinite"/>
+  </g>
+  <g opacity="0.45">
+    <polygon points="176,100 138,165.9 62,165.9 24,100 62,34.1 138,34.1" fill="none" stroke="#17C3D6" stroke-width="1"/>
+  </g>
+  <!-- mid ring dimmed while parsing -->
+  <g opacity="0.35">
+    <circle cx="100" cy="100" r="66" fill="none" stroke="#2FE0F2" stroke-width="3.5" stroke-dasharray="30 12 10 16 22 14"/>
+  </g>
+  <!-- dotted ring: fast spin = parsing -->
+  <g opacity="0.9" filter="url(#jvGlow)">
+    <circle cx="100" cy="100" r="52" fill="none" stroke="#2FE0F2" stroke-width="1.6" stroke-dasharray="0.6 5.4"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="5s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- core: uncertain flicker -->
+  <rect x="80" y="80" width="40" height="40" fill="#17C3D6" opacity="0.3" filter="url(#jvBlur)"/>
+  <circle cx="100" cy="100" r="38" fill="none" stroke="#2FE0F2" stroke-width="3.5" filter="url(#jvGlow)"/>
+  <circle cx="100" cy="100" r="27" fill="none" stroke="#0E8CA0" stroke-width="1.5" opacity="0.7"/>
+  <circle class="coreflick" cx="100" cy="100" r="10" fill="#35E8F7" filter="url(#jvGlow)"/>
+
+  <!-- quirk: query blip orbiting the dotted ring -->
+  <g>
+    <circle cx="100" cy="48" r="3" fill="#35E8F7" filter="url(#jvGlow)"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="2.2s" repeatCount="indefinite"/>
+  </g>
+
+  <text class="txt blink" x="100" y="40">QUERY...</text>
+  <text class="txt" x="100" y="167" opacity="0.7">PARSE_MODE</text>
+</svg>

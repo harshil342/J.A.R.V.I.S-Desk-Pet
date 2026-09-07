@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <filter id="jvGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="jvBlur" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+  <style>
+    .txt { font: 6.5px Consolas, 'Courier New', monospace; letter-spacing: 2px; fill: #2AB8CA; text-anchor: middle; }
+  </style>
+
+  <g opacity="0.5">
+    <circle cx="100" cy="100" r="94" fill="none" stroke="#17C3D6" stroke-width="1.3" stroke-dasharray="12 7 3 9 20 11 5 13"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="30s" repeatCount="indefinite"/>
+  </g>
+  <g opacity="0.85" filter="url(#jvGlow)">
+    <circle cx="100" cy="100" r="82" fill="none" stroke="#2FE0F2" stroke-width="7" stroke-dasharray="1.6 3.4"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="8s" repeatCount="indefinite"/>
+  </g>
+  <g opacity="0.5">
+    <polygon points="176,100 138,165.9 62,165.9 24,100 62,34.1 138,34.1" fill="none" stroke="#17C3D6" stroke-width="1"/>
+  </g>
+  <g opacity="0.8" filter="url(#jvGlow)">
+    <circle cx="100" cy="100" r="66" fill="none" stroke="#2FE0F2" stroke-width="3.5" stroke-dasharray="30 12 10 16 22 14"/>
+    <animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="10s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- quirk: three task blips orbiting at different radii/speeds -->
+  <g filter="url(#jvGlow)">
+    <circle cx="100" cy="48" r="3" fill="#7FF3FC"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="2.4s" repeatCount="indefinite"/>
+  </g>
+  <g filter="url(#jvGlow)">
+    <circle cx="100" cy="34" r="2.4" fill="#2FE0F2"/>
+    <animateTransform attributeName="transform" type="rotate" from="120 100 100" to="480 100 100" dur="3.6s" repeatCount="indefinite"/>
+  </g>
+  <g filter="url(#jvGlow)">
+    <circle cx="100" cy="6" r="2" fill="#17C3D6"/>
+    <animateTransform attributeName="transform" type="rotate" from="240 100 100" to="600 100 100" dur="5s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- busy core -->
+  <rect x="79" y="79" width="42" height="42" fill="#17C3D6" opacity="0.5" filter="url(#jvBlur)"/>
+  <circle cx="100" cy="100" r="38" fill="none" stroke="#2FE0F2" stroke-width="3.5" filter="url(#jvGlow)"/>
+  <circle cx="100" cy="100" r="27" fill="none" stroke="#17C3D6" stroke-width="1.6" opacity="0.85"/>
+  <circle cx="100" cy="100" r="11.5" fill="#35E8F7" filter="url(#jvGlow)">
+    <animate attributeName="r" values="11.5;13;11.5" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+
+  <text class="txt" x="100" y="40" opacity="0.9">MULTI_TASK</text>
+  <text class="txt" x="100" y="167" opacity="0.8">SESSIONS_2</text>
+</svg>

@@ -41,7 +41,7 @@ from .updater import ModelUpdater
 
 _RE_TOOL_TAG = re.compile(
     r"\s*\[(?:set_reminder|todo_add|todo_list|todo_done|todo_remove|todo_clear|"
-    r"create_document|convert_currency|get_weather|get_time|system_status|"
+    r"create_document|get_document_location|document_location|convert_currency|get_weather|get_time|system_status|"
     r"clipboard_assist|launch_app|web_search|calculate|unit_convert|fetch_page|"
     r"wikipedia|remember|recall|open_url|media_control|screenshot|lock|"
     r"active_window|inspect_screen|read_screen_text|running_apps|speak|"
@@ -1300,7 +1300,7 @@ def _build_messages(req: ChatRequest, *, tool_context: Optional[str] = None) -> 
                 "websites, current news, or external facts. "
                 "If the user asks for external information or web lookups that require the internet, "
                 "politely state that you do not have that knowledge because you are operating offline in air-gapped mode. "
-                "You remain fully capable of local tasks (math, system status, local notes, to-dos, reminders, and time)."
+                "You remain fully capable of local tasks (calculations, personal notes, to-dos, reminders, and time)."
             )
         system = (
             prompt
@@ -1381,11 +1381,20 @@ async def native_tool_round(
         # No actionable/lookup cue in the message: arm only the memory
         # pair. A 1B model left with the full catalogue plus llama-server's
         # injected "respond with tool_call" nudge invents calls for plain
-        # statements ("my codename is X" â†’ system_status).
+        # statements ("my codename is X" → system_status).
         schemas = [
             s for s in schemas
             if s.get("function", {}).get("name") in _MEMORY_ONLY_TOOLS
         ]
+    else:
+        cue_user = next(
+            (m.content for m in reversed(req.messages) if m.role == "user"), ""
+        )
+        if not tools._RE_STATUS.search(cue_user or ""):
+            schemas = [
+                s for s in schemas
+                if s.get("function", {}).get("name") != "system_status"
+            ]
     if not schemas:
         async for chunk in _stream_chat(server, bridge, req, lora=lora):
             yield chunk
