@@ -9,31 +9,35 @@
   :root {
     /* --bubble-alpha is driven from the bubbleOpacity pref (renderer sets it
        on :root); --bg-rgb stays per-scheme so both schemes share one alpha. */
-    --bg-rgb: 0, 0, 0;  /* pure black bubble */
+    --bg-rgb: 13, 15, 20;  /* obsidian dark glass */
     --bg: rgba(var(--bg-rgb), var(--bubble-alpha, 0.94));
-    --text: #DFF7FC;
-    --muted: #7FA8B8;
+    --text: #F1F3F5;
+    --muted: #94A3B8;
     --accent: #8A939B;
     --accent-rgb: 138, 147, 155;
-    --border: rgba(var(--accent-rgb), 0.25);
-    --inner-edge: rgba(var(--accent-rgb), 0.18);
+    --border: rgba(255, 255, 255, 0.09);
+    --inner-edge: rgba(255, 255, 255, 0.12);
+    --card-bg: rgba(0, 0, 0, 0.35);
+    --input-bg: rgba(255, 255, 255, 0.05);
   }
   @media (prefers-color-scheme: light) {
     :root {
-      --bg-rgb: 255, 255, 255;
-      --bg: rgba(var(--bg-rgb), var(--bubble-alpha, 0.94));
-      --text: #1c1c20;
-      --muted: #6c7180;
-      --accent: #5B646B;
-      --accent-rgb: 91, 100, 107;
-      --border: rgba(var(--accent-rgb), 0.25);
-      --inner-edge: rgba(255, 255, 255, 0.6);
+      --bg-rgb: 248, 250, 252;
+      --bg: rgba(var(--bg-rgb), var(--bubble-alpha, 0.96));
+      --text: #0F172A;
+      --muted: #64748B;
+      --accent: #475569;
+      --accent-rgb: 71, 85, 105;
+      --border: rgba(0, 0, 0, 0.09);
+      --inner-edge: rgba(255, 255, 255, 0.85);
+      --card-bg: rgba(0, 0, 0, 0.03);
+      --input-bg: rgba(0, 0, 0, 0.04);
     }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     height: 100%; background: transparent; color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
     font-size: calc(13px * var(--bubble-text-scale, 1)); line-height: 1.5; overflow: hidden;
     user-select: none;
     -webkit-font-smoothing: antialiased;
@@ -51,16 +55,16 @@
     position: relative;
     width: 100%; max-width: 100%;
     background: var(--bg);
-    backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(150%);
-    -webkit-backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(150%);
-    border: 1px solid rgba(var(--accent-rgb), 0.32);
+    backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(180%);
+    border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 7px 12px;
-    /* Glassmorphic edge highlight + ambient neon glow + drop shadow */
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.16),
-                inset 0 0 12px rgba(var(--accent-rgb), 0.08),
-                0 0 20px rgba(var(--accent-rgb), 0.25),
-                0 8px 32px rgba(0, 0, 0, 0.55);
+    padding: 8px 12px;
+    /* Hairline specular highlight + ultra-subtle tinted rim + deep elevation shadow */
+    box-shadow: inset 0 1px 0 var(--inner-edge),
+                0 0 0 1px rgba(var(--accent-rgb), 0.14),
+                0 4px 12px rgba(0, 0, 0, 0.35),
+                0 16px 36px -4px rgba(0, 0, 0, 0.65);
     opacity: 0; transform: translateY(2px) scale(0.99);
     transition: opacity 160ms ease, transform 160ms ease;
     pointer-events: none;
@@ -73,21 +77,22 @@
      based on which side of the pet we're rendered. */
   .tail {
     position: absolute;
-    width: 11px; height: 11px;
+    width: 10px; height: 10px;
     background: var(--bg);
     border: 1px solid var(--border);
     transform: rotate(45deg);
-    border-radius: 3px;
-    backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(150%);
-    -webkit-backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(150%);
+    border-radius: 2px;
+    backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(180%);
+    z-index: 1;
   }
-  .bubble[data-side="right"] .tail { left: -6px; top: 50%; margin-top: -6px;
+  .bubble[data-side="right"] .tail { left: -5px; top: 50%; margin-top: -5px;
     border-right: none; border-top: none; }
-  .bubble[data-side="left"] .tail { right: -6px; top: 50%; margin-top: -6px;
+  .bubble[data-side="left"] .tail { right: -5px; top: 50%; margin-top: -5px;
     border-left: none; border-bottom: none; }
-  .bubble[data-side="below"] .tail { top: -6px; left: 50%; margin-left: -6px;
+  .bubble[data-side="below"] .tail { top: -5px; left: 50%; margin-left: -5px;
     border-right: none; border-bottom: none; }
-  .bubble[data-side="above"] .tail { bottom: -6px; left: 50%; margin-left: -6px;
+  .bubble[data-side="above"] .tail { bottom: -5px; left: 50%; margin-left: -5px;
     border-left: none; border-top: none; }
 
   /* — Drag-to-position edit mode (toggled by Settings) — */
@@ -124,26 +129,26 @@
   /* — Continuous-chat layout (size follows content; bubble grows smoothly) — */
   .chat-pane {
     display: flex; flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
   /* Density pref (clawd-prefs.json → bubbleDensity). The renderer toggles
      body[data-density] from prefs; "compact" tightens padding + row gap. */
-  body[data-density="compact"] .bubble { padding: 4px 9px; }
-  body[data-density="compact"] .chat-pane { gap: 2px; }
+  body[data-density="compact"] .bubble { padding: 5px 10px; }
+  body[data-density="compact"] .chat-pane { gap: 3px; }
   /* Top region: previous reply, max ~120px then internal scroll. */
   .last-reply-region {
     flex: 0 1 auto;
-    max-height: 120px;
+    max-height: 130px;
     overflow-y: auto;
     font-size: 12.5px;
-    color: var(--muted);
-    line-height: 1.45;
+    color: var(--text);
+    line-height: 1.5;
     white-space: pre-wrap;
     word-wrap: break-word;
     user-select: text;
     -webkit-app-region: no-drag;
     padding-right: 2px;
-    padding-bottom: 3px;
+    padding-bottom: 5px;
     border-bottom: 1px solid var(--border);
   }
   .last-reply-region::-webkit-scrollbar { width: 4px; }
@@ -151,6 +156,21 @@
   /* Bottom: input grows with typing up to 200px then internally scrolls. */
   .ask-input-wrap {
     flex: 0 0 auto;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 6px 10px;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  }
+  .ask-input-wrap:focus-within {
+    border-color: rgba(var(--accent-rgb), 0.5);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.12);
+    background: rgba(255, 255, 255, 0.07);
+  }
+  @media (prefers-color-scheme: light) {
+    .ask-input-wrap:focus-within {
+      background: rgba(0, 0, 0, 0.05);
+    }
   }
   .ask-input-wrap textarea {
     max-height: 200px;
@@ -331,108 +351,185 @@
     .err-text pre { background: rgba(0,0,0,0.04); }
   }
 
-  /* ── J.A.R.V.I.S. ask-state polish ──────────────────────────────────── */
+  /* ── Ask-state polish & Single-line pill mode ──────────────────────── */
   textarea::placeholder {
-    color: rgba(var(--accent-rgb), 0.55);
-    letter-spacing: 0.02em;
+    color: var(--muted);
+    opacity: 0.65;
+    letter-spacing: 0.01em;
   }
-  .ask-input-wrap textarea {
-    border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
-    padding-bottom: 4px;
-    transition: border-color 160ms ease, box-shadow 160ms ease;
-  }
-  .ask-input-wrap textarea:focus {
-    outline: none;
-    border-bottom-color: rgba(var(--accent-rgb), 0.75);
-    box-shadow: 0 1px 0 rgba(var(--accent-rgb), 0.35);
+  #content > textarea#ask-input {
+    padding: 2px 4px;
+    font-size: 13px;
+    line-height: 1.4;
   }
 
-  /* ── New-chat button (continuous-chat mode) ──────────────────────────
-     Single compact "+" pill in the slim row above the input. Same
-     rgba-accent pill language as .upd-pill. */
+  /* ── Sessions row (continuous-chat mode) ───────────────────────────── */
   .sessions-row {
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; justify-content: flex-end; gap: 5px;
+    padding: 1px 2px;
     -webkit-app-region: no-drag;
   }
   .sessions-add {
     all: unset;
     cursor: pointer; user-select: none;
-    font-size: 10.5px; line-height: 1.2;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 500; line-height: 1;
     color: var(--muted);
-    background: rgba(var(--accent-rgb), 0.10);
-    border: 1px solid rgba(var(--accent-rgb), 0.28);
-    border-radius: 999px;
-    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
     -webkit-app-region: no-drag;
-    transition: background 140ms ease, color 140ms ease;
+    transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
   }
   .sessions-add:hover {
-    background: rgba(var(--accent-rgb), 0.20);
+    background: rgba(255, 255, 255, 0.10);
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+  .sessions-add:active {
+    transform: scale(0.97);
+  }
+  .sessions-icon-btn {
+    padding: 4px 6px;
+  }
+  .sessions-icon-btn.active {
     color: var(--accent);
-  }
-
-  /* ── Proactive drawer (reminders + memory) ──────────────────────────
-     Slides open between the sessions row and the input. Same pill
-     language as .sessions-add; list rows are compact one-liners with a
-     trailing delete glyph. */
-  #proactive-drawer {
-    margin: 4px 0 2px;
-    border: 1px solid rgba(var(--accent-rgb), 0.22);
-    border-radius: 10px;
-    padding: 6px;
-    background: rgba(var(--accent-rgb), 0.06);
-    -webkit-app-region: no-drag;
-  }
-  .drawer-tabs { display: flex; gap: 6px; margin-bottom: 5px; }
-  .drawer-tab {
-    all: unset; cursor: pointer; user-select: none;
-    font-size: 10.5px; line-height: 1.2; color: var(--muted);
-    background: rgba(var(--accent-rgb), 0.08);
-    border: 1px solid transparent; border-radius: 999px; padding: 2px 9px;
-    transition: background 140ms ease, color 140ms ease;
-  }
-  .drawer-tab.active {
-    color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.18);
+    background: rgba(var(--accent-rgb), 0.15);
     border-color: rgba(var(--accent-rgb), 0.35);
   }
-  .drawer-body { max-height: 190px; overflow-y: auto; }
-  .drawer-list { display: flex; flex-direction: column; gap: 2px; }
+  .icon-svg {
+    display: inline-block; vertical-align: middle; flex-shrink: 0;
+  }
+  @media (prefers-color-scheme: light) {
+    .sessions-add {
+      background: rgba(0, 0, 0, 0.04);
+    }
+    .sessions-add:hover {
+      background: rgba(0, 0, 0, 0.08);
+      border-color: rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  /* ── Proactive drawer (reminders + memory) ────────────────────────── */
+  #proactive-drawer {
+    margin: 4px 0 2px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 7px;
+    background: var(--card-bg);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    -webkit-app-region: no-drag;
+  }
+  .drawer-tabs {
+    display: flex; gap: 3px; margin-bottom: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 7px;
+    padding: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  @media (prefers-color-scheme: light) {
+    .drawer-tabs {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.04);
+    }
+  }
+  .drawer-tab {
+    all: unset; cursor: pointer; user-select: none;
+    flex: 1; text-align: center;
+    font-size: 11px; font-weight: 500; line-height: 1.4; color: var(--muted);
+    background: transparent;
+    border: none; border-radius: 5px; padding: 3px 8px;
+    transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+  }
+  .drawer-tab:hover {
+    color: var(--text);
+  }
+  .drawer-tab.active {
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  @media (prefers-color-scheme: light) {
+    .drawer-tab.active {
+      color: #0F172A;
+      background: #FFFFFF;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+  }
+  .drawer-body { max-height: 180px; overflow-y: auto; }
+  .drawer-body::-webkit-scrollbar { width: 4px; }
+  .drawer-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .drawer-list { display: flex; flex-direction: column; gap: 3px; }
   .drawer-row {
     display: flex; align-items: center; gap: 6px;
-    padding: 3px 4px; border-radius: 7px; font-size: 11.5px;
+    padding: 4px 6px; border-radius: 6px; font-size: 11.5px;
+    transition: background 120ms ease;
   }
-  .drawer-row:hover { background: rgba(var(--accent-rgb), 0.10); }
+  .drawer-row:hover { background: rgba(255, 255, 255, 0.05); }
+  @media (prefers-color-scheme: light) {
+    .drawer-row:hover { background: rgba(0, 0, 0, 0.05); }
+  }
   .row-main {
     flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: var(--text);
   }
   .row-badge { color: var(--accent); margin-left: 3px; }
-  .row-meta { color: var(--muted); font-size: 10px; white-space: nowrap; }
+  .row-meta {
+    color: var(--muted); font-size: 10px; white-space: nowrap;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1px 5px; border-radius: 4px;
+  }
+  @media (prefers-color-scheme: light) {
+    .row-meta { background: rgba(0, 0, 0, 0.05); }
+  }
   .row-del {
     all: unset; cursor: pointer; user-select: none;
-    color: var(--muted); font-size: 13px; line-height: 1; padding: 0 3px;
-    border-radius: 5px; transition: color 120ms ease, background 120ms ease;
+    color: var(--muted); font-size: 13px; line-height: 1; padding: 1px 4px;
+    border-radius: 4px; transition: color 120ms ease, background 120ms ease;
+    opacity: 0.6;
   }
-  .row-del:hover { color: #ff7a7a; background: rgba(255,110,110,0.12); }
-  .drawer-empty { color: var(--muted); font-size: 11px; padding: 4px 4px 2px; }
-  .drawer-form { display: flex; gap: 5px; align-items: center; margin-bottom: 5px; }
+  .row-del:hover {
+    color: #EF4444; background: rgba(239, 68, 68, 0.15); opacity: 1;
+  }
+  .drawer-empty {
+    color: var(--muted); font-size: 11px; padding: 8px 4px; text-align: center;
+    font-style: italic;
+  }
+  .drawer-form { display: flex; gap: 5px; align-items: center; margin-bottom: 6px; }
   .drawer-input {
     all: unset; flex: 1; min-width: 0;
     font-size: 11.5px; line-height: 1.4; color: var(--text);
-    border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
-    padding: 2px 2px; transition: border-color 140ms ease;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 7px; transition: border-color 140ms ease, box-shadow 140ms ease;
   }
-  .drawer-input:focus { outline: none; border-bottom-color: rgba(var(--accent-rgb), 0.75); }
-  .drawer-input-slim { flex: 0 0 44px; text-align: center; }
+  .drawer-input:focus {
+    outline: none;
+    border-color: rgba(var(--accent-rgb), 0.55);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.12);
+  }
+  .drawer-input-slim {
+    flex: 0 0 46px; text-align: center;
+  }
   .drawer-add {
     all: unset; cursor: pointer; user-select: none;
-    font-size: 10.5px; line-height: 1.2; color: var(--muted);
-    background: rgba(var(--accent-rgb), 0.12);
-    border: 1px solid rgba(var(--accent-rgb), 0.30);
-    border-radius: 999px; padding: 2px 9px;
-    transition: background 140ms ease, color 140ms ease;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500; line-height: 1;
+    color: #FFFFFF;
+    background: rgba(var(--accent-rgb), 0.35);
+    border: 1px solid rgba(var(--accent-rgb), 0.5);
+    border-radius: 6px; padding: 5px 10px;
+    transition: background 140ms ease, border-color 140ms ease, transform 100ms ease;
   }
-  .drawer-add:hover { background: rgba(var(--accent-rgb), 0.24); color: var(--accent); }
+  .drawer-add:hover {
+    background: rgba(var(--accent-rgb), 0.5);
+    border-color: rgba(var(--accent-rgb), 0.7);
+  }
+  .drawer-add:active {
+    transform: scale(0.96);
+  }
 </style>
 </head>
 <body>

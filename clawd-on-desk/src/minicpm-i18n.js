@@ -263,6 +263,16 @@
     chatSidecarRestarting: "Brain hiccup — restarting ({attempt}/3)…",
     chatSidecarBack: "Back online",
     chatSidecarDown: "The model engine stopped and couldn't be restarted. Restart the app (logs: Settings → open log folder).",
+    // Drawer strings (reminders & memory)
+    drawerToggleTitle: "Reminders & memory",
+    drawerTabReminders: "Reminders",
+    drawerTabMemory: "Memory",
+    drawerSet: "Set",
+    drawerMinsPlaceholder: "min",
+    drawerRemindPlaceholder: "What should I remind you about?",
+    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
+    drawerMemPlaceholder: "Search or add a memory…",
+    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   const EN_PATTERNS = {
     status: /\b(what|which|current|now)\b.{0,30}\b(model|persona|adapter|lora)\b/i,
@@ -320,15 +330,6 @@
       "Reply: The AI suggested hot pot, ramen, BBQ, and Sichuan stir-fry.\n\n" +
       "Event: The owner just wrapped up an AI conversation about \"what to eat for dinner\". The AI's last line: Hot pot is a great pick!\n" +
       "Reply: The AI also thinks hot pot is a great pick.\n\n",
-    drawerToggleTitle: "Reminders & memory",
-    drawerTabReminders: "Reminders",
-    drawerTabMemory: "Memory",
-    drawerSet: "Set",
-    drawerMinsPlaceholder: "min",
-    drawerRemindPlaceholder: "What should I remind you about?",
-    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
-    drawerMemPlaceholder: "Search or add a memory…",
-    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── ZH strings ──
   const ZH_STRINGS = {
@@ -448,6 +449,16 @@
     chatSidecarRestarting: "大脑打了个盹 — 正在重启（{attempt}/3）…",
     chatSidecarBack: "已恢复在线",
     chatSidecarDown: "模型引擎已停止且无法自动恢复，请重启应用（日志见 设置 → 打开日志目录）。",
+    // Drawer strings (reminders & memory)
+    drawerToggleTitle: "提醒与记忆",
+    drawerTabReminders: "提醒",
+    drawerTabMemory: "记忆",
+    drawerSet: "设定",
+    drawerMinsPlaceholder: "分",
+    drawerRemindPlaceholder: "需要提醒您什么？",
+    drawerEmptyReminders: "暂无待办提醒",
+    drawerMemPlaceholder: "搜索或记录记忆…",
+    drawerEmptyMemory: "暂无已存记忆",
   };
   const ZH_PATTERNS = {
     status: /(你现在|当前|目前|现在).{0,4}(是什么|是啥|用的什么|用啥|什么模型|什么人格|哪个模型|哪个人格|是哪个)/,
@@ -504,15 +515,6 @@
       "回复:AI 推荐了火锅、拉面、烤肉和川菜\n\n" +
       "事件:主人刚结束跟 AI 关于「晚饭吃啥」的对话。AI 最后说:火锅好选择!\n" +
       "回复:AI 也觉得火锅是好选择\n\n",
-    drawerToggleTitle: "Reminders & memory",
-    drawerTabReminders: "Reminders",
-    drawerTabMemory: "Memory",
-    drawerSet: "Set",
-    drawerMinsPlaceholder: "min",
-    drawerRemindPlaceholder: "What should I remind you about?",
-    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
-    drawerMemPlaceholder: "Search or add a memory…",
-    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── ZH-TW strings ──
   const ZH_TW_STRINGS = {
@@ -632,9 +634,19 @@
     chatSidecarRestarting: "腦袋打了個盹 — 正在重啟（{attempt}/3）…",
     chatSidecarBack: "已恢復線上",
     chatSidecarDown: "模型引擎已停止且無法自動恢復，請重新啟動應用程式（日誌見 設定 → 開啟日誌目錄）。",
+    // Drawer strings (reminders & memory)
+    drawerToggleTitle: "提醒與記憶",
+    drawerTabReminders: "提醒",
+    drawerTabMemory: "記憶",
+    drawerSet: "設定",
+    drawerMinsPlaceholder: "分",
+    drawerRemindPlaceholder: "需要提醒您什麼？",
+    drawerEmptyReminders: "暫無待辦提醒",
+    drawerMemPlaceholder: "搜尋或記錄記憶…",
+    drawerEmptyMemory: "暫無已存記憶",
   };
   const ZH_TW_PATTERNS = {
-    status: /(你現在|目前|現在).{0,4}(是什麼|是啥|用的什麼|什麼模型|什麼人格|哪個模型|哪個人格|是哪個)/,
+    status: /(你現在|目前|現在).{0,4}(是什麼|是啥|用的什麼|什麼模型|什麼人格|哪個模型|哪个人格|是哪個)/,
     list: /(看看|看一下|查看|有啥|有什麼|哪些|列|列出).{0,5}(adapter|外掛|皮膚|人格|風格|lora)/i,
     off: /(關掉|關閉|去掉|不要|脫掉|取消|卸|卸載).{0,4}(adapter|人格|皮膚|lora)/i,
     off2: /(用回|回到|切到|切回|換成|換到|去).{0,4}(原版|預設|base|普通|原始|裸|本來|純淨)/i,
@@ -688,15 +700,6 @@
       "回覆:AI 推薦了火鍋、拉麵、燒肉和川菜\n\n" +
       "事件:主人剛結束跟 AI 關於「晚餐吃啥」的對話。AI 最後說:火鍋好選擇!\n" +
       "回覆:AI 也覺得火鍋是好選擇\n\n",
-    drawerToggleTitle: "Reminders & memory",
-    drawerTabReminders: "Reminders",
-    drawerTabMemory: "Memory",
-    drawerSet: "Set",
-    drawerMinsPlaceholder: "min",
-    drawerRemindPlaceholder: "What should I remind you about?",
-    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
-    drawerMemPlaceholder: "Search or add a memory…",
-    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── KO strings ──
   const KO_STRINGS = {
@@ -813,9 +816,19 @@
     bubbleCustomizeTextSize: "글자 크기",
     bubbleCustomizeDensity: "밀도",
     bubbleCustomizeTypewriter: "타이프라이터",
-    chatSidecarRestarting: "잠깐 멈췄어요 — 재시작 중({attempt}/3)…",
+    chatSidecarRestarting: "잠깐 멈췄어요 — 재시작 중({attempt}/3）…",
     chatSidecarBack: "다시 온라인",
     chatSidecarDown: "모델 엔진이 중지되어 자동 복구에 실패했어요. 앱을 다시 시작해 주세요.",
+    // Drawer strings (reminders & memory)
+    drawerToggleTitle: "알림 및 기억",
+    drawerTabReminders: "알림",
+    drawerTabMemory: "기억",
+    drawerSet: "설정",
+    drawerMinsPlaceholder: "분",
+    drawerRemindPlaceholder: "어떤 내용을 알려드릴까요?",
+    drawerEmptyReminders: "예정된 알림이 없습니다",
+    drawerMemPlaceholder: "기억 검색 또는 추가…",
+    drawerEmptyMemory: "저장된 기억이 없습니다",
   };
   const KO_PATTERNS = {
     status: /(지금|현재|어떤).{0,12}(모델|페르소나|어댑터|lora)/i,
@@ -872,15 +885,6 @@
       "응답: AI가 핫팟, 라멘, 바비큐, 사천 볶음을 추천했어요\n\n" +
       "이벤트: 주인님이 AI와 「저녁 뭐 먹지」 대화를 막 끝냈어요. AI의 마지막 말: 핫팟 좋은 선택이에요!\n" +
       "응답: AI도 핫팟이 좋은 선택이라고 했어요\n\n",
-    drawerToggleTitle: "Reminders & memory",
-    drawerTabReminders: "Reminders",
-    drawerTabMemory: "Memory",
-    drawerSet: "Set",
-    drawerMinsPlaceholder: "min",
-    drawerRemindPlaceholder: "What should I remind you about?",
-    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
-    drawerMemPlaceholder: "Search or add a memory…",
-    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── JA strings ──
   const JA_STRINGS = {
@@ -1000,6 +1004,16 @@
     chatSidecarRestarting: "ひと眠りしていました — 再起動中（{attempt}/3）…",
     chatSidecarBack: "復帰しました",
     chatSidecarDown: "モデルエンジンが停止し、自動復旧できませんでした。アプリを再起動してください。",
+    // Drawer strings (reminders & memory)
+    drawerToggleTitle: "リマインダー＆記憶",
+    drawerTabReminders: "リマインダー",
+    drawerTabMemory: "記憶",
+    drawerSet: "設定",
+    drawerMinsPlaceholder: "分",
+    drawerRemindPlaceholder: "何について通知しますか？",
+    drawerEmptyReminders: "リマインダーはありません",
+    drawerMemPlaceholder: "記憶を検索または追加…",
+    drawerEmptyMemory: "まだ記録がありません",
   };
   const JA_PATTERNS = {
     status: /(今|現在|どの).{0,12}(モデル|人格|アダプタ|lora)/i,
@@ -1056,15 +1070,6 @@
       "返答：AI が火鍋、ラーメン、焼肉、四川炒め物を提案したよ\n\n" +
       "イベント：ご主人が AI と「夕食何にする」の会話をちょうど終えた。AI が最後に言ったこと：火鍋いい選択！\n" +
       "返答：AI も火鍋がいい選択って言ってたよ\n\n",
-    drawerToggleTitle: "Reminders & memory",
-    drawerTabReminders: "Reminders",
-    drawerTabMemory: "Memory",
-    drawerSet: "Set",
-    drawerMinsPlaceholder: "min",
-    drawerRemindPlaceholder: "What should I remind you about?",
-    drawerEmptyReminders: "No pending reminders. Ask in chat or add one above.",
-    drawerMemPlaceholder: "Search or add a memory…",
-    drawerEmptyMemory: "Nothing remembered yet. Tell me things in chat, or add above.",
   };
   // ── Language data ──
   // Attached below so that each language is one self-contained block.

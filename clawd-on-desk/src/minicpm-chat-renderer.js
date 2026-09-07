@@ -48,9 +48,15 @@ function refreshStaticUi() {
   if (inputEl) {
     inputEl.placeholder = t("chatAskPlaceholder");
   }
-  // Sessions row: tooltip re-localizes live.
+  // Sessions row: tooltip and label re-localizes live.
   const addBtn = document.getElementById("sessions-add");
-  if (addBtn) addBtn.title = t("chatSessionsNew");
+  if (addBtn) {
+    addBtn.title = t("chatSessionsNew");
+    const span = addBtn.querySelector("span");
+    if (span) span.textContent = t("chatSessionsNew");
+  }
+  const pBtn = document.getElementById("proactive-toggle");
+  if (pBtn) pBtn.title = t("drawerToggleTitle");
 }
 
 // Event listener: open native context menu on right-click. Replaced the
@@ -290,8 +296,13 @@ async function createSession() {
 
 function sessionsRowHtml() {
   return '<div class="sessions-row">' +
-    '<button id="sessions-add" class="sessions-add" title="' + escapeHtml(t("chatSessionsNew")) + '">+</button>' +
-    '<button id="proactive-toggle" class="sessions-add" title="' + t("drawerToggleTitle") + '">⏰</button>' +
+    '<button id="sessions-add" class="sessions-add" title="' + escapeHtml(t("chatSessionsNew")) + '">' +
+      '<svg class="icon-svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' +
+      '<span>' + escapeHtml(t("chatSessionsNew")) + '</span>' +
+    '</button>' +
+    '<button id="proactive-toggle" class="sessions-add sessions-icon-btn' + (proactiveOpen ? " active" : "") + '" title="' + escapeHtml(t("drawerToggleTitle")) + '">' +
+      '<svg class="icon-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>' +
+    '</button>' +
   '</div>';
 }
 
@@ -308,6 +319,8 @@ let proactiveTab = "tasks";
 
 async function toggleProactiveDrawer() {
   proactiveOpen = !proactiveOpen;
+  const pBtn = document.getElementById("proactive-toggle");
+  if (pBtn) pBtn.classList.toggle("active", proactiveOpen);
   const d = document.getElementById("proactive-drawer");
   if (!d) return;
   d.style.display = proactiveOpen ? "block" : "none";
@@ -345,8 +358,8 @@ async function renderTasksTab() {
   if (!body) return;
   body.innerHTML =
     '<div class="drawer-form">' +
-      '<input id="drawer-mins" class="drawer-input drawer-input-slim" type="text" inputmode="decimal" placeholder="' + t("drawerMinsPlaceholder") + '" />' +
-      '<input id="drawer-new-text" class="drawer-input" type="text" placeholder="' + t("drawerRemindPlaceholder") + '" />' +
+      '<input id="drawer-mins" class="drawer-input drawer-input-slim" type="text" inputmode="decimal" placeholder="' + t("drawerMinsPlaceholder") + '" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" />' +
+      '<input id="drawer-new-text" class="drawer-input" type="text" placeholder="' + t("drawerRemindPlaceholder") + '" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" />' +
       '<button id="drawer-add-btn" class="drawer-add">' + t("drawerSet") + '</button>' +
     '</div>' +
     '<div id="task-list" class="drawer-list"></div>';
@@ -447,8 +460,12 @@ async function createTaskFromForm() {
   const name = nameEl.value.trim();
   const mins = parseFloat(minsEl.value.replace(",", "."));
   if (!name || !(mins > 0)) {
-    minsEl.style.borderBottomColor = "rgba(255,110,110,0.8)";
-    setTimeout(() => { minsEl.style.borderBottomColor = ""; }, 1200);
+    minsEl.style.borderColor = "rgba(255,110,110,0.8)";
+    minsEl.style.boxShadow = "0 0 0 2px rgba(255,110,110,0.25)";
+    setTimeout(() => {
+      minsEl.style.borderColor = "";
+      minsEl.style.boxShadow = "";
+    }, 1200);
     return;
   }
   const res = await window.minicpm.tasksCreate({ name, delaySeconds: mins * 60, recurring: false });
@@ -485,8 +502,10 @@ async function renderMemoryTab() {
   if (!body) return;
   body.innerHTML =
     '<div class="drawer-form">' +
-      '<input id="drawer-mem-search" class="drawer-input" type="text" placeholder="' + t("drawerMemPlaceholder") + '" />' +
-      '<button id="drawer-mem-add-btn" class="drawer-add">+</button>' +
+      '<input id="drawer-mem-search" class="drawer-input" type="text" placeholder="' + t("drawerMemPlaceholder") + '" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" />' +
+      '<button id="drawer-mem-add-btn" class="drawer-add" title="' + escapeHtml(t("drawerSet")) + '">' +
+        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' +
+      '</button>' +
     '</div>' +
     '<div id="mem-list" class="drawer-list"></div>';
   const res = await window.minicpm.memoryList();
@@ -686,7 +705,7 @@ async function showAsk(lastReply, opts = {}) {
         sessionsRowHtml() +
         '<div id="proactive-drawer" style="display:none"></div>' +
         '<div class="ask-input-wrap">' +
-          '<textarea id="ask-input" placeholder="' + placeholder + '" rows="1"></textarea>' +
+          '<textarea id="ask-input" placeholder="' + placeholder + '" rows="1" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>' +
         '</div>' +
       '</div>';
     inputEl = document.getElementById("ask-input");
@@ -714,7 +733,7 @@ async function showAsk(lastReply, opts = {}) {
     // fits the placeholder text, expanding horizontally as user types.
     const placeholder = escapeHtml(t("chatAskPlaceholder"));
     content.innerHTML =
-      '<textarea id="ask-input" placeholder="' + placeholder + '" rows="1"></textarea>';
+      '<textarea id="ask-input" placeholder="' + placeholder + '" rows="1" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>';
     inputEl = document.getElementById("ask-input");
     inputEl.addEventListener("input", () => autoresize(inputEl));
     inputEl.addEventListener("keydown", onAskKey);
