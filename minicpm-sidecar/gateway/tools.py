@@ -24,6 +24,7 @@ import threading
 import time
 import traceback
 import uuid
+import socket
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
@@ -34,6 +35,53 @@ import httpx
 from .log_setup import get_logger
 
 log = get_logger("tools")
+
+# ── Internet connectivity probing (Butler dual-mode) ──────────────────────────
+
+_ONLINE_CACHE_TTL = 5.0  # seconds
+_last_online_check: float = 0.0
+_is_currently_online: bool = True
+_online_override: Optional[bool] = None
+
+
+def set_internet_connection_override(status: Optional[bool]) -> None:
+    """Manually override internet connectivity for testing or offline enforcement."""
+    global _online_override
+    _online_override = status
+
+
+def check_internet_connection(force: bool = False, timeout: float = 0.5) -> bool:
+    """Fast probe to determine if the system has active internet connectivity.
+    Results are cached for 5 seconds to prevent latency spikes during multi-turn chats.
+    """
+    global _last_online_check, _is_currently_online
+    if _online_override is not None:
+        return _online_override
+
+    env_force = os.environ.get("DESKPET_FORCE_OFFLINE")
+    if env_force == "1":
+        return False
+    if env_force == "0":
+        return True
+
+    now = time.monotonic()
+    if not force and (now - _last_online_check < _ONLINE_CACHE_TTL):
+        return _is_currently_online
+
+    online = False
+    for host in ("1.1.1.1", "8.8.8.8"):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(timeout)
+                sock.connect((host, 53))
+                online = True
+                break
+        except Exception:
+            continue
+
+    _last_online_check = now
+    _is_currently_online = online
+    return online
 
 # ── Pet bridge (reminders push a notification state when they fire) ─────────
 
@@ -123,6 +171,8 @@ def _geolocate_ip() -> Optional[dict]:
 
 
 def get_weather(city: Optional[str] = None) -> str:
+    if not check_internet_connection():
+        return "Weather lookup unavailable: network is offline (air-gapped mode)."
     loc = None
     if city:
         loc = _geocode(city)
@@ -163,6 +213,8 @@ def get_time() -> str:
 
 
 def web_search(query: str) -> str:
+    if not check_internet_connection():
+        return "I am currently running in offline (air-gapped) mode without internet access, sir. I cannot browse the web or look up external information right now."
     r = httpx.get(
         "https://api.duckduckgo.com/",
         params={"q": query, "format": "json", "no_html": 1, "no_redirect": 1},
@@ -195,6 +247,24 @@ def web_search(query: str) -> str:
         )
         if wiki:
             return wiki
+        # Second fallback: query DuckDuckGo HTML search for live search snippets
+        # to ground the butler when instant answers miss.
+        try:
+            r_html = httpx.get(
+                "https://html.duckduckgo.com/html/",
+                params={"q": query},
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) DeskPet/1.0"},
+                timeout=5,
+            )
+            if r_html.status_code == 200:
+                raw_snippets = re.findall(r'result__snippet.*?>(.*?)</a>', r_html.text, re.DOTALL)
+                clean_snippets = [
+                    re.sub(r'<[^>]+>', '', s).strip() for s in raw_snippets if s.strip()
+                ]
+                if clean_snippets:
+                    return "Web search: " + " | ".join(clean_snippets[:3])[:1200]
+        except Exception:
+            pass
         return f"No instant answer found for '{query}'. Rephrase or be more specific."
     return "Web search: " + " | ".join(parts)[:1200]
 
@@ -232,6 +302,8 @@ def _cur_code(word: str) -> Optional[str]:
 
 
 def convert_currency(amount: float, base: str, target: str) -> str:
+    if not check_internet_connection():
+        return "Live currency conversion is unavailable while offline, sir."
     r = httpx.get(f"https://open.er-api.com/v6/latest/{base}", timeout=8)
     r.raise_for_status()
     d = r.json() or {}
@@ -981,7 +1053,20 @@ def system_status() -> str:
         pass
     up = timedelta(seconds=int(time.time() - psutil.boot_time()))
     parts.append(f"uptime {up.seconds // 3600}h {(up.seconds // 60) % 60}m")
+    online = check_internet_connection()
+    parts.append("network " + ("online (connected)" if online else "offline (air-gapped)"))
     return "System status: " + "; ".join(parts) + "."
+
+
+# ── Tool 8b: network_status (connectivity check, butler status) ──────────────
+
+
+def network_status() -> str:
+    """Explicitly check and report live network connectivity status."""
+    online = check_internet_connection(force=True)
+    if online:
+        return "Network status: Online (Connected). Web search and live data feeds are fully operational, sir."
+    return "Network status: Offline (Air-gapped mode). The system has no internet connectivity, sir."
 
 
 # ── Tool 9: clipboard_assist (read clipboard, model does the work) ──────────
@@ -1192,6 +1277,8 @@ def convert_units(amount: float, from_u: str, to_u: str) -> str:
 
 
 def fetch_page(url: str) -> str:
+    if not check_internet_connection():
+        return "Cannot fetch webpage: network is offline (air-gapped mode)."
     url = (url or "").strip()
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
@@ -1216,6 +1303,8 @@ def fetch_page(url: str) -> str:
 
 
 def wikipedia_summary(term: str) -> Optional[str]:
+    if not check_internet_connection():
+        return None
     term = (term or "").strip()
     if not term:
         return None
@@ -1458,6 +1547,16 @@ _RE_STATUS = re.compile(
     r"(?:system|pc|computer)\s+(?:check|health|report|diagnostics?)|"
     r"check\s+(?:the\s+|my\s+)?(?:system|pc|computer)\b|"
     r"run\s+an?\s*(?:system|full)\s+(?:check|diagnostics?))\b",
+    re.IGNORECASE,
+)
+_RE_NET_STATUS = re.compile(
+    r"\b(?:"
+    r"(?:check\s+(?:the\s+)?)?(?:internet|network|connection)\s+status|"
+    r"(?:are\s+you|are\s+we)\s+(?:connected\s+to\s+(?:the\s+)?internet|online|offline)|"
+    r"is\s+(?:the\s+)?(?:internet|network|connection)\s+(?:working|connected|active|online|up)|"
+    r"do\s+you\s+have\s+(?:an?\s+)?internet\s+connection|"
+    r"check\s+(?:the\s+)?(?:internet|network|connection)"
+    r")\b",
     re.IGNORECASE,
 )
 _RE_CLIP = re.compile(r"\bclipboard\b", re.IGNORECASE)
@@ -2090,6 +2189,11 @@ def route_tools(
         run(system_status, label="system_status")
         return results
 
+    # 6b — network status
+    if _RE_NET_STATUS.search(text):
+        run(network_status, label="network_status")
+        return results
+
     # 7 — clipboard
     if _RE_CLIP.search(text):
         action = "summarize" if re.search(r"\bsummar\w+", text, re.I) else \
@@ -2282,16 +2386,27 @@ _CANNED_REMIND = re.compile(r"Reminder set for (.+) from now: '(.+)'")
 
 def canned_reply(label: str, result: str) -> Optional[str]:
     """Fixed Jarvis-voice line for a tool result, or None → model composes."""
+    if label == "network_status":
+        return result
     if label == "cancel_reminders":
         result = (result or "").strip()
         return result if result.startswith(("Cancelled", "No pending")) else None
     if label == "get_weather":
+        if result and ("offline" in result.lower() or "air-gapped" in result.lower()):
+            return "I cannot retrieve live weather reports right now, sir, as the system is currently offline in air-gapped mode."
         # Ready-made factual line ("Mumbai, India: 26.9°C, light drizzle
         # (...)"). Relay verbatim — the 1B sometimes "honestly" claims it
         # cannot access weather even when handed the reading.
         if result and not re.match(r"^(?:no |could not|weather unavailable)", result, re.I):
             return result.strip()
         return None
+    if label == "convert_currency":
+        if result and ("offline" in result.lower() or "air-gapped" in result.lower()):
+            return "Live currency conversion requires an active internet connection, sir, and we are currently operating offline."
+        m = _CANNED_RATE.search(result)
+        if m:
+            return f"At the live rate, {m.group(1)} — {m.group(2)}."
+        return result
     if label == "wikipedia":
         # Ready-made prose — relay verbatim. The 1B model sometimes
         # "honestly" claims it lacks access even when handed a full
@@ -2300,6 +2415,8 @@ def canned_reply(label: str, result: str) -> Optional[str]:
             return result.strip()
         return None
     if label == "web_search":
+        if result and ("offline (air-gapped) mode" in result or "cannot browse the web" in result):
+            return result.strip()
         # Wiki-backed fallback results are ready-made prose — relay them
         # like wikipedia hits. Genuine DDG snippets stay model-composed.
         if result and result.startswith("From Wikipedia"):

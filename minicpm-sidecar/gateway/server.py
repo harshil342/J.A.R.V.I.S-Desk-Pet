@@ -1,4 +1,4 @@
-﻿"""FastAPI gateway in front of llama.cpp's llama-server.
+"""FastAPI gateway in front of llama.cpp's llama-server.
 
 Exposes the same HTTP/SSE contract the Electron app already speaks with
 the legacy PyTorch sidecar, so the renderer (clawd-on-desk/src/minicpm-chat.*)
@@ -1282,13 +1282,29 @@ def _build_messages(req: ChatRequest, *, tool_context: Optional[str] = None) -> 
             prompt = "\n".join(
                 ln for ln in prompt.splitlines() if "remember_fact" not in ln
             )
-        # Ground the 1B model with the live clock on every request. Small
-        # models parrot what they see â€” without this they happily invent
-        # plausible times ("10:30 PM sir") when the router misses a
-        # phrasing. Fresh per request, so it never goes stale mid-session.
         now = datetime.now().strftime("%A, %d %B %Y, %H:%M")
+        online = tools.check_internet_connection()
+        if online:
+            net_status = (
+                "Network Status: ONLINE (Connected).\n"
+                "You have live access to the internet and web search tools. "
+                "Act as an attentive digital butler and information relay: "
+                "when answering factual, research, or current events questions, "
+                "relay and ground your responses in verified tool results and data."
+            )
+        else:
+            net_status = (
+                "Network Status: OFFLINE (Air-gapped mode).\n"
+                "The system currently has NO internet access. "
+                "Strict rule: Do NOT invent, speculate, or hallucinate real-time external events, "
+                "websites, current news, or external facts. "
+                "If the user asks for external information or web lookups that require the internet, "
+                "politely state that you do not have that knowledge because you are operating offline in air-gapped mode. "
+                "You remain fully capable of local tasks (math, system status, local notes, to-dos, reminders, and time)."
+            )
         system = (
             prompt
+            + f"\n\n{net_status}"
             + f"\n\nCurrent date and time (live, from the system clock): {now}. "
             "If asked about the time or date, quote this value exactly; never estimate."
         )

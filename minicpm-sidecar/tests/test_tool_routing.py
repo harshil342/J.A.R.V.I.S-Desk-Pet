@@ -551,3 +551,142 @@ def test_recall_fact_without_args_returns_recent(monkeypatch, tmp_path):
     assert "Blue Falcon" in out
     out = tools.recall_fact(query="codename")
     assert "Blue Falcon" in out
+
+
+def test_internet_connection_check_and_override(monkeypatch):
+    tools.set_internet_connection_override(None)
+    try:
+        tools.set_internet_connection_override(True)
+        assert tools.check_internet_connection() is True
+
+        tools.set_internet_connection_override(False)
+        assert tools.check_internet_connection() is False
+
+        tools.set_internet_connection_override(None)
+        monkeypatch.setenv("DESKPET_FORCE_OFFLINE", "1")
+        assert tools.check_internet_connection() is False
+
+        monkeypatch.setenv("DESKPET_FORCE_OFFLINE", "0")
+        assert tools.check_internet_connection() is True
+    finally:
+        tools.set_internet_connection_override(None)
+
+
+def test_offline_tools_airgapped_behavior(monkeypatch):
+    tools.set_internet_connection_override(False)
+    try:
+        search_res = tools.web_search("quantum computing")
+        assert "offline (air-gapped) mode" in search_res
+        assert tools.canned_reply("web_search", search_res) == search_res
+
+        weather_res = tools.get_weather("London")
+        assert "air-gapped" in weather_res
+        canned_weather = tools.canned_reply("get_weather", weather_res)
+        assert canned_weather is not None and "air-gapped" in canned_weather
+
+        curr_res = tools.convert_currency(100, "USD", "EUR")
+        assert "offline" in curr_res
+        canned_curr = tools.canned_reply("convert_currency", curr_res)
+        assert canned_curr is not None and "offline" in canned_curr
+
+        page_res = tools.fetch_page("https://example.com")
+        assert "offline (air-gapped mode)" in page_res
+
+        assert tools.wikipedia_summary("Physics") is None
+
+        # Local offline tools must continue to work normally
+        assert "local time" in tools.get_time()
+        assert tools.calculate("2 + 2") == "2 + 2 = 4"
+    finally:
+        tools.set_internet_connection_override(None)
+
+
+def test_network_status_tool_and_canned_reply():
+    tools.set_internet_connection_override(True)
+    try:
+        res_online = tools.network_status()
+        assert "Online (Connected)" in res_online
+        assert tools.canned_reply("network_status", res_online) == res_online
+
+        hits = tools.route_tools("are you online?")
+        assert hits and hits[0][0] == "network_status"
+
+        hits = tools.route_tools("check network status")
+        assert hits and hits[0][0] == "network_status"
+
+        tools.set_internet_connection_override(False)
+        res_offline = tools.network_status()
+        assert "Offline (Air-gapped mode)" in res_offline
+        assert tools.canned_reply("network_status", res_offline) == res_offline
+    finally:
+        tools.set_internet_connection_override(None)
+
+
+def test_system_status_includes_network():
+    tools.set_internet_connection_override(True)
+    try:
+        stat_online = tools.system_status()
+        assert "network online (connected)" in stat_online
+
+        tools.set_internet_connection_override(False)
+        stat_offline = tools.system_status()
+        assert "network offline (air-gapped)" in stat_offline
+    finally:
+        tools.set_internet_connection_override(None)
+
+
+def test_web_search_ddg_html_fallback(monkeypatch):
+    tools.set_internet_connection_override(True)
+    try:
+        class _MockResp:
+            def __init__(self, text, status_code=200):
+                self.text = text
+                self.status_code = status_code
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"AbstractText": "", "Answer": "", "RelatedTopics": []}
+
+        html_sample = (
+            '<html><body>'
+            '<a class="result__snippet">Python 3.13 is released with nogil support.</a>'
+            '</body></html>'
+        )
+
+        def mock_get(url, *args, **kwargs):
+            if "html.duckduckgo.com" in url:
+                return _MockResp(html_sample)
+            return _MockResp("")
+
+        monkeypatch.setattr(tools.httpx, "get", mock_get)
+        monkeypatch.setattr(tools, "_wiki_topic_lookup", lambda q: None)
+        monkeypatch.setattr(tools, "wikipedia_summary", lambda q: None)
+
+        res = tools.web_search("python 3.13 features")
+        assert "Web search:" in res
+        assert "nogil support" in res
+    finally:
+        tools.set_internet_connection_override(None)
+
+
+def test_server_system_prompt_network_awareness():
+    from gateway.server import _build_messages, ChatRequest, ChatMessage
+    tools.set_internet_connection_override(True)
+    try:
+        req = ChatRequest(messages=[ChatMessage(role="user", content="Hello")])
+        msgs = _build_messages(req)
+        sys_msg = next(m["content"] for m in msgs if m["role"] == "system")
+        assert "Network Status: ONLINE (Connected)" in sys_msg
+        assert "attentive digital butler" in sys_msg
+
+        tools.set_internet_connection_override(False)
+        msgs_off = _build_messages(req)
+        sys_msg_off = next(m["content"] for m in msgs_off if m["role"] == "system")
+        assert "Network Status: OFFLINE (Air-gapped mode)" in sys_msg_off
+        assert "Do NOT invent, speculate, or hallucinate" in sys_msg_off
+    finally:
+        tools.set_internet_connection_override(None)
+
+
