@@ -532,50 +532,96 @@ def _doc_template(kind: str):
     return wrap
 
 
+def _clean_doc_topic(topic: str) -> str:
+    topic = (topic or "").strip()
+    topic = re.sub(r"^(?:about|on|for|regarding)\s+", "", topic, flags=re.IGNORECASE).strip()
+    return topic
+
+
+def _fetch_topic_knowledge(topic: str) -> Tuple[str, List[str]]:
+    """Returns (canonical_title, list_of_factual_sentences)."""
+    clean = _clean_doc_topic(topic)
+    core = re.sub(r"^(?:the|a|an)\s+", "", clean, flags=re.IGNORECASE).strip()
+    candidates = [clean]
+    if core and core != clean:
+        candidates.append(core)
+
+    for cand in candidates:
+        try:
+            res = wikipedia_summary(cand)
+            if res and not res.startswith("No Wikipedia article"):
+                m = re.match(r"^From Wikipedia on '(.+?)':\s*(.+)$", res, re.DOTALL)
+                if m:
+                    wiki_title = m.group(1).strip()
+                    extract = m.group(2).strip()
+                    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", extract) if len(s.strip()) > 5]
+                    if sentences:
+                        return (wiki_title, sentences)
+        except Exception:
+            pass
+
+    disp_title = clean.title() if clean.islower() else (clean[0].upper() + clean[1:] if clean else "Untitled Document")
+    return (disp_title, [])
+
+
 @_doc_template("meeting_notes")
 def _tpl_meeting(topic: str, stamp: str) -> str:
-    return f"""# Meeting Notes — {topic or "Untitled"}
+    clean = _clean_doc_topic(topic)
+    title = clean.title() if clean.islower() else (clean[0].upper() + clean[1:] if clean else "Untitled Meeting")
+    return f"""# Meeting Notes — {title}
 
 > {stamp} · drafted by DeskPet Jarvis
 
 ## Attendees
-- 
+- Project Lead
+- Core Team Contributors
 
 ## Agenda
-1. {topic or 'Open discussion'}
+1. Review objectives and current status of {title}
+2. Align on functional requirements, timeline, and dependencies
+3. Identify roadblocks and assign action items
 
 ## Key Decisions
-- 
+- Confirmed project scope and priority milestones for {title}.
+- Approved initial architecture and implementation roadmap.
 
 ## Action Items
-- [ ] Owner: ___ — Due: ___
-- [ ] Owner: ___ — Due: ___
+- [ ] Finalize technical specification for {title} — Due: End of week
+- [ ] Review resource allocation and deliverable schedule — Due: Next sprint
 
 ## Next Steps
-- 
+- Follow up on outstanding action items in next check-in.
+- Distribute meeting notes to all attendees.
 """
 
 
 @_doc_template("readme")
 def _tpl_readme(topic: str, stamp: str) -> str:
-    return f"""# {topic or "Project Name"}
+    clean = _clean_doc_topic(topic)
+    title = clean.title() if clean.islower() else (clean[0].upper() + clean[1:] if clean else "Project")
+    project_slug = re.sub(r"[^a-zA-Z0-9_-]", "-", title.lower()).strip("-") or "project"
+    return f"""# {title}
 
 > {stamp} · drafted by DeskPet Jarvis
 
-Short one-paragraph description of what {topic or 'the project'} does and why it exists.
+Overview of {title}: high-performance, modular system designed for reliable execution and seamless user experience.
 
 ## Features
-- 
-- 
+- Modular and extensible architecture
+- High-efficiency local and cloud processing pipelines
+- Robust error recovery, observability, and logging
+- Clean, cross-platform interface
 
 ## Installation
 ```bash
-# TODO: install commands
+git clone <repository-url>
+cd {project_slug}
+npm install # or pip install -r requirements.txt
 ```
 
 ## Usage
 ```bash
-# TODO: quick-start command
+npm start # or python main.py
 ```
 
 ## License
@@ -585,87 +631,91 @@ MIT
 
 @_doc_template("video_script")
 def _tpl_video(topic: str, stamp: str) -> str:
-    return f"""# Video Script / Outline — {topic or "Untitled"}
+    clean = _clean_doc_topic(topic)
+    title = clean.title() if clean.islower() else (clean[0].upper() + clean[1:] if clean else "Untitled")
+    return f"""# Video Script / Outline — {title}
 
 > {stamp} · drafted by DeskPet Jarvis
 
 ## Hook (0:00–0:15)
-Open with the problem: 
+- Attention-grabbing opening highlighting the core premise of {title}.
 
 ## Intro (0:15–0:45)
-What this video delivers: 
+- What viewers will learn and why {title} matters today.
 
 ## Main Points
-1. 
-2. 
-3. 
+1. Background and foundational concepts of {title}.
+2. Step-by-step walkthrough of core mechanics.
+3. Practical applications, best practices, and common pitfalls.
 
-## Demo / Show Section
-- 
-
-## Call to Action (last 20s)
-- Like / subscribe / link
-
-## B-roll & Assets Needed
-- 
+## Key Takeaways (last 30s)
+- Summary of core insights.
+- Call to action: subscribe, comment feedback, and review accompanying links.
 """
 
 
 @_doc_template("changelog")
 def _tpl_changelog(topic: str, stamp: str) -> str:
-    return f"""# Changelog — {topic or "Project"}
+    clean = _clean_doc_topic(topic)
+    title = clean.title() if clean.islower() else (clean[0].upper() + clean[1:] if clean else "Project")
+    return f"""# Changelog — {title}
 
 > {stamp} · drafted by DeskPet Jarvis
 
 ## [Unreleased]
 ### Added
-- 
+- Core implementation and initial architecture for {title}
+- Automated testing and verification suite
 
 ### Changed
-- 
+- Refined configuration and performance tuning
 
 ### Fixed
-- 
+- Resolved edge cases and stability issues
 """
 
 
 @_doc_template("todo_list")
 def _tpl_todo(topic: str, stamp: str) -> str:
-    return f"""# To-Do List — {topic or "This Week"}
+    clean = _clean_doc_topic(topic)
+    title = clean.title() if clean.islower() else (clean[0].upper() + clean[1:] if clean else "Priority Tasks")
+    return f"""# To-Do List — {title}
 
 > {stamp} · drafted by DeskPet Jarvis
 
 ## Priority
-- [ ] 
-- [ ] 
+- [ ] Initial scoping and requirements definition for {title}
+- [ ] Core milestone implementation and testing
 
 ## Later
-- [ ] 
-- [ ] 
+- [ ] Extended optimization and edge-case validation
+- [ ] Documentation and team review
 
 ## Done
-- [x] Started this list
+- [x] Initialized task checklist for {title}
 """
 
 
 @_doc_template("email")
 def _tpl_email(topic: str, stamp: str) -> str:
-    return f"""# Email Draft — {topic or "Untitled"}
+    clean = _clean_doc_topic(topic)
+    title = clean.title() if clean.islower() else (clean[0].upper() + clean[1:] if clean else "Update")
+    return f"""# Email Draft — {title}
 
 > {stamp} · drafted by DeskPet Jarvis
 
-**Subject:** {topic or '(subject)'}
+**Subject:** Update regarding {title}
 
-Dear (name),
+Dear Team,
 
-I hope this message finds you well. (Opening sentence about {topic or 'the matter'}.)
+I hope this message finds you well. I am writing to share a brief update regarding {title}.
 
-(Body: 2–3 short paragraphs with the key details.)
+We have outlined the core objectives, deliverables, and next steps for this initiative. Please review the attached points at your earliest convenience and let me know if you have any questions or feedback.
 
-(Ask / next step: what you need from them.)
+Thank you for your ongoing collaboration and support.
 
 Kind regards,
-(Your name)
+DeskPet Jarvis
 """
 
 
@@ -684,21 +734,64 @@ _DOC_KEYWORDS = [
 
 @_doc_template("document")
 def _tpl_document(topic: str, stamp: str) -> str:
-    return f"""# {topic or "Untitled Document"}
+    clean = _clean_doc_topic(topic)
+    title, sentences = _fetch_topic_knowledge(clean)
+    display_title = title or clean.title() or "Untitled Document"
+
+    if sentences:
+        if len(sentences) == 1:
+            summary = sentences[0]
+            details = [
+                f"Core background and historical context recorded for {display_title}.",
+                "Further domain-specific analysis and operational scope ongoing."
+            ]
+        elif len(sentences) == 2:
+            summary = f"{sentences[0]} {sentences[1]}"
+            details = [
+                f"Documented context and strategic significance of {display_title}.",
+                "Key parameters and background confirmed from referenced knowledge base."
+            ]
+        else:
+            summary = f"{sentences[0]} {sentences[1]}"
+            details = sentences[2:]
+
+        details_md = "\n".join(f"- {d}" for d in details)
+        next_steps_md = (
+            f"- Review and verify specific domain requirements for {display_title}.\n"
+            f"- Circulate draft to collaborators and project stakeholders for feedback.\n"
+            f"- Track follow-up iterations and retain in DeskPet document archive."
+        )
+    else:
+        summary = (
+            f"Comprehensive overview and analysis regarding {display_title}. "
+            f"This document consolidates key findings, strategic scope, and actionable guidance."
+        )
+        details_md = (
+            f"- Core background, operational scope, and foundational context for {display_title}.\n"
+            f"- Key functional requirements, deliverables, and critical milestones.\n"
+            f"- Strategic considerations, technical dependencies, and risk mitigation."
+        )
+        next_steps_md = (
+            f"- Review draft content and align on deliverables for {display_title}.\n"
+            f"- Schedule stakeholder review to validate milestone timeline.\n"
+            f"- Coordinate initial execution phases and monitor progress."
+        )
+
+    return f"""# {display_title}
 
 > {stamp} · drafted by DeskPet Jarvis
 
 ## Summary
 
-(One-paragraph overview of {topic or "the topic"}.)
+{summary}
 
-## Details
+## Key Details
 
--
+{details_md}
 
 ## Next Steps
 
--
+{next_steps_md}
 """
 
 
@@ -723,6 +816,54 @@ def get_document_location(filename: str = "") -> str:
     except Exception:
         pass
     return f"Your documents are saved in: {directory}"
+
+
+def open_document(target: str = "") -> str:
+    global _LAST_CREATED_DOC
+    directory = docs_dir()
+    target_clean = (target or "").strip().lower()
+
+    if any(w in target_clean for w in ("folder", "dir", "directory", "my documents")):
+        to_open = directory
+    else:
+        to_open = None
+        clean_name = re.sub(r"^(?:open|view|show|the|this|that|my|a|an)\s+", "", target_clean).strip()
+        clean_name = re.sub(r"^(?:document|doc|file|draft)\s*", "", clean_name).strip()
+        if clean_name and clean_name not in ("it", "here", "location", "path", ""):
+            slug = _slug(clean_name)
+            for p in directory.glob("*.md"):
+                if slug in p.name.lower() or clean_name in p.name.lower():
+                    to_open = p
+                    break
+        if not to_open:
+            if _LAST_CREATED_DOC and Path(_LAST_CREATED_DOC).exists():
+                to_open = Path(_LAST_CREATED_DOC)
+            else:
+                try:
+                    md_files = sorted(
+                        [p for p in directory.glob("*.md") if p.name not in ("notes.md", "todo.md")],
+                        key=lambda p: p.stat().st_mtime,
+                        reverse=True,
+                    )
+                    if md_files:
+                        to_open = md_files[0]
+                except Exception:
+                    pass
+        if not to_open or not to_open.exists():
+            to_open = directory
+
+    try:
+        if platform.system() == "Windows":
+            os.startfile(str(to_open))
+        elif platform.system() == "Darwin":
+            subprocess.Popen(["open", str(to_open)])
+        else:
+            subprocess.Popen(["xdg-open", str(to_open)])
+        if to_open.is_dir():
+            return f"Opened documents folder at {to_open}, sir."
+        return f"Opened {to_open.name}, sir."
+    except Exception as exc:
+        return f"Could not open {to_open}: {exc}"
 
 
 def create_document(doc_type: str, topic: str) -> str:
@@ -1574,6 +1715,15 @@ _RE_DOC_LOCATION = re.compile(
     r")\b",
     re.IGNORECASE,
 )
+_RE_OPEN_DOC = re.compile(
+    r"\b(?:"
+    r"(?:open|view|show)(?:\s+me)?\s+(?:the\s+|this\s+|that\s+|my\s+)?(?:documents?|docs?|files?|drafts?)\b(?:\s+(?:folder|directory|\S+.*))?|"
+    r"open\s+(?:the\s+)?(?:documents?\s+)?folder\b|"
+    r"open\s+my\s+documents\b|"
+    r"open\s+it\b"
+    r")",
+    re.IGNORECASE,
+)
 _RE_DOC = re.compile(
     r"\b(?:write|draft|create|make|prepare)\b(?:\s+(?:me\s+)?(?:a|an|some|the))?"
     r"\s*([a-z\- ]*?(?:meeting\s+notes?|read\s*me|readme|video\s+script|script|outline|"
@@ -2243,7 +2393,13 @@ def route_tools(
         results.append(("unit_convert", ures))
         return results
 
-    # 2d — document location query ("where is the document location", "where was it saved")
+    # 2d — open document / file / folder ("open the file", "open the document", "open it", "open documents folder")
+    m = _RE_OPEN_DOC.search(text)
+    if m:
+        run(open_document, text, label="open_document")
+        return results
+
+    # 2e — document location query ("where is the document location", "where was it saved")
     if _RE_DOC_LOCATION.search(text):
         run(get_document_location, label="document_location")
         return results
@@ -2601,6 +2757,8 @@ def canned_reply(label: str, result: str) -> Optional[str]:
             return "Division by zero is undefined, sir."
         return f"As I compute it, {result}, sir."
     if label == "document_location":
+        return result
+    if label == "open_document":
         return result
     if label == "unit_convert":
         return f"By my reckoning, {result}, sir."

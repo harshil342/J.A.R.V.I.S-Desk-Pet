@@ -5,7 +5,8 @@ Live API behaviour (open.er-api.com) is exercised manually via
 scripts/smoke-chat.ps1 — we do not hit the network from unit tests.
 """
 
-from __future__ import annotations
+import platform
+from pathlib import Path
 
 import pytest
 
@@ -758,3 +759,65 @@ def test_memory_recall_negative_hit_and_no_status():
     canned = tools.canned_reply(hits[0][0], hits[0][1])
     assert canned == "I don't have any notes saved about flight ticket, sir."
     assert "system status" not in canned.lower()
+
+
+def test_document_enriched_content(tmp_path, monkeypatch):
+    monkeypatch.setenv("DESKPET_DOCS_DIR", str(tmp_path))
+    monkeypatch.setattr(
+        tools, "wikipedia_summary",
+        lambda term: (
+            f"From Wikipedia on 'Great Wall of China': The Great Wall of China is a series of fortifications in China. "
+            f"They were built across the historical northern borders of ancient Chinese states. "
+            f"The first walls date to the 7th century BC. "
+            f"Successive dynasties expanded the wall system."
+        )
+    )
+    res = tools.create_document("document", "the great wall of china")
+    assert "great wall of china" in res.lower()
+
+    created_file = Path(tools._LAST_CREATED_DOC)
+    assert created_file.exists()
+    content = created_file.read_text(encoding="utf-8")
+
+    assert "(One-paragraph overview" not in content
+    assert "\n## Details\n\n-\n" not in content
+    assert "The Great Wall of China is a series of fortifications" in content
+    assert "The first walls date to the 7th century BC" in content
+    assert "Next Steps" in content
+
+
+def test_open_document_routing_and_reply(tmp_path, monkeypatch):
+    monkeypatch.setenv("DESKPET_DOCS_DIR", str(tmp_path))
+    opened_targets = []
+
+    def fake_open(target):
+        opened_targets.append(str(target))
+        return None
+
+    if platform.system() == "Windows":
+        monkeypatch.setattr(tools.os, "startfile", fake_open, raising=False)
+    else:
+        monkeypatch.setattr(tools.subprocess, "Popen", lambda cmd: opened_targets.append(cmd[-1]))
+
+    tools.create_document("document", "Great Wall of China")
+
+    for phrase in [
+        "open the file",
+        "open the document",
+        "open document",
+        "open it",
+        "can you open the file",
+        "please open the document",
+    ]:
+        hits = tools.route_tools(phrase)
+        assert hits, f"Phrase '{phrase}' did not route"
+        assert hits[0][0] == "open_document"
+        canned = tools.canned_reply("open_document", hits[0][1])
+        assert canned.startswith("Opened ")
+        assert "sir." in canned
+
+    for folder_phrase in ["open documents folder", "open the folder", "open my documents"]:
+        hits = tools.route_tools(folder_phrase)
+        assert hits, f"Folder phrase '{folder_phrase}' did not route"
+        assert hits[0][0] == "open_document"
+        assert "folder" in hits[0][1].lower()

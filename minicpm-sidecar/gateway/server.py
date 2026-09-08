@@ -41,7 +41,7 @@ from .updater import ModelUpdater
 
 _RE_TOOL_TAG = re.compile(
     r"\s*\[(?:set_reminder|todo_add|todo_list|todo_done|todo_remove|todo_clear|"
-    r"create_document|get_document_location|document_location|convert_currency|get_weather|get_time|system_status|"
+    r"create_document|get_document_location|document_location|open_document|convert_currency|get_weather|get_time|system_status|"
     r"clipboard_assist|launch_app|web_search|calculate|unit_convert|fetch_page|"
     r"wikipedia|remember|recall|open_url|media_control|screenshot|lock|"
     r"active_window|inspect_screen|read_screen_text|running_apps|speak|"

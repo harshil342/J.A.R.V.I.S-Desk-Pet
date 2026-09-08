@@ -270,6 +270,22 @@ class ToolRegistry:
         )
 
         self.register_native(
+            name="open_document",
+            description="Open a created document, markdown file, or the documents folder on the host machine.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "target": {
+                        "type": "string",
+                        "description": "Optional file name, topic, or 'folder' to open. Defaults to the latest document.",
+                    }
+                },
+                "required": [],
+            },
+            handler=tools.open_document,
+        )
+
+        self.register_native(
             name="set_reminder",
             description="Set a local timer/reminder that will ping the desktop pet when expired.",
             parameters={
