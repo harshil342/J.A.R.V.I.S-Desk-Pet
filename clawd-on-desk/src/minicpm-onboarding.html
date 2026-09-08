@@ -47,6 +47,28 @@
           </div>
           <div class="model-card-body">
             <p class="model-card-desc" data-i18n="onboardingDownloadCardDesc"></p>
+            <div class="model-preset-selector" id="model-preset-selector" role="radiogroup">
+              <div class="preset-option selected" data-preset="minicpm5-1b" tabindex="0" role="radio" aria-checked="true">
+                <div class="preset-option-radio"></div>
+                <div class="preset-option-content">
+                  <div class="preset-option-header">
+                    <span class="preset-option-name" data-i18n="onboardingPreset1BName"></span>
+                    <span class="preset-badge" data-i18n="onboardingPresetRecommended"></span>
+                  </div>
+                  <div class="preset-option-desc" data-i18n="onboardingPreset1BDesc"></div>
+                </div>
+              </div>
+              <div class="preset-option" data-preset="minicpm5-2b" tabindex="0" role="radio" aria-checked="false">
+                <div class="preset-option-radio"></div>
+                <div class="preset-option-content">
+                  <div class="preset-option-header">
+                    <span class="preset-option-name" data-i18n="onboardingPreset2BName"></span>
+                    <span class="preset-badge preset-badge-blue" data-i18n="onboardingPresetEnhanced"></span>
+                  </div>
+                  <div class="preset-option-desc" data-i18n="onboardingPreset2BDesc"></div>
+                </div>
+              </div>
+            </div>
             <div class="progress-card hidden" id="model-progress-card">
               <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
               <div class="progress-text">

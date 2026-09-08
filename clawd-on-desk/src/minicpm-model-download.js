@@ -7,26 +7,63 @@ const crypto = require("crypto");
 const path = require("path");
 const { createProxyAgent } = require("./proxy-agent");
 
-const MODEL_FILENAME = "MiniCPM5-1B-Q8_0.gguf";
-const MODEL_SIZE_BYTES = 1_153_529_216;
-const MODELSCOPE_MODEL_ID = "OpenBMB/MiniCPM5-1B-GGUF";
-const MODELSCOPE_REVISION = "master";
-const PROVIDERS = {
-  huggingface: {
-    id: "huggingface",
-    label: "Hugging Face",
-    url: `https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/resolve/main/${MODEL_FILENAME}`,
-    authHosts: new Set(["huggingface.co"]),
-    tokenEnv: ["HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"],
+const MODEL_PRESETS = {
+  "minicpm5-1b": {
+    id: "minicpm5-1b",
+    name: "MiniCPM5-1B",
+    tag: "Recommended",
+    desc: "Fast & lightweight (~1.15 GB), low memory footprint. Perfect for laptops & iGPUs.",
+    filename: "MiniCPM5-1B-Q8_0.gguf",
+    sizeBytes: 1_153_529_216,
+    hfRepo: "openbmb/MiniCPM5-1B-GGUF",
+    msRepo: "OpenBMB/MiniCPM5-1B-GGUF",
+    revision: "master",
   },
-  modelscope: {
-    id: "modelscope",
-    label: "ModelScope",
-    url: `https://modelscope.cn/models/OpenBMB/MiniCPM5-1B-GGUF/resolve/master/${MODEL_FILENAME}`,
-    authHosts: new Set(["modelscope.cn", "www.modelscope.cn"]),
-    tokenEnv: ["MODELSCOPE_API_TOKEN", "MS_TOKEN", "MODELSCOPE_TOKEN"],
+  "minicpm5-2b": {
+    id: "minicpm5-2b",
+    name: "MiniCPM5-2B",
+    tag: "Enhanced",
+    desc: "Advanced reasoning & coding (~1.56 GB). Recommended for 16GB+ RAM or GPUs.",
+    filename: "MiniCPM5-2B-Q4_K_M.gguf",
+    sizeBytes: 1_561_318_368,
+    hfRepo: "openbmb/MiniCPM5-2B-GGUF",
+    msRepo: "OpenBMB/MiniCPM5-2B-GGUF",
+    revision: "master",
   },
 };
+const DEFAULT_MODEL_PRESET = "minicpm5-1b";
+
+const MODEL_FILENAME = MODEL_PRESETS[DEFAULT_MODEL_PRESET].filename;
+const MODEL_SIZE_BYTES = MODEL_PRESETS[DEFAULT_MODEL_PRESET].sizeBytes;
+const MODELSCOPE_MODEL_ID = MODEL_PRESETS[DEFAULT_MODEL_PRESET].msRepo;
+const MODELSCOPE_REVISION = MODEL_PRESETS[DEFAULT_MODEL_PRESET].revision;
+
+function getModelPreset(presetKey) {
+  const key = String(presetKey || "").trim().toLowerCase();
+  return MODEL_PRESETS[key] || MODEL_PRESETS[DEFAULT_MODEL_PRESET];
+}
+
+function getProvidersForPreset(presetKey) {
+  const preset = getModelPreset(presetKey);
+  return {
+    huggingface: {
+      id: "huggingface",
+      label: "Hugging Face",
+      url: `https://huggingface.co/${preset.hfRepo}/resolve/main/${preset.filename}`,
+      authHosts: new Set(["huggingface.co"]),
+      tokenEnv: ["HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"],
+    },
+    modelscope: {
+      id: "modelscope",
+      label: "ModelScope",
+      url: `https://modelscope.cn/models/${preset.msRepo}/resolve/${preset.revision || "master"}/${preset.filename}`,
+      authHosts: new Set(["modelscope.cn", "www.modelscope.cn"]),
+      tokenEnv: ["MODELSCOPE_API_TOKEN", "MS_TOKEN", "MODELSCOPE_TOKEN"],
+    },
+  };
+}
+
+const PROVIDERS = getProvidersForPreset(DEFAULT_MODEL_PRESET);
 
 function normalizeProvider(value) {
   const v = String(value || "").trim().toLowerCase();
@@ -227,6 +264,8 @@ function downloadUrlToFile({
   providerId,
   url,
   destination,
+  filename,
+  expectedSize,
   env = process.env,
   onProgress,
   maxRedirects = 8,
@@ -236,6 +275,7 @@ function downloadUrlToFile({
     const tmp = `${destination}.part`;
     let file = null;
     let bytesDone = 0;
+    const targetFilename = filename || path.basename(destination);
 
     function fail(err) {
       try { if (file) file.destroy(); } catch {}
@@ -274,7 +314,7 @@ function downloadUrlToFile({
           return;
         }
 
-        const total = Number(res.headers["content-length"]) || MODEL_SIZE_BYTES;
+        const total = Number(res.headers["content-length"]) || expectedSize || MODEL_SIZE_BYTES;
         file = fs.createWriteStream(tmp);
         res.on("error", fail);
         res.on("data", (chunk) => {
@@ -284,7 +324,7 @@ function downloadUrlToFile({
               onProgress({
                 phase: "transfer",
                 provider: providerId,
-                file: MODEL_FILENAME,
+                file: targetFilename,
                 bytes_done: bytesDone,
                 bytes_total: total,
               });
@@ -316,6 +356,7 @@ function downloadUrlToFile({
 }
 
 async function downloadMiniCpmModel({
+  modelPreset = DEFAULT_MODEL_PRESET,
   destinationDir,
   env = process.env,
   onProgress,
@@ -325,12 +366,14 @@ async function downloadMiniCpmModel({
   agent,
 } = {}) {
   if (!destinationDir) throw new Error("destinationDir is required");
+  const preset = getModelPreset(modelPreset);
+  const providers = getProvidersForPreset(preset.id);
   ensureDir(destinationDir);
-  const destination = path.join(destinationDir, MODEL_FILENAME);
+  const destination = path.join(destinationDir, preset.filename);
   try {
     const st = fs.statSync(destination);
     if (st.isFile() && st.size > 0) {
-      return { ok: true, path: destination, bytes: st.size, provider: "local", skipped: true };
+      return { ok: true, path: destination, bytes: st.size, provider: "local", skipped: true, modelPreset: preset.id };
     }
   } catch {}
 
@@ -350,16 +393,16 @@ async function downloadMiniCpmModel({
   const errors = [];
 
   for (const providerId of attempts) {
-    const provider = PROVIDERS[providerId];
+    const provider = providers[providerId];
     try {
       if (typeof onProgress === "function") {
-        onProgress({ phase: "route", provider: providerId, country: geo.country, countrySource: geo.source });
+        onProgress({ phase: "route", provider: providerId, country: geo.country, countrySource: geo.source, modelPreset: preset.id });
       }
       if (providerId === "modelscope" && typeof snapshotCountImpl === "function") {
         try {
-          await snapshotCountImpl({ env, agent });
+          await snapshotCountImpl({ env, agent, modelId: preset.msRepo, revision: preset.revision });
           if (typeof onProgress === "function") {
-            onProgress({ phase: "snapshot-count", provider: providerId, ok: true });
+            onProgress({ phase: "snapshot-count", provider: providerId, ok: true, modelPreset: preset.id });
           }
         } catch (snapshotErr) {
           if (typeof onProgress === "function") {
@@ -368,6 +411,7 @@ async function downloadMiniCpmModel({
               provider: providerId,
               ok: false,
               message: String(snapshotErr && snapshotErr.message || snapshotErr),
+              modelPreset: preset.id,
             });
           }
         }
@@ -376,12 +420,14 @@ async function downloadMiniCpmModel({
         providerId,
         url: provider.url,
         destination,
+        filename: preset.filename,
+        expectedSize: preset.sizeBytes,
         env,
         onProgress,
         agent,
       });
       if (typeof onProgress === "function") {
-        onProgress({ phase: "complete", provider: providerId, file: MODEL_FILENAME, path: destination });
+        onProgress({ phase: "complete", provider: providerId, file: preset.filename, path: destination, modelPreset: preset.id });
       }
       return {
         ...result,
@@ -389,12 +435,13 @@ async function downloadMiniCpmModel({
         country: geo.country,
         countrySource: geo.source,
         url: provider.url,
+        modelPreset: preset.id,
       };
     } catch (err) {
       const message = String((err && err.message) || err);
       errors.push({ provider: providerId, message });
       if (typeof onProgress === "function") {
-        onProgress({ phase: "retry", provider: providerId, message });
+        onProgress({ phase: "retry", provider: providerId, message, modelPreset: preset.id });
       }
     }
   }
@@ -406,7 +453,9 @@ async function downloadMiniCpmModel({
 }
 
 module.exports = {
+  DEFAULT_MODEL_PRESET,
   MODEL_FILENAME,
+  MODEL_PRESETS,
   MODEL_SIZE_BYTES,
   MODELSCOPE_MODEL_ID,
   MODELSCOPE_REVISION,
@@ -416,6 +465,9 @@ module.exports = {
   buildModelScopeUserAgent,
   detectCountry,
   downloadMiniCpmModel,
+  downloadUrlToFile,
+  getModelPreset,
+  getProvidersForPreset,
   getTokenForProvider,
   normalizeProvider,
   parseCloudflareTrace,

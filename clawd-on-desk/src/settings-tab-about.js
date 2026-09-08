@@ -291,15 +291,6 @@
           safe.repoUrl.replace(/^https?:\/\//, "")
         ));
       }
-
-      if (safe.modelRepoUrl) {
-        infoSection.appendChild(buildAboutLinkRow(
-          t("aboutModelRepositoryLabel"),
-          safe.modelRepoUrl,
-          safe.modelRepoUrl.replace(/^https?:\/\//, "")
-        ));
-      }
-
       if (safe.license || safe.copyright || safe.upstreamRepoUrl) {
         infoSection.appendChild(buildAboutLicenseRow(safe));
       }

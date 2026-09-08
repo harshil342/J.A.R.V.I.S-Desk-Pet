@@ -10,10 +10,9 @@ contextBridge.exposeInMainWorld("onboarding", {
   diskInfo: () => ipcRenderer.invoke("onboarding:disk-info"),
   platformInfo: () => ipcRenderer.invoke("onboarding:platform-info"),
 
-  // User actions
   selectDevice: (device) => ipcRenderer.invoke("onboarding:select-device", { device }),
   pickLocalModel: () => ipcRenderer.invoke("onboarding:pick-local-model"),
-  startModelDownload: () => ipcRenderer.invoke("onboarding:start-model-download"),
+  startModelDownload: (opts) => ipcRenderer.invoke("onboarding:start-model-download", typeof opts === "string" ? { modelPreset: opts } : (opts || {})),
   warmup: () => ipcRenderer.invoke("onboarding:warmup"),
   complete: () => ipcRenderer.invoke("onboarding:complete"),
   // Used when the user switches between online download and local file

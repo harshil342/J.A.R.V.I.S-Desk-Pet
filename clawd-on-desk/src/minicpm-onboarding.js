@@ -401,24 +401,26 @@ module.exports = function initOnboarding(ctx) {
       return { ok: true, modelDir: target };
     },
 
-    "onboarding:start-model-download": async () => {
+    "onboarding:start-model-download": async (_evt, payload = {}) => {
+      const modelPreset = (typeof payload === "string" ? payload : payload && payload.modelPreset) || "minicpm5-1b";
       const chat = ctx.getChat();
       const destinationDir = chat && chat.getDefaultModelDir ? chat.getDefaultModelDir() : userDataPath("models");
-      progress("start", { phase: "download" });
+      progress("start", { phase: "download", modelPreset });
       try {
         const result = await downloadMiniCpmModel({
           destinationDir,
-          onProgress: (ev) => progress("download", ev),
+          modelPreset,
+          onProgress: (ev) => progress("download", { ...ev, modelPreset }),
         });
         if (chat && chat.setModelDir && result && result.path) {
           chat.setModelDir(result.path);
         }
-        progress("done", { phase: "download", ok: true, provider: result.provider, path: result.path });
-        return { ok: true, ...result };
+        progress("done", { phase: "download", ok: true, provider: result.provider, path: result.path, modelPreset });
+        return { ok: true, ...result, modelPreset };
       } catch (err) {
         const msg = String(err && err.message || err);
-        progress("error", { phase: "download", message: msg });
-        return { ok: false, error: msg };
+        progress("error", { phase: "download", message: msg, modelPreset });
+        return { ok: false, error: msg, modelPreset };
       }
     },
 

@@ -27,10 +27,20 @@ let currentStep = "env-check";
 let modelStatus = "idle";    // "idle" | "downloading" | "ready"
 let modelSource = null;      // "download" | "local"
 let modelInfo = null;        // { path, sizeBytes } once ready
+let selectedModelPreset = "minicpm5-1b"; // "minicpm5-1b" | "minicpm5-2b"
 let warmupStatus = "idle";   // "idle" | "running" | "ready" | "error"
 let warmupKicked = false;    // guard against double-firing warmup
 let envCheckRan = false;     // re-paint env-check details on lang change
 let downloadFailed = false;  // show an explicit retry affordance after failure
+
+function selectModelPreset(presetId) {
+  selectedModelPreset = presetId || "minicpm5-1b";
+  $$(".preset-option").forEach((opt) => {
+    const isMatch = opt.dataset.preset === selectedModelPreset;
+    opt.classList.toggle("selected", isMatch);
+    opt.setAttribute("aria-checked", isMatch ? "true" : "false");
+  });
+}
 
 // Apply translations to all `data-i18n` elements. Called once on boot
 // and again on every language change.
@@ -142,6 +152,7 @@ function paintModelCards() {
   const dlStatus = el("model-download-status");
   const dlStatusText = el("model-download-status-text");
   const dlProgress = el("model-progress-card");
+  const presetSelector = el("model-preset-selector");
   const localStatus = el("model-local-status");
   const localStatusText = el("model-local-status-text");
 
@@ -150,10 +161,14 @@ function paintModelCards() {
   dlStatus.classList.add("hidden");
   localStatus.classList.add("hidden");
   dlProgress.classList.add("hidden");
+  if (presetSelector) {
+    presetSelector.classList.remove("hidden", "disabled");
+  }
 
   if (modelStatus === "downloading") {
     dlCard.classList.add("selected");
     localCard.classList.add("disabled");
+    if (presetSelector) presetSelector.classList.add("disabled");
     dlBtn.disabled = true;
     dlBtn.textContent = t("onboardingDownloading");
     localBtn.disabled = true;
@@ -163,6 +178,7 @@ function paintModelCards() {
   }
 
   if (modelStatus === "ready") {
+    if (presetSelector) presetSelector.classList.add("hidden");
     if (modelSource === "download") {
       dlCard.classList.add("selected");
       dlStatus.classList.remove("hidden");
@@ -184,6 +200,10 @@ function paintModelCards() {
   }
 
   // idle
+  if (presetSelector) {
+    presetSelector.classList.remove("hidden", "disabled");
+    selectModelPreset(selectedModelPreset);
+  }
   dlBtn.disabled = false;
   dlBtn.textContent = downloadFailed
     ? t("onboardingDownloadRetry")
@@ -290,7 +310,7 @@ async function startModelDownload() {
     }
   });
 
-  const r = await window.onboarding.startModelDownload();
+  const r = await window.onboarding.startModelDownload(selectedModelPreset);
   if (unsub) unsub();
 
   if (r && r.ok) {
@@ -298,8 +318,8 @@ async function startModelDownload() {
     modelStatus = "ready";
     modelSource = "download";
     modelInfo = {
-      path: (state && state.modelDir) || null,
-      sizeBytes: null,
+      path: (r && r.path) || (state && state.modelDir) || null,
+      sizeBytes: (r && r.bytes) || null,
     };
     paintModelPanel();
     void runWarmupInline();
@@ -417,6 +437,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   el("env-next").addEventListener("click", async () => {
     show("model");
     await detectExistingModel();
+  });
+
+  $$(".preset-option").forEach((opt) => {
+    opt.addEventListener("click", () => {
+      if (modelStatus === "downloading") return;
+      selectModelPreset(opt.dataset.preset);
+    });
+    opt.addEventListener("keydown", (e) => {
+      if (modelStatus === "downloading") return;
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectModelPreset(opt.dataset.preset);
+      }
+    });
   });
 
   el("model-download-btn").addEventListener("click", () => { void startModelDownload(); });
