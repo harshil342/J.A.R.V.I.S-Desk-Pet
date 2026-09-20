@@ -2,6 +2,10 @@
 
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
 
 const downloader = require("../src/minicpm-model-download");
 
@@ -98,5 +102,80 @@ describe("minicpm-model-download", () => {
     const p2b = downloader.getProvidersForPreset("minicpm5-2b");
     assert.match(p2b.huggingface.url, /MiniCPM5-2B-Q4_K_M\.gguf/);
     assert.match(p2b.modelscope.url, /MiniCPM5-2B-Q4_K_M\.gguf/);
+  });
+
+  it("hashes files with sha256 without loading them fully", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "deskpet-hash-"));
+    const file = path.join(dir, "probe.bin");
+    fs.writeFileSync(file, "deskpet-model-bytes");
+    const expected = crypto.createHash("sha256").update("deskpet-model-bytes").digest("hex");
+    assert.equal(await downloader.sha256File(file), expected);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("reads the expected LFS hash from the Hugging Face API", async () => {
+    const api = async () => JSON.stringify({ siblings: [
+      { rfilename: "other.gguf", lfs: { oid: "sha256:" + "0".repeat(64) } },
+      { rfilename: "MiniCPM5-1B-Q8_0.gguf", lfs: { oid: "sha256:" + "a".repeat(64) } },
+    ] });
+    assert.equal(
+      await downloader.fetchHuggingFaceLfsSha({ repo: "openbmb/x", filename: "MiniCPM5-1B-Q8_0.gguf", requestTextImpl: api }),
+      "a".repeat(64)
+    );
+  });
+
+  it("returns null when the LFS hash is missing or unparsable", async () => {
+    assert.equal(await downloader.fetchHuggingFaceLfsSha({
+      repo: "x", filename: "y", requestTextImpl: async () => JSON.stringify({ siblings: [] }),
+    }), null);
+    assert.equal(await downloader.fetchHuggingFaceLfsSha({
+      repo: "x", filename: "y", requestTextImpl: async () => "not-json{{{",
+    }), null);
+    assert.equal(await downloader.fetchHuggingFaceLfsSha({
+      repo: "x", filename: "y", requestTextImpl: async () => { throw new Error("offline"); },
+    }), null);
+  });
+
+  it("deletes the file and throws on sha256 mismatch", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "deskpet-badmodel-"));
+    const api = async () => JSON.stringify({ siblings: [
+      { rfilename: "MiniCPM5-1B-Q8_0.gguf", lfs: { oid: "b".repeat(64) } },
+    ] });
+    const downloadImpl = async ({ destination }) => {
+      fs.writeFileSync(destination, "corrupt-bytes");
+      return { ok: true, bytes: 13, path: destination };
+    };
+    await assert.rejects(
+      downloader.downloadMiniCpmModel({
+        modelPreset: "minicpm5-1b",
+        destinationDir: dir,
+        env: { MINICPM_MODEL_PROVIDER: "huggingface" },
+        requestTextImpl: api,
+        downloadImpl,
+        snapshotCountImpl: null,
+      }),
+      /sha256 mismatch/
+    );
+    assert.equal(fs.existsSync(path.join(dir, "MiniCPM5-1B-Q8_0.gguf")), false);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("skips verification when the hash API is unreachable", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "deskpet-skiphash-"));
+    const downloadImpl = async ({ destination }) => {
+      fs.writeFileSync(destination, "unverified-bytes");
+      return { ok: true, bytes: 16, path: destination };
+    };
+    const result = await downloader.downloadMiniCpmModel({
+      modelPreset: "minicpm5-1b",
+      destinationDir: dir,
+      env: { MINICPM_MODEL_PROVIDER: "huggingface" },
+      requestTextImpl: async () => { throw new Error("offline"); },
+      downloadImpl,
+      snapshotCountImpl: null,
+    });
+    assert.equal(result.ok, true);
+    assert.equal(fs.existsSync(path.join(dir, "MiniCPM5-1B-Q8_0.gguf")), true);
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });

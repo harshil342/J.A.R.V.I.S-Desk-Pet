@@ -15,6 +15,7 @@ const MODEL_PRESETS = {
     desc: "Fast & lightweight (~1.15 GB), low memory footprint. Perfect for laptops & iGPUs.",
     filename: "MiniCPM5-1B-Q8_0.gguf",
     sizeBytes: 1_153_529_216,
+    sha256: null, // optional hard pin; otherwise resolved live from HF LFS metadata
     hfRepo: "openbmb/MiniCPM5-1B-GGUF",
     msRepo: "OpenBMB/MiniCPM5-1B-GGUF",
     revision: "master",
@@ -26,6 +27,7 @@ const MODEL_PRESETS = {
     desc: "Advanced reasoning & coding (~1.56 GB). Recommended for 16GB+ RAM or GPUs.",
     filename: "MiniCPM5-2B-Q4_K_M.gguf",
     sizeBytes: 1_561_318_368,
+    sha256: null, // optional hard pin; otherwise resolved live from HF LFS metadata
     hfRepo: "openbmb/MiniCPM5-2B-GGUF",
     msRepo: "OpenBMB/MiniCPM5-2B-GGUF",
     revision: "master",
@@ -260,6 +262,35 @@ function removeQuietly(file) {
   try { fs.rmSync(file, { force: true }); } catch {}
 }
 
+// ponytail: stream the file once, never load a 2GB model into RAM
+function sha256File(filePath) {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    const stream = fs.createReadStream(filePath);
+    stream.on("error", reject);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.on("end", () => {
+      try { resolve(hash.digest("hex")); } catch (err) { reject(err); }
+    });
+  });
+}
+
+// Best-effort: read the expected content hash from HF's own LFS metadata.
+// Returns null when offline, unparsable, or the file isn't LFS-tracked —
+// callers treat null as "skip verification", never as failure.
+async function fetchHuggingFaceLfsSha({ repo, filename, requestTextImpl = requestText, env = process.env, agent } = {}) {
+  try {
+    const body = await requestTextImpl(`https://huggingface.co/api/models/${repo}/revision/main`, { timeoutMs: 15000, env, agent });
+    const siblings = (JSON.parse(body) || {}).siblings || [];
+    const entry = siblings.find((s) => s && s.rfilename === filename);
+    const oid = entry && entry.lfs && entry.lfs.oid;
+    const hex = String(oid || "").replace(/^sha256:/, "").toLowerCase();
+    return /^[0-9a-f]{64}$/.test(hex) ? hex : null;
+  } catch {
+    return null;
+  }
+}
+
 function downloadUrlToFile({
   providerId,
   url,
@@ -455,6 +486,17 @@ async function downloadMiniCpmModel({
         onProgress,
         agent,
       });
+      // Content hash is provider-independent (same GGUF everywhere): verify
+      // whenever HF publishes an LFS oid, otherwise keep size-only checking.
+      const expectedSha = preset.sha256
+        || await fetchHuggingFaceLfsSha({ repo: preset.hfRepo, filename: preset.filename, requestTextImpl, env, agent });
+      if (expectedSha) {
+        const actualSha = await sha256File(destination);
+        if (actualSha !== expectedSha) {
+          removeQuietly(destination);
+          throw new Error(`sha256 mismatch for ${preset.filename} (expected ${expectedSha.slice(0, 12)}…, got ${actualSha.slice(0, 12)}…); deleted corrupt file`);
+        }
+      }
       if (typeof onProgress === "function") {
         onProgress({ phase: "complete", provider: providerId, file: preset.filename, path: destination, modelPreset: preset.id });
       }
@@ -495,6 +537,7 @@ module.exports = {
   detectCountry,
   downloadMiniCpmModel,
   downloadUrlToFile,
+  fetchHuggingFaceLfsSha,
   getModelPreset,
   getProvidersForPreset,
   getTokenForProvider,
@@ -503,5 +546,6 @@ module.exports = {
   parseCountryText,
   providerOrder,
   selectProviderForCountry,
+  sha256File,
   triggerModelScopeSnapshotCount,
 };

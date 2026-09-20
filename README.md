@@ -322,7 +322,7 @@ J.A.R.V.I.S. pairs ultra-low-latency deterministic execution with native edge mo
 
 ## 🧪 Quality & Test Verification Matrix
 
-J.A.R.V.I.S. Desk Pet is rigorously verified with **4,659 automated tests** passing with 0 failures across both the Electron desktop shell and the Python FastAPI sidecar gateway:
+J.A.R.V.I.S. Desk Pet is rigorously verified with **4,664 automated tests** passing with 0 failures across both the Electron desktop shell and the Python FastAPI sidecar gateway:
 
 ```
 ========================================================================================
@@ -330,17 +330,17 @@ J.A.R.V.I.S. Desk Pet is rigorously verified with **4,659 automated tests** pass
 ========================================================================================
  Suite Layer                 | Passed   | Failed | Skipped | Test Suites / Files
 -----------------------------+----------+--------+---------+----------------------------
- Electron & UI Runtime       | 4,378    | 0      | 12      | 496 suites (1,247 test units)
+ Electron & UI Runtime       | 4,383    | 0      | 12      | 496 suites (1,247 test units)
  Python FastAPI Gateway      | 281      | 0      | 2       | 281 test items
 -----------------------------+----------+--------+---------+----------------------------
- TOTAL VERIFIED TESTS        | 4,659    | 0      | 14      | 100% Passing Pass Rate
+ TOTAL VERIFIED TESTS        | 4,664    | 0      | 14      | 100% Passing Pass Rate
 ========================================================================================
 ```
 
 ### Reproduce Test Verification
 
 ```powershell
-# 1. Run the complete Electron & J.A.R.V.I.S. test suite (4,378 tests)
+# 1. Run the complete Electron & J.A.R.V.I.S. test suite (4,383 tests)
 cd clawd-on-desk && node test/run-tests.js
 
 # 2. Run Python FastAPI Gateway test suite (281 tests)

@@ -23,7 +23,36 @@ permissions:
   contents: read
 
 jobs:
+  test:
+    runs-on: ubuntu-22.04
+    name: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Electron tests
+        working-directory: clawd-on-desk
+        run: |
+          npm install --no-audit --no-fund
+          node test/run-tests.js
+
+      - name: Sidecar tests
+        run: uv run --project minicpm-sidecar pytest minicpm-sidecar/tests -q -p no:cacheprovider
+
   build-linux:
+    needs: test
     runs-on: ubuntu-22.04
     name: linux-x64
     steps:
@@ -84,6 +113,7 @@ jobs:
           retention-days: 7
 
   build-windows:
+    needs: test
     runs-on: windows-2022
     name: windows
     defaults:
