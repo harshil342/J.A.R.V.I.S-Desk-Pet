@@ -136,7 +136,7 @@ function evaluateShouldShow({
   if (sessionHudPinned === true) return { show: true, nextHoldUntil: 0 };
   if (clickRevealed !== true) return { show: false, nextHoldUntil: 0 };
 
-  // revealed 态：hot zone 续命 + grace period
+  // revealed state: hot zone extends hold + grace period
   let nextHoldUntil = Number.isFinite(visibleHoldUntil) ? visibleHoldUntil : 0;
   const tNow = Number.isFinite(now) ? now : 0;
   const grace = Number.isFinite(hideGraceMs) ? hideGraceMs : 0;

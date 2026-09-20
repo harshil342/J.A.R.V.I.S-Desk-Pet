@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld("minicpm", {
   // Bubble window controls
   resize: (width, height) => ipcRenderer.invoke("minicpm:resize", { width, height }),
   setChatAnchor: (bottomY) => ipcRenderer.invoke("minicpm:set-chat-anchor", { bottomY }),
+  setExpandMode: (mode) => ipcRenderer.invoke("minicpm:set-expand-mode", { mode }),
+  getExpandMode: () => ipcRenderer.invoke("minicpm:get-expand-mode"),
   hideWindow: () => ipcRenderer.invoke("minicpm:hide-window"),
   showWindow: () => ipcRenderer.invoke("minicpm:show-window"),
   focusWindow: () => ipcRenderer.invoke("minicpm:focus-window"),

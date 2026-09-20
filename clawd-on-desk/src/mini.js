@@ -299,15 +299,15 @@ function checkMiniModeSnap() {
 function enterMiniMode(wa, viaMenu, edge) {
   if (!themeSupportsMini()) return;
   if (miniMode && !viaMenu) return;
-  // preMini 存 virtual — 退出 mini 时能复原贴顶位置
+  // preMini stores virtual — restores edge-pinned position on mini exit
   const virtualBounds = ctx.getPetWindowBounds();
   if (!viaMenu) {
     preMiniX = virtualBounds.x;
     preMiniY = virtualBounds.y;
   }
-  // 清零 viewport offset — mini 全程用 real 坐标,避免每帧 materialize + IPC 风暴
+  // Zero viewport offset — mini uses real coords throughout, avoids per-frame materialize + IPC storm
   if (typeof ctx.setViewportOffsetY === "function") ctx.setViewportOffsetY(0);
-  // 之后 real === virtual,用 real API 读取当前 y 作为 mini 起点
+  // After this real === virtual, read current y via real API as mini start
   const bounds = ctx.win.getBounds();
   miniMode = true;
   miniSleepPeeked = false;
@@ -439,11 +439,11 @@ function exitMiniMode() {
 
 function enterMiniViaMenu() {
   if (!themeSupportsMini()) return;
-  // preMini 存 virtual — 退出 mini 时能复原贴顶位置
+  // preMini stores virtual — restores edge-pinned position on mini exit
   const virtualBounds = ctx.getPetWindowBounds();
   preMiniX = virtualBounds.x;
   preMiniY = virtualBounds.y;
-  // 清零 viewport offset — 和 enterMiniMode 对称
+  // Zero viewport offset — symmetric with enterMiniMode
   if (typeof ctx.setViewportOffsetY === "function") ctx.setViewportOffsetY(0);
   const bounds = ctx.win.getBounds();
   const size = _getSize();
@@ -498,13 +498,13 @@ function handleDisplayChange() {
   if (!ctx.win || ctx.win.isDestroyed()) return;
   if (!miniMode) return;
   const size = _getSize();
-  // mini 期间 offset 恒为 0,real === virtual,直接读 real
+  // Offset stays 0 during mini, real === virtual, read real directly
   const bounds = ctx.win.getBounds();
   const snapY = miniSnap ? miniSnap.y : bounds.y;
   const wa = ctx.getNearestWorkArea(currentMiniX + size.width / 2, snapY + size.height / 2);
   lastMiniWorkArea = wa;
   currentMiniX = calcMiniX(wa, size);
-  // mini 的 y 必须在工作区内(real 坐标),加回两端 clamp
+  // Mini y must stay in work area (real coords), clamp both ends
   const clampedY = Math.max(wa.y, Math.min(snapY, wa.y + wa.height - size.height));
   miniSnap = { y: clampedY, width: size.width, height: size.height };
   ctx.win.setBounds({ x: currentMiniX, y: clampedY, width: size.width, height: size.height });
@@ -537,7 +537,7 @@ function restoreFromPrefs(prefs, size) {
   const wa = ctx.getNearestWorkArea(prefs.x + size.width / 2, prefs.y + size.height / 2);
   lastMiniWorkArea = wa;
   currentMiniX = calcMiniX(wa, size);
-  // 启动恢复 mini 时 y 必须在工作区内(保证 offset = 0,符合 mini 语义)
+  // Restoring mini on launch: y must stay in work area (keeps offset = 0, mini semantics)
   const startY = Math.max(wa.y, Math.min(prefs.y, wa.y + wa.height - size.height));
   miniSnap = { y: startY, width: size.width, height: size.height };
   miniMode = true;

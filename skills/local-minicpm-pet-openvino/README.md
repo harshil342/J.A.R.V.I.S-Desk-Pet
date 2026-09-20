@@ -1,33 +1,33 @@
 # Local-MiniCPM-Pet-OpenVINO
 
-一键部署 MiniCPM 桌宠体验环境，后端采用 OpenVINO 推理引擎，在 Intel AIPC 上完全本地运行。
+One-click deploy of the MiniCPM desk-pet experience with the OpenVINO inference backend, fully local on Intel AIPC.
 
-## 这是什么
+## What is this
 
-这是一个面向 Intel AIPC 开发者的 Skill，用于快速搭建 MiniCPM 桌宠的完整体验环境：
+A Skill for Intel AIPC developers to quickly set up the full MiniCPM desk-pet experience:
 
-- **前端**：MiniCPM Desk Pet（Electron 桌宠应用，从源码 `npm start` 启动）
-- **后端**：OpenVINO 推理服务（FastAPI HTTP 服务，替代默认的 llama-server）
-- **模型**：MiniCPM5-1B INT8 量化版（从 ModelScope 自动下载）
+- **Frontend**: MiniCPM Desk Pet (Electron pet app, started from source via `npm start`)
+- **Backend**: OpenVINO inference service (FastAPI HTTP service, replaces the default llama-server)
+- **Model**: MiniCPM5-1B INT8 quantized (auto-downloaded from ModelScope)
 
-整个推理流程在本地 Intel 硬件上完成，无需云端服务。部署完成后，用户直接通过桌宠 UI 进行对话。
+All inference runs locally on Intel hardware, no cloud needed. After deploy, chat with the pet directly in its UI.
 
-## 目录结构
+## Layout
 
 ```
 local-minicpm-pet-openvino/
-├── README.md                 ← 本文件
+├── README.md                 ← this file
 └── src/
-    ├── SKILL.md              ← Skill 元数据 + Agent 执行指南
-    ├── info.json             ← 运行时配置（venv 名称、Python 版本、内存需求、模型地址）
-    ├── meta.json             ← 应用商店展示信息（名称、描述、用例标签）
-    ├── requirements.txt      ← Python 依赖清单（openvino-genai, fastapi, uvicorn 等）
+    ├── SKILL.md              ← Skill metadata + agent runbook
+    ├── info.json             ← runtime config (venv name, Python version, memory needs, model URL)
+    ├── meta.json             ← store listing (name, description, use-case tags)
+    ├── requirements.txt      ← Python deps (openvino-genai, fastapi, uvicorn, etc.)
     └── scripts/
-        ├── run.ps1           ← 部署入口：环境检测 → 依赖安装 → 启动推理服务 → 启动桌宠
-        └── server.py         ← OpenVINO 推理 HTTP 服务（FastAPI，端口 18765）
+        ├── run.ps1           ← deploy entry: env check → deps → start inference → start pet
+        └── server.py         ← OpenVINO inference HTTP service (FastAPI, port 18765)
 ```
 
-## 工作原理
+## How it works
 
 ```
 ┌────────────────┐   HTTP :18765   ┌────────────────────┐   OpenVINO   ┌──────────┐
@@ -36,114 +36,114 @@ local-minicpm-pet-openvino/
 └────────────────┘                 └────────────────────┘             └──────────┘
 ```
 
-1. `run.ps1` 是部署入口，依次完成：硬件检测 → 环境配置 → 依赖安装 → 服务启动 → 前端启动
-2. `server.py` 作为 HTTP 推理服务常驻后台，提供 OpenAI 兼容的 `/v1/chat/completions` API
-3. 桌宠前端通过 HTTP 与推理服务通信，用户直接在桌宠 UI 上聊天
+1. `run.ps1` is the deploy entry: hardware check → env setup → dep install → service start → frontend start
+2. `server.py` stays resident as the HTTP inference service with OpenAI-compatible `/v1/chat/completions`
+3. The pet frontend talks to the inference service over HTTP; chat in the pet UI
 
-## 使用方式
+## Usage
 
-本 Skill 通过 AI 助手（Agent）使用，用户全程只需自然语言对话，无需手动敲命令。
+This Skill is used via an AI assistant (agent); the user just chats in natural language, no manual commands.
 
-### 第一步：安装 Skill
+### Step 1: Install the Skill
 
-将整个 `local-minicpm-pet-openvino` 目录放入你所使用的 AI 助手的 Skills 安装目录，或通过应用市场搜索安装。
+Drop the whole `local-minicpm-pet-openvino` folder into your AI assistant's Skills directory, or install via the marketplace.
 
-### 第二步：对助手说话
+### Step 2: Tell the assistant
 
-安装完成后，直接对 AI 助手说出你的需求，例如：
+Once installed, just tell the AI assistant what you need, e.g.:
 
-- "帮我部署 MiniCPM 桌宠"
-- "搭建一个本地 AI 桌宠体验环境"
-- "在我这台 Intel 电脑上跑一个 OpenVINO 桌宠"
+- "Deploy the MiniCPM desk pet for me"
+- "Set up a local AI desk-pet experience"
+- "Run an OpenVINO desk pet on this Intel machine"
 
-助手识别到关键意图后，会自动调用本 Skill 开始部署。
+The assistant picks up the intent and starts deploying with this Skill.
 
-### 第三步：等待部署完成，开始使用
+### Step 3: Wait, then use it
 
-助手会自动完成以下全部工作（无需人工干预）：
+The assistant does all of this with no manual steps:
 
-1. 判断你的网络环境（国内自动走镜像源）
-2. 检测 Intel AIPC 硬件
-3. 安装 Python / npm 依赖
-4. 下载 AI 模型（约 1.5GB，首次）
-5. 启动 OpenVINO 推理服务
-6. 拉起桌宠前端窗口
+1. Detect your network env (China auto-uses mirrors)
+2. Check Intel AIPC hardware
+3. Install Python / npm deps
+4. Download the AI model (~1.5GB, first time)
+5. Start the OpenVINO inference service
+6. Launch the pet frontend window
 
-部署完成后，桌宠窗口自动出现在桌面上，直接和它对话即可。
+When done, the pet window appears on the desktop — just talk to it.
 
-### 日常管理
+### Daily management
 
-部署完成后，你也可以随时对助手说：
+After deploy, tell the assistant anytime:
 
-- "停掉桌宠" / "关掉桌宠环境" → 助手会停止推理服务和前端
-- "桌宠还在跑吗" / "看看桌宠状态" → 助手会检查运行状态并报告
-- "重新启动桌宠" → 助手会再次部署（幂等，跳过已完成步骤，秒级启动）
+- "Stop the pet" → stops inference + frontend
+- "Is the pet still running?" → checks status and reports
+- "Restart the pet" → redeploys (idempotent, skips done steps, starts in seconds)
 
-## 环境要求
+## Requirements
 
-- Windows 10/11 + Intel AIPC 硬件（LNL/ARL/PTL/WCL）
+- Windows 10/11 + Intel AIPC hardware (LNL/ARL/PTL/WCL)
 - Python 3.11+
 - Node.js 18+ / npm
 - git
 
-## API 端点（部署后可用）
+## API endpoints (after deploy)
 
-| 端点 | 方法 | 说明 |
+| Endpoint | Method | Notes |
 | --- | --- | --- |
-| `/api/health` | GET | 健康检查（返回模型加载状态） |
-| `/v1/chat/completions` | POST | OpenAI 兼容的对话推理 |
-| `/api/shutdown` | POST | 优雅关闭推理服务 |
+| `/api/health` | GET | health check (model load status) |
+| `/v1/chat/completions` | POST | OpenAI-compatible chat inference |
+| `/api/shutdown` | POST | graceful shutdown |
 
 ---
 
-## 开发者 / 排障参考
+## Developer / troubleshooting reference
 
-> 以下内容仅供开发者手动调试或排查问题使用，普通用户无需关心。
+> Below is for developers debugging manually only; end users can ignore.
 
-手动调用部署脚本：
+Manually invoke the deploy script:
 
 ```powershell
-# 部署并启动（中国大陆环境）
+# Deploy and start (mainland China)
 scripts\run.ps1 --china
 
-# 部署并启动（海外 / 可直连环境）
+# Deploy and start (direct internet)
 scripts\run.ps1
 
-# 查看运行状态
+# Check status
 scripts\run.ps1 --status
 
-# 停止所有服务
+# Stop all services
 scripts\run.ps1 --stop
 
-# 输出诊断信息（排障用）
+# Diagnostics (for troubleshooting)
 scripts\run.ps1 --debug
 ```
 
-脚本参数：
+Script flags:
 
-| 参数 | 说明 |
+| Flag | Notes |
 | --- | --- |
-| `--china` | 锁定中国大陆镜像源（GitCode / 清华 pip / 淘宝 npm / npmmirror Electron） |
-| `--status` | 查看推理服务和桌宠前端的运行状态 |
-| `--stop` | 停止推理服务 + 关闭桌宠前端 |
-| `--debug` | 输出详细诊断信息（见下方说明） |
+| `--china` | pin mainland-China mirrors (GitCode / Tsinghua pip / Taobao npm / npmmirror Electron) |
+| `--status` | show inference + pet frontend status |
+| `--stop` | stop inference + pet frontend |
+| `--debug` | verbose diagnostics (see below) |
 
-`--debug` 输出内容：
+`--debug` output:
 
-| 分类 | 信息 |
+| Group | Info |
 | --- | --- |
-| 系统 | Windows 版本、CPU 架构 |
-| Python 环境 | venv 是否存在、Python 版本、openvino/fastapi 等包版本 |
-| 模型 | 模型目录是否存在、文件列表及大小 |
-| 推理服务 | /api/health 响应、端口 18765 占用情况（netstat） |
-| 桌宠前端 | electron 相关进程名和 PID |
-| 环境变量 | MINICPM_BACKEND、PIP_INDEX_URL、ELECTRON_MIRROR 等 |
-| 最近日志 | 最新日志文件的最后 20 行 |
+| System | Windows version, CPU arch |
+| Python env | venv present, Python version, openvino/fastapi pkg versions |
+| Model | model dir present, file list + sizes |
+| Inference | /api/health response, port 18765 occupancy (netstat) |
+| Pet frontend | electron process names + PIDs |
+| Env vars | MINICPM_BACKEND, PIP_INDEX_URL, ELECTRON_MIRROR, etc. |
+| Recent logs | last 20 lines of newest log file |
 
-健康检查：
+Health check:
 
 ```powershell
 curl http://127.0.0.1:18765/api/health
 ```
 
-日志位置：`%USERPROFILE%\.openvino\log\`
+Logs: `%USERPROFILE%\.openvino\log\`

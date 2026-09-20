@@ -20,7 +20,7 @@ case "$(uname -s)-$(uname -m)" in
   Linux-x86_64)  TARGET="linux-x64";   EXE="" ;;
   Linux-aarch64) TARGET="linux-arm64"; EXE="" ;;
   *)
-    red "不支持的 host: $(uname -s) $(uname -m)。Windows 用 PyInstaller GUI 或在 WSL 内跑。"
+    red "Unsupported host: $(uname -s) $(uname -m). On Windows use PyInstaller GUI or run inside WSL."
     exit 1
     ;;
 esac
@@ -29,22 +29,22 @@ cyan "==> Gateway target: $TARGET"
 
 if [[ ! -d "$ROOT/.venv" ]]; then
   if ! command -v uv >/dev/null 2>&1; then
-    red "uv 未安装。先 curl -LsSf https://astral.sh/uv/install.sh | sh"
+    red "uv not installed. Install first: curl -LsSf https://astral.sh/uv/install.sh | sh"
     exit 1
   fi
-  cyan "==> uv sync (首次安装 gateway 依赖)..."
+  cyan "==> uv sync (first-time gateway deps install)..."
   ( cd "$ROOT" && uv sync )
 fi
 
 if [[ ! -x "$ROOT/.venv/bin/pyinstaller" ]]; then
-  cyan "==> 安装 PyInstaller..."
+  cyan "==> Installing PyInstaller..."
   ( cd "$ROOT" && uv pip install "pyinstaller>=6.0" )
 fi
 
-cyan "==> 清理上次产物..."
+cyan "==> Cleaning previous build output..."
 rm -rf "$ROOT/build/build" "$ROOT/build/dist"
 
-cyan "==> 运行 PyInstaller..."
+cyan "==> Running PyInstaller..."
 ( cd "$ROOT/build" && "$ROOT/.venv/bin/pyinstaller" \
     gateway.spec \
     --distpath "$ROOT/build/dist" \
@@ -56,10 +56,10 @@ OUT="$ROOT/bin/$TARGET"
 mkdir -p "$OUT"
 SRC_BIN="$ROOT/build/dist/minicpm-sidecar${EXE}"
 if [[ ! -f "$SRC_BIN" ]]; then
-  red "PyInstaller 没找到产物：$SRC_BIN"
+  red "PyInstaller output not found: $SRC_BIN"
   exit 1
 fi
 cp -f "$SRC_BIN" "$OUT/"
 
 green "==> OK -> $OUT/minicpm-sidecar${EXE}"
-green "    试跑: $OUT/minicpm-sidecar${EXE} --help"
+green "    smoke test: $OUT/minicpm-sidecar${EXE} --help"

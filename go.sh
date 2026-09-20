@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
-# go.sh — [开发者快捷脚本] 一键起开发模式的 MiniCPM 桌宠
+# go.sh — [dev shortcut] launch MiniCPM pet in dev mode
 #
 # ┌────────────────────────────────────────────────────────────────┐
-# │  这是给「开发者」用的，不是给最终用户的。                       │
-# │  普通用户请直接下载 dmg/exe 安装包，安装后跟着 Onboarding 走。 │
+# │  For DEVELOPERS, not end users.                                │
+# │  End users: download the dmg/exe installer, then follow Onboarding. │
 # │                                                                │
-# │  ./go.sh 做的事：                                              │
-# │  1) 装 Node / uv 依赖                                          │
-# │  2) 下载官方 llama.cpp release 里的 llama-server               │
-# │  3) uv sync 给 gateway 装 fastapi/uvicorn 等轻量 deps           │
-# │  4) npm install + npm start 起 Electron（dev 模式）            │
+# │  ./go.sh does:                                                 │
+# │  1) Install Node / uv deps                                     │
+# │  2) Download official llama-server from the llama.cpp release  │
+# │  3) uv sync: fastapi/uvicorn etc. for the gateway              │
+# │  4) npm install + npm start (Electron dev mode)                │
 # │                                                                │
-# │  打包好的 .app / .dmg / .exe 已经内置 minicpm-sidecar 二进制，│
-# │  不依赖本脚本。                                                │
+# │  Packaged .app / .dmg / .exe bundles minicpm-sidecar already,  │
+# │  no dependency on this script.                                 │
 # └────────────────────────────────────────────────────────────────┘
 #
 # Usage:
-#   ./go.sh                # 安装 + 启动 (前台)
-#   ./go.sh setup          # 只装依赖,不启动
-#   ./go.sh start          # 跳过依赖检查直接启动
-#   ./go.sh doctor         # 检查环境但什么都不做
-#   ./go.sh fetch-llama    # 重新下载官方 llama-server
-#   ./go.sh build          # 出整套安装包 (mac arm64 dmg)
+#   ./go.sh                # install + launch (foreground)
+#   ./go.sh setup          # deps only, no launch
+#   ./go.sh start          # launch, skip dep checks
+#   ./go.sh doctor         # check env, change nothing
+#   ./go.sh fetch-llama    # re-download official llama-server
+#   ./go.sh build          # full installer (mac arm64 dmg)
 
 set -e
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -53,13 +53,13 @@ ensure_node() {
       green "    ✓ Node $(node -v)"
       return 0
     fi
-    yellow "    Node 版本 $(node -v) < 18,需要升级"
+    yellow "    Node $(node -v) < 18, please upgrade"
   else
-    yellow "    Node 未安装,自动装一个..."
+    yellow "    Node not installed, installing..."
   fi
 
   if command -v brew >/dev/null 2>&1; then
-    cyan "    使用 Homebrew 安装 Node 22 (LTS)..."
+    cyan "    Installing Node 22 (LTS) via Homebrew..."
     if brew install node@22; then
       brew link --overwrite --force node@22 || true
       if command -v node >/dev/null 2>&1; then
@@ -67,16 +67,16 @@ ensure_node() {
         return 0
       fi
     fi
-    yellow "    Homebrew 安装失败,改用 fnm..."
+    yellow "    Homebrew install failed, trying fnm..."
   fi
 
   if ! command -v fnm >/dev/null 2>&1; then
-    cyan "    安装 fnm (Node 版本管理器,无 sudo)..."
+    cyan "    Installing fnm (Node version manager, no sudo)..."
     curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
   fi
   load_fnm_env
   if ! command -v fnm >/dev/null 2>&1; then
-    red "fnm 自动安装失败。请手动安装 Node 18+: https://nodejs.org/"
+    red "fnm auto-install failed. Please install Node 18+ manually: https://nodejs.org/"
     exit 1
   fi
 
@@ -87,7 +87,7 @@ ensure_node() {
   load_fnm_env
 
   if ! command -v node >/dev/null 2>&1; then
-    red "Node 安装后仍找不到。检查 ~/.local/share/fnm/ 或重启终端再试。"
+    red "Node still not found after install. Check ~/.local/share/fnm/ or restart the terminal."
     exit 1
   fi
   green "    ✓ Node $(node -v) (fnm)"
@@ -103,41 +103,41 @@ ensure_uv() {
     green "    ✓ uv $(uv --version) (~/.local/bin)"
     return 0
   fi
-  yellow "    uv 未安装,自动安装..."
+  yellow "    uv not installed, installing..."
   curl -LsSf https://astral.sh/uv/install.sh | sh
   export PATH="$HOME/.local/bin:$PATH"
   if ! command -v uv >/dev/null 2>&1; then
-    red "uv 自动安装失败。请手动安装: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    red "uv auto-install failed. Install manually: curl -LsSf https://astral.sh/uv/install.sh | sh"
     exit 1
   fi
-  green "    ✓ uv $(uv --version) (新装)"
+  green "    ✓ uv $(uv --version) (fresh install)"
 }
 
 check_environment() {
-  cyan "==> 检查环境..."
+  cyan "==> Checking environment..."
 
   if [[ "$(uname)" != "Darwin" && "$(uname)" != "Linux" ]]; then
-    yellow "    Windows 用户请用 PowerShell：scripts\\go.ps1 (后续提供)"
+    yellow "    Windows users: use PowerShell scripts\\go.ps1 (coming later)"
   fi
 
   ensure_node
   ensure_uv
 
   if [[ ! -f "$SIDECAR_DIR/pyproject.toml" ]]; then
-    red "找不到 $SIDECAR_DIR/pyproject.toml,你是不是没解压完整?"
+    red "Missing $SIDECAR_DIR/pyproject.toml — incomplete checkout?"
     exit 1
   fi
   green "    ✓ minicpm-sidecar/"
 
   if [[ ! -f "$APP_DIR/package.json" ]]; then
-    red "找不到 $APP_DIR/package.json"
+    red "Missing $APP_DIR/package.json"
     exit 1
   fi
   green "    ✓ clawd-on-desk/"
 }
 
 ensure_llama_server() {
-  cyan "==> 检查 llama-server..."
+  cyan "==> Checking llama-server..."
   local triple
   case "$(uname -s)-$(uname -m)" in
     Darwin-arm64)  triple="mac-arm64" ;;
@@ -148,61 +148,61 @@ ensure_llama_server() {
   esac
   local bin="$SIDECAR_DIR/bin/$triple/llama-server"
   if [[ -x "$bin" ]]; then
-    green "    ✓ llama-server 已存在 ($bin)"
+    green "    ✓ llama-server found ($bin)"
     return 0
   fi
-  cyan "    首次下载官方 llama.cpp release 里的 llama-server..."
+  cyan "    First run: downloading official llama.cpp release llama-server..."
   ( cd "$SIDECAR_DIR" && ./scripts/fetch-llama-release.sh )
-  green "    ✓ llama-server 已就绪"
+  green "    ✓ llama-server ready"
 }
 
 install_python_deps() {
-  cyan "==> Gateway 依赖 (uv sync)..."
+  cyan "==> Gateway deps (uv sync)..."
   if [[ -d "$SIDECAR_DIR/.venv" && -f "$SIDECAR_DIR/.venv/bin/python" ]]; then
-    green "    ✓ .venv 已存在,跳过 sync (跑 ./go.sh setup --force-sync 强制重装)"
+    green "    ✓ .venv exists, skipping sync (run ./go.sh setup --force-sync to force)"
   else
-    cyan "    首次安装,只需几十 MB（fastapi + uvicorn + httpx + huggingface_hub）..."
+    cyan "    First install, only a few dozen MB (fastapi + uvicorn + httpx + huggingface_hub)..."
     ( cd "$SIDECAR_DIR" && uv sync )
     green "    ✓ Gateway deps installed"
   fi
 }
 
 install_npm_deps() {
-  cyan "==> Electron 依赖 (npm install)..."
+  cyan "==> Electron deps (npm install)..."
   if [[ -d "$APP_DIR/node_modules" ]]; then
-    green "    ✓ node_modules 已存在,跳过"
+    green "    ✓ node_modules exists, skipping"
   else
     ( cd "$APP_DIR" && npm install --no-audit --no-fund )
     green "    ✓ npm deps installed"
   fi
 }
 
-# LoRA 适配器权重 (.gguf) 不在 git 里,首次/缺失时从 Hugging Face 拉取
-# (脚本幂等:本地已有有效文件即跳过)。
-#   $1 == "required" → 失败即终止 (打包路径,缺文件会出残包)
-#   否则             → 尽力而为 (dev 启动,拉不到也能先用 Base 人格)
+# LoRA adapter weights (.gguf) are not in git; fetch from Hugging Face on first run / when missing
+# (idempotent: skip if a valid local file already exists).
+#   $1 == "required" → abort on failure (packaging path, missing file = broken bundle)
+#   otherwise        → best effort (dev start, pet can run on Base persona if fetch fails)
 fetch_adapters() {
-  cyan "==> LoRA 适配器权重 (Hugging Face,缺失才下载)..."
+  cyan "==> LoRA adapter weights (Hugging Face, download if missing)..."
   load_fnm_env
   if ! command -v node >/dev/null 2>&1; then
-    yellow "    ⚠ Node 不在 PATH,跳过适配器下载"
+    yellow "    ⚠ Node not in PATH, skipping adapter download"
     return 0
   fi
   if ( cd "$APP_DIR" && node scripts/fetch-adapters.js ); then
     return 0
   fi
   if [[ "${1:-}" == "required" ]]; then
-    red "    适配器下载失败,打包会缺少猫娘人格。检查网络后重试。"
+    red "    Adapter download failed, bundle will miss the neko persona. Check network and retry."
     exit 1
   fi
-  yellow "    ⚠ 适配器下载失败;桌宠可先用 Base 人格,稍后 npm run fetch:adapters 重试。"
+  yellow "    ⚠ Adapter download failed; pet can run on Base persona for now, retry later with npm run fetch:adapters."
 }
 
 start_pet() {
-  cyan "==> 启动桌宠..."
+  cyan "==> Starting deskpet..."
   load_fnm_env
   if ! command -v node >/dev/null 2>&1; then
-    red "Node 不在 PATH 中。先跑一次 ./go.sh setup,或重启终端。"
+    red "Node not in PATH. Run ./go.sh setup once, or restart the terminal."
     exit 1
   fi
   # Hint the Electron host where to find the sidecar source and Python.
@@ -218,7 +218,7 @@ start_pet() {
   green "    MINICPM_PYTHON=$MINICPM_PYTHON"
   [[ -n "${MINICPM_MODEL_DIR:-}" ]] && green "    MINICPM_MODEL_DIR=$MINICPM_MODEL_DIR"
   echo
-  green "桌宠启动中... 关闭终端 (Ctrl+C) 即停止。"
+  green "Deskpet starting... Close the terminal (Ctrl+C) to stop."
   cd "$APP_DIR" && exec npm start
 }
 
@@ -227,7 +227,7 @@ case "$cmd" in
   doctor)
     check_environment
     green ""
-    green "✅ 环境就绪,可直接 ./go.sh 启动。"
+    green "✅ Environment ready, run ./go.sh to start."
     ;;
   setup)
     check_environment
@@ -236,7 +236,7 @@ case "$cmd" in
     install_npm_deps
     fetch_adapters
     green ""
-    green "✅ 安装完成。下一步: ./go.sh start"
+    green "✅ Setup complete. Next: ./go.sh start"
     ;;
   start)
     start_pet
@@ -244,7 +244,7 @@ case "$cmd" in
   fetch-llama|build-llama)
     check_environment
     if [[ "$cmd" == "build-llama" ]]; then
-      yellow "    build-llama 现在只是兼容别名；将下载官方 llama.cpp release。"
+      yellow "    build-llama is now just a compat alias; it downloads the official llama.cpp release."
     fi
     ( cd "$SIDECAR_DIR" && ./scripts/fetch-llama-release.sh )
     ;;
@@ -257,22 +257,22 @@ case "$cmd" in
     start_pet
     ;;
   build)
-    # 一站式：下载官方 llama-server + PyInstaller 编 gateway →
-    # electron-builder 出 dmg。输出位于 clawd-on-desk/dist/*.dmg。
+    # All-in-one: download official llama-server + PyInstaller gateway →
+    # electron-builder dmg. Output in clawd-on-desk/dist/*.dmg.
     check_environment
     ensure_llama_server
     install_python_deps
     install_npm_deps
     fetch_adapters required
-    cyan "==> 编 gateway + 准备 sidecar-bin..."
+    cyan "==> Building gateway + staging sidecar-bin..."
     ( cd "$SIDECAR_DIR" && ./scripts/build-all.sh )
-    cyan "==> 打包 Electron 应用 (electron-builder)..."
+    cyan "==> Packaging Electron app (electron-builder)..."
     cd "$APP_DIR" && npx electron-builder --mac --arm64 -c.mac.target=dmg
-    green "==> 完成。dmg 位于 $APP_DIR/dist/"
+    green "==> Done. dmg is at $APP_DIR/dist/"
     ;;
   *)
-    red "未知命令: $cmd"
-    red "用法: ./go.sh [doctor|setup|start|run|build|fetch-llama]"
+    red "Unknown command: $cmd"
+    red "Usage: ./go.sh [doctor|setup|start|run|build|fetch-llama]"
     exit 1
     ;;
 esac

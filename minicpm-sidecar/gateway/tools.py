@@ -160,14 +160,23 @@ def _geocode(city: str) -> Optional[dict]:
 
 def _geolocate_ip() -> Optional[dict]:
     """Last-resort city detection when the user didn't name one."""
-    try:
-        r = httpx.get("https://ipapi.co/json/", timeout=5)
-        r.raise_for_status()
-        d = r.json()
-        return {"lat": d.get("latitude"), "lon": d.get("longitude"),
-                "name": d.get("city") or "your location", "country": d.get("country_name") or ""}
-    except Exception:
-        return None
+    for url in ("http://ip-api.com/json", "https://ipwhois.app/json/"):
+        try:
+            r = httpx.get(url, timeout=3.5)
+            if r.status_code == 200:
+                d = r.json()
+                lat = d.get("lat") or d.get("latitude")
+                lon = d.get("lon") or d.get("longitude")
+                if lat is not None and lon is not None:
+                    return {
+                        "lat": float(lat),
+                        "lon": float(lon),
+                        "name": d.get("city") or "your location",
+                        "country": d.get("country") or d.get("country_name") or "",
+                    }
+        except Exception:
+            continue
+    return None
 
 
 def get_weather(city: Optional[str] = None) -> str:
@@ -201,12 +210,120 @@ def get_weather(city: Optional[str] = None) -> str:
             f"wind {cur.get('wind_speed_10m', '?')} km/h).")
 
 
-# ── Tool 2: time (offline) ───────────────────────────────────────────────────
+# ── Tool 2: clock & time (offline, any timezone) ─────────────────────────────
+
+_TIMEZONES = {
+    # UTC / GMT
+    "utc": (0, "UTC", "UTC"),
+    "gmt": (0, "GMT", "GMT"),
+    # Europe
+    "london": (1, "London", "BST/GMT"),
+    "uk": (1, "United Kingdom", "BST/GMT"),
+    "paris": (2, "Paris", "CEST"),
+    "france": (2, "France", "CEST"),
+    "berlin": (2, "Berlin", "CEST"),
+    "germany": (2, "Germany", "CEST"),
+    "rome": (2, "Rome", "CEST"),
+    "italy": (2, "Italy", "CEST"),
+    "madrid": (2, "Madrid", "CEST"),
+    "spain": (2, "Spain", "CEST"),
+    "amsterdam": (2, "Amsterdam", "CEST"),
+    # Middle East & Africa
+    "cairo": (3, "Cairo", "EEST"),
+    "egypt": (3, "Egypt", "EEST"),
+    "moscow": (3, "Moscow", "MSK"),
+    "russia": (3, "Moscow", "MSK"),
+    "dubai": (4, "Dubai", "GST"),
+    "uae": (4, "UAE", "GST"),
+    # Asia
+    "karachi": (5, "Karachi", "PKT"),
+    "pakistan": (5, "Pakistan", "PKT"),
+    "india": (5.5, "India", "IST"),
+    "ist": (5.5, "India", "IST"),
+    "delhi": (5.5, "Delhi", "IST"),
+    "new delhi": (5.5, "New Delhi", "IST"),
+    "mumbai": (5.5, "Mumbai", "IST"),
+    "bangalore": (5.5, "Bangalore", "IST"),
+    "bengaluru": (5.5, "Bengaluru", "IST"),
+    "kolkata": (5.5, "Kolkata", "IST"),
+    "chennai": (5.5, "Chennai", "IST"),
+    "bangkok": (7, "Bangkok", "ICT"),
+    "thailand": (7, "Thailand", "ICT"),
+    "jakarta": (7, "Jakarta", "WIB"),
+    "singapore": (8, "Singapore", "SGT"),
+    "hong kong": (8, "Hong Kong", "HKT"),
+    "beijing": (8, "Beijing", "CST"),
+    "shanghai": (8, "Shanghai", "CST"),
+    "china": (8, "China", "CST"),
+    "taipei": (8, "Taipei", "CST"),
+    "perth": (8, "Perth", "AWST"),
+    "tokyo": (9, "Tokyo", "JST"),
+    "japan": (9, "Japan", "JST"),
+    "seoul": (9, "Seoul", "KST"),
+    "korea": (9, "South Korea", "KST"),
+    # Australia & Pacific
+    "sydney": (10, "Sydney", "AEST"),
+    "melbourne": (10, "Melbourne", "AEST"),
+    "brisbane": (10, "Brisbane", "AEST"),
+    "australia": (10, "Sydney", "AEST"),
+    "auckland": (12, "Auckland", "NZST"),
+    "new zealand": (12, "Auckland", "NZST"),
+    # Americas
+    "honolulu": (-10, "Honolulu", "HST"),
+    "hawaii": (-10, "Hawaii", "HST"),
+    "anchorage": (-8, "Anchorage", "AKDT"),
+    "alaska": (-8, "Alaska", "AKDT"),
+    "los angeles": (-7, "Los Angeles", "PDT"),
+    "la": (-7, "Los Angeles", "PDT"),
+    "san francisco": (-7, "San Francisco", "PDT"),
+    "seattle": (-7, "Seattle", "PDT"),
+    "vancouver": (-7, "Vancouver", "PDT"),
+    "california": (-7, "California", "PDT"),
+    "pst": (-8, "Pacific Standard Time", "PST"),
+    "pdt": (-7, "Pacific Daylight Time", "PDT"),
+    "denver": (-6, "Denver", "MDT"),
+    "colorado": (-6, "Colorado", "MDT"),
+    "mst": (-7, "Mountain Standard Time", "MST"),
+    "mdt": (-6, "Mountain Daylight Time", "MDT"),
+    "chicago": (-5, "Chicago", "CDT"),
+    "dallas": (-5, "Dallas", "CDT"),
+    "houston": (-5, "Houston", "CDT"),
+    "cst": (-6, "Central Standard Time", "CST"),
+    "cdt": (-5, "Central Daylight Time", "CDT"),
+    "new york": (-4, "New York", "EDT"),
+    "nyc": (-4, "New York City", "EDT"),
+    "boston": (-4, "Boston", "EDT"),
+    "washington": (-4, "Washington, D.C.", "EDT"),
+    "dc": (-4, "Washington, D.C.", "EDT"),
+    "miami": (-4, "Miami", "EDT"),
+    "toronto": (-4, "Toronto", "EDT"),
+    "est": (-5, "Eastern Standard Time", "EST"),
+    "edt": (-4, "Eastern Daylight Time", "EDT"),
+    "sao paulo": (-3, "São Paulo", "BRT"),
+    "brazil": (-3, "São Paulo", "BRT"),
+    "buenos aires": (-3, "Buenos Aires", "ART"),
+    "argentina": (-3, "Buenos Aires", "ART"),
+}
 
 
-def get_time() -> str:
+def get_time(location: Optional[str] = None) -> str:
+    from datetime import timezone
+    if location:
+        norm = location.strip().lower().rstrip("?.!,")
+        if norm in _TIMEZONES:
+            offset_hours, name, code = _TIMEZONES[norm]
+            tz = timezone(timedelta(hours=offset_hours))
+            dt = datetime.now(timezone.utc).astimezone(tz)
+            return f"{dt.strftime('%A, %B %d, %Y, %I:%M %p').lstrip('0')} in {name} ({code})."
+        for k, (offset_hours, name, code) in _TIMEZONES.items():
+            if k == norm or k in norm.split():
+                tz = timezone(timedelta(hours=offset_hours))
+                dt = datetime.now(timezone.utc).astimezone(tz)
+                return f"{dt.strftime('%A, %B %d, %Y, %I:%M %p').lstrip('0')} in {name} ({code})."
+
     now = datetime.now()
-    return f"{now.strftime('%A, %d %B %Y, %H:%M')} (local time)."
+    # ponytail: 12-hour format with AM/PM
+    return f"{now.strftime('%A, %B %d, %Y, %I:%M %p').lstrip('0')} (local time)."
 
 
 # ── Tool 3: web search (DuckDuckGo instant answers, no key) ─────────────────
@@ -567,8 +684,36 @@ def _fetch_topic_knowledge(topic: str) -> Tuple[str, List[str]]:
 @_doc_template("meeting_notes")
 def _tpl_meeting(topic: str, stamp: str) -> str:
     clean = _clean_doc_topic(topic)
-    title = clean.title() if clean.islower() else (clean[0].upper() + clean[1:] if clean else "Untitled Meeting")
-    return f"""# Meeting Notes — {title}
+    title, sentences = _fetch_topic_knowledge(clean)
+    display_title = title or clean.title() or "Untitled Meeting"
+
+    if sentences:
+        ctx = " ".join(sentences[:2])
+        findings = "\n".join(f"- {s}" for s in sentences[2:6]) if len(sentences) > 2 else f"- Explored core background and implications of {display_title}."
+        return f"""# Meeting Notes — {display_title}
+
+> {stamp} · drafted by DeskPet Jarvis
+
+## Overview & Background
+{ctx}
+
+## Discussion Points & Findings
+{findings}
+
+## Key Decisions
+- Confirmed understanding and operational scope for {display_title}.
+- Aligned on priority takeaways and knowledge archiving.
+
+## Action Items
+- [ ] Synthesize findings into the final project dossier — Due: End of week
+- [ ] Share documented brief with core stakeholders — Due: Next check-in
+
+## Next Steps
+- Incorporate follow-up feedback from the team.
+- Retain notes in DeskPet local document archive.
+"""
+
+    return f"""# Meeting Notes — {display_title}
 
 > {stamp} · drafted by DeskPet Jarvis
 
@@ -577,16 +722,16 @@ def _tpl_meeting(topic: str, stamp: str) -> str:
 - Core Team Contributors
 
 ## Agenda
-1. Review objectives and current status of {title}
+1. Review objectives and current status of {display_title}
 2. Align on functional requirements, timeline, and dependencies
 3. Identify roadblocks and assign action items
 
 ## Key Decisions
-- Confirmed project scope and priority milestones for {title}.
+- Confirmed project scope and priority milestones for {display_title}.
 - Approved initial architecture and implementation roadmap.
 
 ## Action Items
-- [ ] Finalize technical specification for {title} — Due: End of week
+- [ ] Finalize technical specification for {display_title} — Due: End of week
 - [ ] Review resource allocation and deliverable schedule — Due: Next sprint
 
 ## Next Steps
@@ -739,59 +884,40 @@ def _tpl_document(topic: str, stamp: str) -> str:
     display_title = title or clean.title() or "Untitled Document"
 
     if sentences:
-        if len(sentences) == 1:
-            summary = sentences[0]
-            details = [
-                f"Core background and historical context recorded for {display_title}.",
-                "Further domain-specific analysis and operational scope ongoing."
-            ]
-        elif len(sentences) == 2:
-            summary = f"{sentences[0]} {sentences[1]}"
-            details = [
-                f"Documented context and strategic significance of {display_title}.",
-                "Key parameters and background confirmed from referenced knowledge base."
-            ]
-        else:
-            summary = f"{sentences[0]} {sentences[1]}"
-            details = sentences[2:]
-
+        summary = " ".join(sentences[:2])
+        details = sentences[2:6] if len(sentences) > 2 else [f"Core background and significance recorded for {display_title}."]
         details_md = "\n".join(f"- {d}" for d in details)
-        next_steps_md = (
-            f"- Review and verify specific domain requirements for {display_title}.\n"
-            f"- Circulate draft to collaborators and project stakeholders for feedback.\n"
-            f"- Track follow-up iterations and retain in DeskPet document archive."
-        )
-    else:
-        summary = (
-            f"Comprehensive overview and analysis regarding {display_title}. "
-            f"This document consolidates key findings, strategic scope, and actionable guidance."
-        )
-        details_md = (
-            f"- Core background, operational scope, and foundational context for {display_title}.\n"
-            f"- Key functional requirements, deliverables, and critical milestones.\n"
-            f"- Strategic considerations, technical dependencies, and risk mitigation."
-        )
-        next_steps_md = (
-            f"- Review draft content and align on deliverables for {display_title}.\n"
-            f"- Schedule stakeholder review to validate milestone timeline.\n"
-            f"- Coordinate initial execution phases and monitor progress."
-        )
+        return f"""# {display_title}
+
+> {stamp} · drafted by DeskPet Jarvis
+
+## Overview
+{summary}
+
+## Key Facts & Background
+{details_md}
+
+## Reference Notes
+- Concise factual summary sourced from verified reference archive.
+- Retained in DeskPet local document library for offline access.
+
+## Next Steps
+- Review draft content and retain in DeskPet document archive.
+"""
 
     return f"""# {display_title}
 
 > {stamp} · drafted by DeskPet Jarvis
 
-## Summary
+## Overview
+Brief overview and reference notes regarding {display_title}.
 
-{summary}
-
-## Key Details
-
-{details_md}
+## Key Points
+- Core background, operational scope, and foundational context for {display_title}.
+- Deliverables, dependencies, and reference notes.
 
 ## Next Steps
-
-{next_steps_md}
+- Review draft content and retain in DeskPet document archive.
 """
 
 
@@ -822,9 +948,30 @@ def open_document(target: str = "") -> str:
     global _LAST_CREATED_DOC
     directory = docs_dir()
     target_clean = (target or "").strip().lower()
+    folder_label = "documents"
 
-    if any(w in target_clean for w in ("folder", "dir", "directory", "my documents")):
+    # Known system folder recognition
+    if any(w in target_clean for w in ("download", "downloads")):
+        to_open = Path.home() / "Downloads"
+        folder_label = "downloads"
+    elif any(w in target_clean for w in ("desktop",)):
+        to_open = Path.home() / "Desktop"
+        folder_label = "desktop"
+    elif any(w in target_clean for w in ("picture", "pictures", "photo", "photos")):
+        to_open = Path.home() / "Pictures"
+        folder_label = "pictures"
+    elif any(w in target_clean for w in ("music", "songs")):
+        to_open = Path.home() / "Music"
+        folder_label = "music"
+    elif any(w in target_clean for w in ("video", "videos", "movie", "movies")):
+        to_open = Path.home() / "Videos"
+        folder_label = "videos"
+    elif any(w in target_clean for w in ("home", "user")):
+        to_open = Path.home()
+        folder_label = "home"
+    elif any(w in target_clean for w in ("folder", "dir", "directory", "my documents", "documents folder")):
         to_open = directory
+        folder_label = "documents"
     else:
         to_open = None
         clean_name = re.sub(r"^(?:open|view|show|the|this|that|my|a|an)\s+", "", target_clean).strip()
@@ -851,16 +998,28 @@ def open_document(target: str = "") -> str:
                     pass
         if not to_open or not to_open.exists():
             to_open = directory
+            folder_label = "documents"
+
+    try:
+        to_open.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
 
     try:
         if platform.system() == "Windows":
-            os.startfile(str(to_open))
+            if to_open.is_dir():
+                subprocess.Popen(["explorer.exe", os.path.normpath(str(to_open))])
+            else:
+                try:
+                    os.startfile(str(to_open))
+                except OSError:
+                    subprocess.Popen(["notepad.exe", str(to_open)])
         elif platform.system() == "Darwin":
             subprocess.Popen(["open", str(to_open)])
         else:
             subprocess.Popen(["xdg-open", str(to_open)])
         if to_open.is_dir():
-            return f"Opened documents folder at {to_open}, sir."
+            return f"Opened {folder_label} folder at {to_open}, sir."
         return f"Opened {to_open.name}, sir."
     except Exception as exc:
         return f"Could not open {to_open}: {exc}"
@@ -1041,6 +1200,22 @@ def cancel_reminders() -> str:
     return f"Cancelled {n} pending reminder(s), sir."
 
 
+def list_reminders() -> str:
+    # ponytail: read existing persistent reminders file
+    with _REMINDERS_LOCK:
+        items = _load_reminders_unlocked()
+    if not items:
+        return "You have no active reminders scheduled, sir."
+    now = time.time()
+    lines = []
+    for r in items:
+        diff = max(0, int(r.get("fire_at", now) - now))
+        mins, secs = divmod(diff, 60)
+        t_str = f"{mins}m {secs}s" if mins else f"{secs}s"
+        lines.append(f"• '{r.get('text', 'Reminder')}' (in ~{t_str})")
+    return f"Active reminders ({len(items)}), sir:\n" + "\n".join(lines)
+
+
 # ── Tool 7: todo capture (todo.md) ───────────────────────────────────────────
 
 
@@ -1048,7 +1223,15 @@ def _todo_file() -> Path:
     return docs_dir() / "todo.md"
 
 
+_LAST_TODO_ITEM: Optional[str] = None
+_ANAPHORIC_TASKS = {
+    "it", "that", "this", "the task", "the item", "task", "item",
+    "the last one", "last one", "the last task", "last task", "the last item", "last item",
+}
+
+
 def todo_add(text: str) -> str:
+    global _LAST_TODO_ITEM
     text = (text or "").strip()
     if not text:
         return "Nothing to add — tell me the task text."
@@ -1058,6 +1241,7 @@ def todo_add(text: str) -> str:
         f.write_text("# DeskPet To-Do\n\n", encoding="utf-8")
     with f.open("a", encoding="utf-8") as fh:
         fh.write(line)
+    _LAST_TODO_ITEM = text
     return f"Added to your to-do list: '{text}'."
 
 
@@ -1137,6 +1321,8 @@ def _norm_item(s: str) -> str:
 
 
 def todo_clear() -> str:
+    global _LAST_TODO_ITEM
+    _LAST_TODO_ITEM = None
     f = _todo_file()
     lines = []
     if f.exists():
@@ -1149,6 +1335,7 @@ def todo_clear() -> str:
 
 
 def todo_done(item: str) -> str:
+    global _LAST_TODO_ITEM
     item = (item or "").strip()
     if not item:
         return "Nothing to complete — tell me the task name."
@@ -1156,6 +1343,16 @@ def todo_done(item: str) -> str:
     if not f.exists():
         return "Your to-do list is empty — nothing to mark as done."
     lines = f.read_text(encoding="utf-8").splitlines()
+
+    item_norm = _norm_item(item)
+    if item_norm in _ANAPHORIC_TASKS or item_norm == "it":
+        if _LAST_TODO_ITEM:
+            item = _LAST_TODO_ITEM
+        else:
+            open_tasks = [ln for ln in lines if ln.startswith("- [ ]")]
+            if open_tasks:
+                item = _item_body(open_tasks[-1])
+
     needle = _norm_item(item)
     for i, ln in enumerate(lines):
         if ln.startswith("- [ ]"):
@@ -1169,6 +1366,7 @@ def todo_done(item: str) -> str:
 
 
 def todo_remove(item: str) -> str:
+    global _LAST_TODO_ITEM
     item = (item or "").strip()
     if not item:
         return "Nothing to remove — tell me the task name."
@@ -1176,6 +1374,16 @@ def todo_remove(item: str) -> str:
     if not f.exists():
         return "Your to-do list is empty — nothing to remove."
     lines = f.read_text(encoding="utf-8").splitlines()
+
+    item_norm = _norm_item(item)
+    if item_norm in _ANAPHORIC_TASKS or item_norm == "it":
+        if _LAST_TODO_ITEM:
+            item = _LAST_TODO_ITEM
+        else:
+            open_tasks = [ln for ln in lines if ln.startswith("- [ ]")]
+            if open_tasks:
+                item = _item_body(open_tasks[-1])
+
     needle = _norm_item(item)
     kept, removed = [], None
     for ln in lines:
@@ -1188,6 +1396,8 @@ def todo_remove(item: str) -> str:
         kept.append(ln)
     if removed is None:
         return f"No task matching '{item}' on your to-do list."
+    if _LAST_TODO_ITEM and _norm_item(_LAST_TODO_ITEM) == needle:
+        _LAST_TODO_ITEM = None
     f.write_text("\n".join(kept) + "\n", encoding="utf-8")
     return f"Removed from your to-do list: '{removed}'."
 
@@ -1196,27 +1406,65 @@ def todo_remove(item: str) -> str:
 
 
 def system_status() -> str:
-    import psutil
-    cpu = psutil.cpu_percent(interval=0.5)
-    vm = psutil.virtual_memory()
-    parts = [
-        f"CPU {cpu:.0f}%",
-        f"RAM {vm.percent:.0f}% used ({vm.used // (1024 ** 2)} MB of {vm.total // (1024 ** 2)} MB)",
-    ]
+    parts = []
     try:
-        bat = psutil.sensors_battery()
-        if bat is not None:
-            plug = "charging" if bat.power_plugged else "on battery"
-            parts.append(f"battery {bat.percent:.0f}% ({plug})")
+        import psutil
+        cpu = psutil.cpu_percent(interval=0.2)
+        vm = psutil.virtual_memory()
+        parts.append(f"CPU {cpu:.0f}%")
+        parts.append(f"RAM {vm.percent:.0f}% used ({vm.used // (1024 ** 2)} MB of {vm.total // (1024 ** 2)} MB)")
+        try:
+            bat = psutil.sensors_battery()
+            if bat is not None:
+                plug = "charging" if bat.power_plugged else "on battery"
+                parts.append(f"battery {bat.percent:.0f}% ({plug})")
+        except Exception:
+            pass
+        try:
+            du = psutil.disk_usage(str(Path.home()))
+            parts.append(f"disk {du.percent:.0f}% used")
+        except Exception:
+            pass
+        up = timedelta(seconds=int(time.time() - psutil.boot_time()))
+        parts.append(f"uptime {up.seconds // 3600}h {(up.seconds // 60) % 60}m")
     except Exception:
-        pass
-    try:
-        du = psutil.disk_usage(str(Path.home()))
-        parts.append(f"disk {du.percent:.0f}% used")
-    except Exception:
-        pass
-    up = timedelta(seconds=int(time.time() - psutil.boot_time()))
-    parts.append(f"uptime {up.seconds // 3600}h {(up.seconds // 60) % 60}m")
+        # 100% Python standard library fallback (zero external dependencies)
+        if platform.system() == "Windows":
+            try:
+                import ctypes
+                class MEMORYSTATUSEX(ctypes.Structure):
+                    _fields_ = [
+                        ("dwLength", ctypes.c_ulong),
+                        ("dwMemoryLoad", ctypes.c_ulong),
+                        ("ullTotalPhys", ctypes.c_ulonglong),
+                        ("ullAvailPhys", ctypes.c_ulonglong),
+                        ("ullTotalPageFile", ctypes.c_ulonglong),
+                        ("ullAvailPageFile", ctypes.c_ulonglong),
+                        ("ullTotalVirtual", ctypes.c_ulonglong),
+                        ("ullAvailVirtual", ctypes.c_ulonglong),
+                        ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+                    ]
+                stat = MEMORYSTATUSEX()
+                stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+                if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+                    total_mb = stat.ullTotalPhys // (1024 ** 2)
+                    used_mb = (stat.ullTotalPhys - stat.ullAvailPhys) // (1024 ** 2)
+                    parts.append(f"RAM {stat.dwMemoryLoad}% used ({used_mb} MB of {total_mb} MB)")
+                ms = ctypes.windll.kernel32.GetTickCount64()
+                up = timedelta(seconds=int(ms // 1000))
+                parts.append(f"uptime {up.days * 24 + up.seconds // 3600}h {(up.seconds // 60) % 60}m")
+            except Exception:
+                pass
+        try:
+            import shutil
+            du = shutil.disk_usage(str(Path.home()))
+            disk_pct = int((du.used / du.total) * 100) if du.total else 0
+            parts.append(f"disk {disk_pct}% used")
+        except Exception:
+            pass
+        cpus = os.cpu_count()
+        if cpus:
+            parts.insert(0, f"CPU ({cpus} cores)")
     online = check_internet_connection()
     parts.append("network " + ("online (connected)" if online else "offline (air-gapped)"))
     return "System status: " + "; ".join(parts) + "."
@@ -1285,6 +1533,199 @@ def clipboard_assist(action: str) -> str:
         return f"Clipboard content: {snippet}"
     return (f"The user's clipboard contains the text below. "
             f"{verb.capitalize()} it as requested.\n---\n{snippet}\n---")
+
+
+def clipboard_write(text: str) -> str:
+    # ponytail: native Windows clip.exe or xclip
+    text = (text or "").strip()
+    if not text:
+        return "No text provided to copy, sir."
+    try:
+        if platform.system() == "Windows":
+            subprocess.run(["clip"], input=text.encode("utf-16"), check=True, timeout=2)
+        else:
+            subprocess.run(["xclip", "-selection", "clipboard"], input=text.encode("utf-8"), check=True, timeout=2)
+        return f"Copied '{text[:60]}' to your clipboard, sir."
+    except Exception as exc:
+        return f"Could not copy to clipboard: {exc}"
+
+
+def find_file(query: str, folder: Optional[str] = None) -> str:
+    # ponytail: stdlib os.walk over standard user folders, max depth 2
+    q = (query or "").strip().lower()
+    if not q:
+        return "Please specify a file name or keyword to search for, sir."
+    roots = []
+    if folder and folder.lower() in ("downloads", "download"):
+        roots = [Path.home() / "Downloads"]
+    elif folder and folder.lower() in ("documents", "document", "docs"):
+        roots = [Path.home() / "Documents" / "DeskPet", Path.home() / "Documents"]
+    elif folder and folder.lower() in ("desktop",):
+        roots = [Path.home() / "Desktop"]
+    else:
+        roots = [
+            Path.home() / "Documents" / "DeskPet",
+            Path.home() / "Documents",
+            Path.home() / "Downloads",
+            Path.home() / "Desktop",
+        ]
+
+    matches = []
+    seen_paths = set()
+    for root in roots:
+        if not root.is_dir():
+            continue
+        try:
+            for cur, dirs, files in os.walk(root):
+                dirs[:] = [d for d in dirs if d not in {".git", "node_modules", "__pycache__", "AppData", "$RECYCLE.BIN"}]
+                rel_parts = Path(cur).relative_to(root).parts
+                if len(rel_parts) > 2:
+                    del dirs[:]
+                    continue
+                for f in files:
+                    if q in f.lower():
+                        fp = Path(cur) / f
+                        if str(fp) in seen_paths:
+                            continue
+                        seen_paths.add(str(fp))
+                        try:
+                            sz_kb = max(1, int(fp.stat().st_size / 1024))
+                            matches.append(f"- {f} ({sz_kb} KB) - {fp}")
+                        except Exception:
+                            matches.append(f"- {f} - {fp}")
+                        if len(matches) >= 5:
+                            break
+                if len(matches) >= 5:
+                    break
+        except Exception:
+            continue
+        if len(matches) >= 5:
+            break
+
+    if not matches:
+        return f"I could not find any files matching '{query}' in your Documents, Downloads, or Desktop folders, sir."
+    return f"Found {len(matches)} matching file(s), sir:\n" + "\n".join(matches)
+
+
+def git_status(repo_dir: Optional[str] = None) -> str:
+    # ponytail: native git CLI
+    target = repo_dir
+    if not target:
+        # Check current directory and parents
+        p = Path(os.getcwd()).resolve()
+        while p != p.parent:
+            if (p / ".git").is_dir():
+                target = str(p)
+                break
+            p = p.parent
+    if not target:
+        # Check active window for open workspace or project
+        try:
+            from . import screen_context
+            info = screen_context.get_active_window_info()
+            if info and info.title:
+                parts = info.title.split(" - ")
+                if len(parts) >= 2:
+                    proj = parts[-2].strip()
+                    for base in [Path("H:/apps"), Path.home() / "Documents", Path.home() / "source", Path.home() / "repos", Path.home() / "Desktop"]:
+                        cand = base / proj
+                        if (cand / ".git").is_dir():
+                            target = str(cand)
+                            break
+        except Exception:
+            pass
+    if not target:
+        if Path("H:/apps/Deskpet/.git").is_dir():
+            target = "H:/apps/Deskpet"
+        else:
+            target = os.getcwd()
+
+    try:
+        branch = subprocess.check_output(
+            ["git", "branch", "--show-current"],
+            cwd=target, text=True, timeout=3, stderr=subprocess.DEVNULL,
+        ).strip()
+        st = subprocess.check_output(
+            ["git", "status", "--short"],
+            cwd=target, text=True, timeout=3, stderr=subprocess.DEVNULL,
+        ).strip()
+        lines = [l for l in st.splitlines() if l.strip()]
+        repo_name = Path(target).name
+        if not lines:
+            return f"In repository '{repo_name}' on branch '{branch}': Working tree clean, sir."
+        summary = "\n".join(lines[:5]) + (f"\n...and {len(lines)-5} more" if len(lines) > 5 else "")
+        return f"In repository '{repo_name}' on branch '{branch}', sir. {len(lines)} uncommitted change(s):\n{summary}"
+    except Exception:
+        return "I am not currently running inside a Git repository, sir."
+
+
+def wifi_info() -> str:
+    # ponytail: native netsh on Windows, socket for IP
+    try:
+        ip = socket.gethostbyname(socket.gethostname())
+    except Exception:
+        ip = "Unknown"
+    if platform.system() != "Windows":
+        return f"Local IP: {ip}, sir."
+    ssid = "Ethernet / Disconnected"
+    sig_info = ""
+    try:
+        out = subprocess.check_output(["netsh", "wlan", "show", "interfaces"], text=True, timeout=3)
+        m_ssid = re.search(r"^\s*SSID\s*:\s*(.+)$", out, re.MULTILINE)
+        if m_ssid:
+            ssid = m_ssid.group(1).strip()
+        m_sig = re.search(r"^\s*Signal\s*:\s*(.+)$", out, re.MULTILINE)
+        if m_sig:
+            sig_info = f" (Signal: {m_sig.group(1).strip()})"
+    except Exception:
+        pass
+    return f"Connected to {ssid}{sig_info}. Local IP: {ip}, sir."
+
+
+_HOLIDAYS = {
+    "christmas": (12, 25),
+    "new year": (1, 1),
+    "new years": (1, 1),
+    "new year's": (1, 1),
+    "halloween": (10, 31),
+    "valentine": (2, 14),
+    "valentines": (2, 14),
+    "valentine's": (2, 14),
+}
+
+
+def date_math(query: str) -> Optional[str]:
+    # ponytail: stdlib datetime delta math
+    q = (query or "").lower().strip()
+    now = datetime.now()
+
+    # "how many days until <holiday/date>"
+    m_until = re.search(r"\b(?:how many days (?:until|to|till)|days (?:until|to|till))\s+([a-z0-9 '\-]+)", q)
+    if m_until:
+        target_name = m_until.group(1).strip().rstrip("?.!")
+        for hol, (m, d) in _HOLIDAYS.items():
+            if hol in target_name:
+                target = datetime(now.year, m, d)
+                if target.date() < now.date():
+                    target = datetime(now.year + 1, m, d)
+                diff = (target.date() - now.date()).days
+                return f"There are {diff} day(s) until {target_name.title()} ({target.strftime('%B %d, %Y')}), sir."
+
+    # "what date is in <N> days / weeks / months"
+    # ponytail: stdlib datetime + simple regex handles all common date offset queries
+    m_future = re.search(r"\b(?:what (?:is the )?date\s+(?:is\s+)?(?:in\s+)?|date in\s+)(\d+)\s+(day|days|week|weeks|month|months)\b", q)
+    if m_future:
+        num = int(m_future.group(1))
+        unit = m_future.group(2)
+        if "week" in unit:
+            future = now + timedelta(weeks=num)
+        elif "month" in unit:
+            future = now + timedelta(days=num * 30)
+        else:
+            future = now + timedelta(days=num)
+        return f"In {num} {unit}, the date will be {future.strftime('%A, %B %d, %Y')}, sir."
+
+    return None
 
 
 # ── Tool 10: calculator (safe AST evaluator, fully offline) ─────────────
@@ -1461,20 +1902,35 @@ def fetch_page(url: str) -> str:
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     try:
-        r = httpx.get(url, timeout=10, follow_redirects=True,
-                      headers={"User-Agent": "Mozilla/5.0 (DeskPet-Jarvis)"})
+        r = httpx.get(
+            url,
+            timeout=10,
+            follow_redirects=True,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) DeskPet-Jarvis/1.0"},
+        )
         r.raise_for_status()
     except Exception as exc:
         return f"Could not fetch {url}: {type(exc).__name__}."
     html = r.text or ""
-    html = re.sub(r"(?is)<(script|style|noscript)[^>]*>.*?</\1>", " ", html)
-    text = re.sub(r"(?s)<[^>]+>", " ", html)
-    text = re.sub(r"\s+", " ", text).strip()
-    if not text:
+    # Strip script, style, nav, footer, header, svg tags
+    cleaned = re.sub(r"(?is)<(script|style|noscript|header|footer|nav|svg)[^>]*>.*?</\1>", " ", html)
+    # Convert block/break elements into linebreaks
+    cleaned = re.sub(r"(?i)<(?:p|br|div|h[1-6]|li|tr)[^>]*>", "\n", cleaned)
+    # Strip remaining HTML tags
+    text = re.sub(r"<[^>]+>", " ", cleaned)
+    import html as _html
+    text = _html.unescape(text)
+    lines = [re.sub(r"\s+", " ", line).strip() for line in text.splitlines()]
+    clean_text = "\n".join(line for line in lines if line)
+    if not clean_text:
         return f"The page at {url} returned no readable text."
+    excerpt = clean_text[:2500] + ("\n...(content truncated)" if len(clean_text) > 2500 else "")
     return (f"The page at {url} contains the following text. "
             f"Summarise or answer from it as the user asked.\n---\n"
-            f"{text[:3000]}\n---")
+            f"{excerpt}\n---")
+
+
+fetch_url = fetch_page
 
 
 # ── Tool 13: wikipedia summary ──────────────────────────────────────────
@@ -1554,20 +2010,28 @@ def recall_fact(query: str = "", key: str = "", topic: str = "", term: str = "",
     query = (query or key or topic or term or next(iter(_alt.values()), "") or "").strip().lower()
     try:
         from .semantic_memory import default_memory_store
+        if not query:
+            if not default_memory_store._items:
+                return "I have nothing saved in my memory yet, sir."
+            recent = list(default_memory_store._items.values())[-10:]
+            lines = [f"- {item.text}" for item in recent]
+            return "From my memory:\n" + "\n".join(lines)
+
         matches = default_memory_store.search(query, limit=5)
         if matches:
             lines = [f"- {item.text}" for item, _ in matches]
             return "From my memory:\n" + "\n".join(lines)
+        return f"I have no memory matching '{query}'."
     except Exception:
         pass
 
     f = _notes_file()
     if not f.exists():
-        return "I have nothing saved in my memory yet, sir."
+        return f"I have no memory matching '{query}'." if query else "I have nothing saved in my memory yet, sir."
     lines = [ln for ln in f.read_text(encoding="utf-8").splitlines()
              if ln.startswith("- ")]
     if not lines:
-        return "I have nothing saved in my memory yet, sir."
+        return f"I have no memory matching '{query}'." if query else "I have nothing saved in my memory yet, sir."
     if not query:
         return "My memory contains:\n" + "\n".join(lines[-10:])
     stop = {
@@ -1599,6 +2063,157 @@ def open_url(url: str) -> str:
     return f"opened: {host}"
 
 
+# ── Tool 15b: AI web chat automation (Gemini, Claude, ChatGPT, DeepSeek, Qwen) ──
+
+_AI_DISPLAY_NAMES = {
+    "chatgpt": "ChatGPT",
+    "claude": "Claude",
+    "gemini": "Gemini",
+    "deepseek": "DeepSeek",
+    "qwen": "Qwen",
+    "perplexity": "Perplexity",
+    "copilot": "Copilot",
+    "grok": "Grok",
+}
+
+
+def _norm_ai_provider(name: str) -> str:
+    n = re.sub(r"[^a-z0-9]", "", (name or "").lower())
+    if "chatgpt" in n or "gpt" in n or "openai" in n:
+        return "chatgpt"
+    if "claude" in n or "anthropic" in n:
+        return "claude"
+    if "gemini" in n:
+        return "gemini"
+    if "deepseek" in n:
+        return "deepseek"
+    if "qwen" in n or "tongyi" in n:
+        return "qwen"
+    if "perplexity" in n:
+        return "perplexity"
+    if "copilot" in n or "bing" in n:
+        return "copilot"
+    if "grok" in n or "xai" in n:
+        return "grok"
+    return "chatgpt"
+
+
+def rebuild_ai_prompt(raw_query: str) -> str:
+    """Clean conversational wrappers, capitalize, and punctuate prompt for web models."""
+    p = (raw_query or "").strip(" :,-")
+    p = re.sub(r"^(?:(?:it|them|him|her)\s+)?to\s+", "", p, flags=re.IGNORECASE)
+    p = re.sub(r"^(?:(?:can|could|would)\s+you\s+)?(?:please\s+)?", "", p, flags=re.IGNORECASE)
+    p = re.sub(r"^(?:about|that|for)\s+", "", p, flags=re.IGNORECASE)
+    p = p.strip(" :,-")
+    if not p:
+        return ""
+    p = p[0].upper() + p[1:]
+    is_q = re.match(
+        r"^(?:what|why|how|when|where|who|which|whose|whom|is|are|can|could|would|will|do|does|did|should)\b",
+        p,
+        re.IGNORECASE,
+    )
+    if is_q:
+        if not p.endswith(("?", "!", ".")):
+            p += "?"
+    elif not p.endswith((".", "?", "!", '"', "'")):
+        p += "."
+    return p
+
+
+def _send_webchat_input(needs_paste: bool = True, delay: float = 2.5):
+    """Simulate Windows keystrokes (Ctrl+V and/or Enter) after the browser window opens."""
+    if platform.system() != "Windows":
+        return
+    import threading
+
+    def _worker():
+        time.sleep(delay)
+        try:
+            import ctypes
+            u32 = ctypes.windll.user32
+            VK_CONTROL = 0x11
+            VK_V = 0x56
+            VK_RETURN = 0x0D
+            KEYEVENTF_KEYUP = 0x0002
+
+            if needs_paste:
+                # Ctrl+V
+                u32.keybd_event(VK_CONTROL, 0, 0, 0)
+                u32.keybd_event(VK_V, 0, 0, 0)
+                time.sleep(0.06)
+                u32.keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0)
+                u32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
+                time.sleep(0.18)
+
+            # Enter
+            u32.keybd_event(VK_RETURN, 0, 0, 0)
+            time.sleep(0.06)
+            u32.keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0)
+        except Exception as exc:
+            try:
+                print(f"[tools] webchat input simulation error: {exc}")
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+
+
+def open_ai_webchat(provider_raw: str, prompt_raw: str) -> str:
+    """Rebuild prompt, copy to clipboard, launch browser, and submit via Enter."""
+    provider = _norm_ai_provider(provider_raw)
+    display = _AI_DISPLAY_NAMES.get(provider, provider.capitalize())
+    prompt = rebuild_ai_prompt(prompt_raw) or (prompt_raw or "").strip()
+    if not prompt:
+        return f"No prompt provided to send to {display}, sir."
+
+    # 1. Copy rebuilt prompt to clipboard as an immediate, foolproof safeguard
+    clipboard_write(prompt)
+
+    # 2. Formulate target URL
+    import urllib.parse
+    encoded_q = urllib.parse.quote_plus(prompt)
+
+    if provider == "chatgpt":
+        target_url = f"https://chatgpt.com/?q={encoded_q}"
+        needs_paste = False
+    elif provider == "claude":
+        target_url = f"https://claude.ai/new?q={encoded_q}"
+        needs_paste = False
+    elif provider == "perplexity":
+        target_url = f"https://www.perplexity.ai/search?q={encoded_q}"
+        needs_paste = False
+    elif provider == "copilot":
+        target_url = f"https://copilot.microsoft.com/?q={encoded_q}"
+        needs_paste = False
+    elif provider == "gemini":
+        target_url = "https://gemini.google.com/app"
+        needs_paste = True
+    elif provider == "deepseek":
+        target_url = "https://chat.deepseek.com"
+        needs_paste = True
+    elif provider == "qwen":
+        target_url = "https://chat.qwen.ai"
+        needs_paste = True
+    elif provider == "grok":
+        target_url = "https://grok.com"
+        needs_paste = True
+    else:
+        target_url = f"https://chatgpt.com/?q={encoded_q}"
+        needs_paste = False
+
+    # 3. Open in default browser
+    open_url(target_url)
+
+    # 4. Asynchronously send paste and enter keystrokes on Windows
+    if provider != "perplexity":
+        delay = 2.5 if needs_paste else 2.0
+        _send_webchat_input(needs_paste=needs_paste, delay=delay)
+
+    return f"Opened {display} with your prompt: '{prompt}'"
+
+
 # ── Tool 16: volume & media keys (Windows SendKeys) ──────────────────
 
 _MEDIA_KEYS = {
@@ -1609,17 +2224,113 @@ _MEDIA_KEYS = {
 
 
 def media_control(action: str) -> str:
-    key = _MEDIA_KEYS.get((action or "").strip().lower())
-    if not key:
-        return "That media control is not recognised."
-    if platform.system() != "Windows":
-        return "Media keys are only wired up on Windows for now."
-    subprocess.run(
-        ["powershell", "-NoProfile", "-Command",
-         f"(New-Object -ComObject WScript.Shell).SendKeys('{key}')"],
-        capture_output=True, text=True, timeout=5,
-    )
-    return f"sent: {action}"
+    act = (action or "").strip().lower()
+    if platform.system() == "Windows":
+        vk_map = {
+            "mute": 0xAD,          # VK_VOLUME_MUTE
+            "volume_down": 0xAE,   # VK_VOLUME_DOWN
+            "volume_up": 0xAF,     # VK_VOLUME_UP
+            "next": 0xB0,          # VK_MEDIA_NEXT_TRACK
+            "prev": 0xB1,          # VK_MEDIA_PREV_TRACK
+            "play_pause": 0xB3,    # VK_MEDIA_PLAY_PAUSE
+        }
+        vk = vk_map.get(act)
+        if not vk:
+            return "That media control is not recognised."
+        try:
+            import ctypes
+            ctypes.windll.user32.keybd_event(vk, 0, 0, 0)
+            ctypes.windll.user32.keybd_event(vk, 0, 2, 0)  # KEYEVENTF_KEYUP
+            return f"sent: {act}"
+        except Exception as exc:
+            return f"Media control failed: {exc}"
+    return "Media keys are only wired up on Windows for now."
+
+
+def set_volume_percent(level: int) -> str:
+    level = max(0, min(100, int(level)))
+    if platform.system() == "Windows":
+        try:
+            import ctypes
+            from ctypes import wintypes, Structure, c_float, c_void_p, POINTER, byref, HRESULT
+            ole32 = ctypes.windll.ole32
+            ole32.CoInitialize(None)
+
+            class GUID(Structure):
+                _fields_ = [('Data1', wintypes.DWORD), ('Data2', wintypes.WORD), ('Data3', wintypes.WORD), ('Data4', wintypes.BYTE * 8)]
+
+            def _pg(guid_str):
+                g = GUID()
+                ole32.CLSIDFromString(guid_str, byref(g))
+                return g
+
+            CLSID_MMDeviceEnumerator = _pg('{BCDE0395-E52F-467C-8E3D-C4579291692E}')
+            IID_IMMDeviceEnumerator = _pg('{A95664D2-9614-4F35-A746-DE8DB63617E6}')
+            IID_IAudioEndpointVolume = _pg('{5CDF2C82-841E-4546-9722-0CF74078229A}')
+
+            class IMMDeviceEnumeratorVtbl(Structure):
+                _fields_ = [
+                    ('QueryInterface', c_void_p), ('AddRef', c_void_p), ('Release', c_void_p), ('EnumAudioEndpoints', c_void_p),
+                    ('GetDefaultAudioEndpoint', ctypes.WINFUNCTYPE(HRESULT, c_void_p, wintypes.DWORD, wintypes.DWORD, POINTER(c_void_p))),
+                    ('GetDevice', c_void_p), ('RegisterEndpointNotificationCallback', c_void_p), ('UnregisterEndpointNotificationCallback', c_void_p)
+                ]
+            class IMMDeviceEnumerator(Structure):
+                _fields_ = [('lpVtbl', POINTER(IMMDeviceEnumeratorVtbl))]
+
+            class IMMDeviceVtbl(Structure):
+                _fields_ = [
+                    ('QueryInterface', c_void_p), ('AddRef', c_void_p), ('Release', c_void_p),
+                    ('Activate', ctypes.WINFUNCTYPE(HRESULT, c_void_p, POINTER(GUID), wintypes.DWORD, c_void_p, POINTER(c_void_p))),
+                ]
+            class IMMDevice(Structure):
+                _fields_ = [('lpVtbl', POINTER(IMMDeviceVtbl))]
+
+            class IAudioEndpointVolumeVtbl(Structure):
+                _fields_ = [
+                    ('QueryInterface', c_void_p), ('AddRef', c_void_p), ('Release', c_void_p),
+                    ('RegisterControlChangeNotify', c_void_p), ('UnregisterControlChangeNotify', c_void_p),
+                    ('GetChannelCount', c_void_p), ('SetMasterVolumeLevel', c_void_p),
+                    ('SetMasterVolumeLevelScalar', ctypes.WINFUNCTYPE(HRESULT, c_void_p, c_float, c_void_p)),
+                    ('GetMasterVolumeLevel', c_void_p),
+                    ('GetMasterVolumeLevelScalar', ctypes.WINFUNCTYPE(HRESULT, c_void_p, POINTER(c_float))),
+                    ('SetMute', ctypes.WINFUNCTYPE(HRESULT, c_void_p, wintypes.BOOL, c_void_p)),
+                    ('GetMute', ctypes.WINFUNCTYPE(HRESULT, c_void_p, POINTER(wintypes.BOOL))),
+                ]
+            class IAudioEndpointVolume(Structure):
+                _fields_ = [('lpVtbl', POINTER(IAudioEndpointVolumeVtbl))]
+
+            device_enumerator = c_void_p()
+            hr_enum = ole32.CoCreateInstance(byref(CLSID_MMDeviceEnumerator), None, 1, byref(IID_IMMDeviceEnumerator), byref(device_enumerator))
+            if hr_enum != 0 or not device_enumerator.value:
+                return f"Failed to initialize audio endpoint enumerator: hr={hr_enum}"
+            enum = ctypes.cast(device_enumerator, POINTER(IMMDeviceEnumerator))
+            updated = False
+            for role in (0, 1):
+                try:
+                    default_device = c_void_p()
+                    hr_dev = enum.contents.lpVtbl.contents.GetDefaultAudioEndpoint(device_enumerator, 0, role, byref(default_device))
+                    if hr_dev == 0 and default_device.value:
+                        dev = ctypes.cast(default_device, POINTER(IMMDevice))
+                        endpoint_volume = c_void_p()
+                        hr_act = dev.contents.lpVtbl.contents.Activate(default_device, byref(IID_IAudioEndpointVolume), 1, None, byref(endpoint_volume))
+                        if hr_act == 0 and endpoint_volume.value:
+                            vol = ctypes.cast(endpoint_volume, POINTER(IAudioEndpointVolume))
+                            hr_set = vol.contents.lpVtbl.contents.SetMasterVolumeLevelScalar(endpoint_volume, c_float(level / 100.0), None)
+                            if hr_set == 0:
+                                updated = True
+                except Exception:
+                    pass
+            if updated:
+                return f"volume set to {level}%"
+            return "Failed to set volume: no default audio endpoint found."
+        except Exception as exc:
+            return f"Failed to set volume: {exc}"
+    elif platform.system() == "Darwin":
+        subprocess.run(["osascript", "-e", f"set volume output volume {level}"], check=False)
+        return f"volume set to {level}%"
+    else:
+        subprocess.run(["amixer", "-D", "pulse", "sset", "Master", f"{level}%"], check=False)
+        return f"volume set to {level}%"
 
 
 # ── Tool 17: screenshot (saved to Documents/DeskPet) ──────────────────
@@ -1649,9 +2360,21 @@ def take_screenshot() -> str:
 
 def lock_workstation() -> str:
     if platform.system() == "Windows":
+        try:
+            import ctypes
+            res = ctypes.windll.user32.LockWorkStation()
+            if res != 0:
+                return "locked: workstation"
+        except Exception:
+            pass
         subprocess.run(["rundll32.exe", "user32.dll,LockWorkStation"], timeout=5)
         return "locked: workstation"
-    return "Locking is only wired up on Windows for now."
+    elif platform.system() == "Darwin":
+        subprocess.Popen(["pmset", "displaysleepnow"])
+        return "locked: workstation"
+    else:
+        subprocess.Popen(["xdg-screensaver", "lock"])
+        return "locked: workstation"
 
 
 # ── Keyword router (F2 Phase A) ──────────────────────────────────────────────
@@ -1673,11 +2396,11 @@ WEATHER_ASK = (
     "Certainly, sir — which city shall I check the weather for?"
 )
 _RE_TODO_LIST = re.compile(
-    r"\b(?:show|list|read)\b.*\b(?:my\s+)?(?:todo|todos|to-dos|tasks?)\b|"
-    r"\b(?:my\s+)?(?:todo\s+list|todos|tasks)\b\s*\??$",
+    r"\b(?:show|list|read|view|check|display|get)\b.*\b(?:(?:my|the)\s+)?(?:to[- ]?do|to[- ]?dos|tasks?)\b|"
+    r"^\s*(?:what(?:'s| is)\s+(?:on\s+)?)?(?:(?:my|the)\s+)?(?:to[- ]?do\s+list|todos|to-dos|tasks)\s*\??$",
     re.IGNORECASE,
 )
-_TODO_WORDS = r"(?:to-do\s+list|todo\s*list|to-dos|todos|to-do|todo|task\s*list|tasks)"
+_TODO_WORDS = r"(?:to[- ]?do\s+list|to[- ]?dos|to[- ]?do|todos|todo|task\s*list|tasks)"
 _RE_TODO_CLEAR = re.compile(
     # "clear my todo list" | "wipe my todos" | "delete all my tasks"
     r"\b(?:clear|wipe|empty|reset|erase)\b.*?\b" + _TODO_WORDS + r"\b|"
@@ -1693,14 +2416,14 @@ _RE_TODO_DONE = re.compile(
     re.IGNORECASE,
 )
 _RE_TODO_REMOVE = re.compile(
-    # "remove buy milk from my todo" | "delete buy milk from my todo list"
-    r"\b(?:remove|delete|drop)\s+(.+?)\s+from\s+(?:my\s+)?" + _TODO_WORDS + r"\b",
+    # "remove buy milk from my todo" | "delete buy milk from the to do list" | "remove it from the to do list"
+    r"\b(?:remove|delete|drop)\s+(.+?)\s+from\s+(?:(?:my|the|this)\s+)?" + _TODO_WORDS + r"\b",
     re.IGNORECASE,
 )
 _RE_TODO_ADD = re.compile(
     # "add to my todo: buy milk" | "add buy milk to my todo"
-    r"\badd\s+(?:to\s+)?(?:my\s+)?(?:todo|to-do|todos|task\s*list)\b[:\s]*(.+)"
-    r"|\badd\s+(.+?)\s+(?:to|on)\s+(?:my\s+)?(?:todo|to-do|todos|task\s*list|tasks)\b",
+    r"\badd\s+(?:to\s+)?(?:(?:my|the)\s+)?(?:to[- ]?do|todos|task\s*list)\b[:\s]*(.+)"
+    r"|\badd\s+(.+?)\s+(?:to|on)\s+(?:(?:my|the)\s+)?(?:to[- ]?do|todos|task\s*list|tasks)\b",
     re.IGNORECASE,
 )
 _RE_DOC_LOCATION = re.compile(
@@ -1717,9 +2440,9 @@ _RE_DOC_LOCATION = re.compile(
 )
 _RE_OPEN_DOC = re.compile(
     r"\b(?:"
-    r"(?:open|view|show)(?:\s+me)?\s+(?:the\s+|this\s+|that\s+|my\s+)?(?:documents?|docs?|files?|drafts?)\b(?:\s+(?:folder|directory|\S+.*))?|"
-    r"open\s+(?:the\s+)?(?:documents?\s+)?folder\b|"
-    r"open\s+my\s+documents\b|"
+    r"(?:open|view|show)(?:\s+me)?\s+(?:the\s+|this\s+|that\s+|my\s+)?(?:created\s+|drafted\s+|recent\s+|last\s+)?(?:documents?|docs?|files?|drafts?|notes?)\b(?:\s+(?:folder|directory|\S+.*))?|"
+    r"(?:open|view|show|browse)\s+(?:the\s+|my\s+)?(?:downloads?|desktop|pictures?|photos?|music|videos?|documents?|docs?|home)?\s*(?:folder|dir|directory)\b|"
+    r"open\s+(?:the\s+|my\s+)?(?:downloads?|desktop|pictures?|documents)\b|"
     r"open\s+it\b"
     r")",
     re.IGNORECASE,
@@ -1740,6 +2463,8 @@ _RE_TIME = re.compile(
     r"(?:the\s+)?(?:current\s+|right\s+now\s+|local\s+)?time\b"
     r"|time\s+(?:is\s+it|now|please|right\s+now)"
     r"|(?:current|local|exact)\s+time\b"
+    r"|\btime\s+(?:in|at|for)\s+([A-Za-z .'-]{2,25})"
+    r"|\bclock\b"
     # date questions
     r"|(?:what(?:'s|s| is)|tell me|show me)\s+(?:the\s+|today'?s\s+)?date\b"
     r"|today'?s\s+date"
@@ -1790,8 +2515,8 @@ _RE_PERCENT_OF = re.compile(
 _RE_MATHFN = re.compile(
     r"\b(?:sqrt|square\s+root(?:\s+of)?)\s*[(:]?\s*(\d+(?:\.\d+)?)\)?", re.IGNORECASE)
 _RE_ARITH = re.compile(
-    r"(\d[\d,]*(?:\.\d+)?(?:\s*(?:[-+*/×÷^]|\*\*|plus|minus|times|"
-    r"multiplied\s+by|divided\s+by|over|x)\s*\d[\d,]*(?:\.\d+)?)+)",
+    r"(\(?\s*\d[\d,]*(?:\.\d+)?(?:\s*[\)\(]*\s*(?:[-+*/×÷^]|\*\*|plus|minus|times|"
+    r"multiplied\s+by|divided\s+by|over|x)\s*[\)\(]*\s*\d[\d,]*(?:\.\d+)?[\)\(]*)+)",
     re.IGNORECASE)
 _RE_CALC_HINT = re.compile(
     r"\b(?:calculate|compute|evaluate|what(?:'s| is)|how much is|solve)\b", re.IGNORECASE)
@@ -1809,14 +2534,205 @@ _RE_UNITS_REV = re.compile(
     r"how\s+many\s+(" + _UNIT_WORD + r")\s+(?:in|are in|is in)\s+(\d+(?:[.,]\d+)?)\s*"
     r"(?:degrees\s+|°\s*)?(" + _UNIT_WORD + r")\b",
     re.IGNORECASE)
+_SITE_URLS = {
+    # Music & Audio
+    "spotify": "https://open.spotify.com",
+    "spotify web": "https://open.spotify.com",
+    "youtube music": "https://music.youtube.com",
+    "yt music": "https://music.youtube.com",
+    "ytmusic": "https://music.youtube.com",
+    "soundcloud": "https://soundcloud.com",
+
+    # Video & Streaming
+    "youtube": "https://www.youtube.com",
+    "yt": "https://www.youtube.com",
+    "netflix": "https://www.netflix.com",
+    "twitch": "https://www.twitch.tv",
+
+    # Social & Community
+    "reddit": "https://www.reddit.com",
+    "twitter": "https://twitter.com",
+    "x": "https://x.com",
+    "facebook": "https://www.facebook.com",
+    "fb": "https://www.facebook.com",
+    "instagram": "https://www.instagram.com",
+    "ig": "https://www.instagram.com",
+    "linkedin": "https://www.linkedin.com",
+    "pinterest": "https://www.pinterest.com",
+    "tiktok": "https://www.tiktok.com",
+
+    # Search & Knowledge
+    "google": "https://www.google.com",
+    "google maps": "https://maps.google.com",
+    "maps": "https://maps.google.com",
+    "wikipedia": "https://www.wikipedia.org",
+    "wiki": "https://www.wikipedia.org",
+    "github": "https://github.com",
+    "stackoverflow": "https://stackoverflow.com",
+    "stack overflow": "https://stackoverflow.com",
+    "duckduckgo": "https://duckduckgo.com",
+    "ddg": "https://duckduckgo.com",
+    "bing": "https://www.bing.com",
+
+    # Shopping & Entertainment
+    "amazon": "https://www.amazon.com",
+    "ebay": "https://www.ebay.com",
+    "imdb": "https://www.imdb.com",
+
+    # AI Web Chats (direct open)
+    "chatgpt": "https://chatgpt.com",
+    "chat gpt": "https://chatgpt.com",
+    "claude": "https://claude.ai",
+    "claude ai": "https://claude.ai",
+    "gemini": "https://gemini.google.com/app",
+    "google gemini": "https://gemini.google.com/app",
+    "deepseek": "https://chat.deepseek.com",
+    "deep seek": "https://chat.deepseek.com",
+    "qwen": "https://chat.qwen.ai",
+    "tongyi": "https://chat.qwen.ai",
+    "perplexity": "https://www.perplexity.ai",
+    "perplexity ai": "https://www.perplexity.ai",
+    "copilot": "https://copilot.microsoft.com",
+    "grok": "https://grok.com",
+}
+
+_SITE_SEARCH_URLS = {
+    # Music & Audio
+    "spotify": "https://open.spotify.com/search/{q}",
+    "spotify web": "https://open.spotify.com/search/{q}",
+    "youtube music": "https://music.youtube.com/search?q={q}",
+    "yt music": "https://music.youtube.com/search?q={q}",
+    "ytmusic": "https://music.youtube.com/search?q={q}",
+    "soundcloud": "https://soundcloud.com/search?q={q}",
+
+    # Video & Streaming
+    "youtube": "https://www.youtube.com/results?search_query={q}",
+    "yt": "https://www.youtube.com/results?search_query={q}",
+    "netflix": "https://www.netflix.com/search?q={q}",
+    "twitch": "https://www.twitch.tv/search?term={q}",
+
+    # Social & Community
+    "reddit": "https://www.reddit.com/search/?q={q}",
+    "twitter": "https://twitter.com/search?q={q}",
+    "x": "https://x.com/search?q={q}",
+    "facebook": "https://www.facebook.com/search/top/?q={q}",
+    "fb": "https://www.facebook.com/search/top/?q={q}",
+    "instagram": "https://www.instagram.com/explore/tags/{q}/",
+    "ig": "https://www.instagram.com/explore/tags/{q}/",
+    "linkedin": "https://www.linkedin.com/search/results/all/?keywords={q}",
+    "pinterest": "https://www.pinterest.com/search/pins/?q={q}",
+    "tiktok": "https://www.tiktok.com/search?q={q}",
+
+    # Search & Knowledge
+    "google": "https://www.google.com/search?q={q}",
+    "google maps": "https://www.google.com/maps/search/{q}",
+    "maps": "https://www.google.com/maps/search/{q}",
+    "wikipedia": "https://en.wikipedia.org/w/index.php?search={q}",
+    "wiki": "https://en.wikipedia.org/w/index.php?search={q}",
+    "github": "https://github.com/search?q={q}",
+    "stackoverflow": "https://stackoverflow.com/search?q={q}",
+    "stack overflow": "https://stackoverflow.com/search?q={q}",
+    "duckduckgo": "https://duckduckgo.com/?q={q}",
+    "ddg": "https://duckduckgo.com/?q={q}",
+    "bing": "https://www.bing.com/search?q={q}",
+
+    # Shopping & Entertainment
+    "amazon": "https://www.amazon.com/s?k={q}",
+    "ebay": "https://www.ebay.com/sch/i.html?_nkw={q}",
+    "imdb": "https://www.imdb.com/find/?q={q}",
+
+    # AI Search
+    "perplexity": "https://www.perplexity.ai/search?q={q}",
+    "perplexity ai": "https://www.perplexity.ai/search?q={q}",
+}
+
+
+def _norm_site_name(name: str) -> str:
+    n = re.sub(r"\s+", " ", (name or "").strip().lower())
+    alias_map = {
+        "yt": "youtube",
+        "yt music": "youtube music",
+        "ytmusic": "youtube music",
+        "fb": "facebook",
+        "ig": "instagram",
+        "ddg": "duckduckgo",
+        "wiki": "wikipedia",
+        "spotify web": "spotify",
+        "google map": "google maps",
+        "maps": "google maps",
+        "stack overflow": "stackoverflow",
+        "claude ai": "claude",
+        "google gemini": "gemini",
+        "deep seek": "deepseek",
+        "qwen ai": "qwen",
+        "tongyi": "qwen",
+        "perplexity ai": "perplexity",
+    }
+    return alias_map.get(n, n)
+
+
+_SITE_NAMES_RE = (
+    r"youtube\s+music|yt\s*music|spotify\s+web|google\s+maps|stack\s*overflow|"
+    r"youtube|spotify|reddit|twitter|facebook|instagram|linkedin|pinterest|twitch|soundcloud|"
+    r"netflix|github|wikipedia|amazon|ebay|imdb|google|duckduckgo|bing|tiktok|maps|wiki|ddg|fb|ig|yt|x"
+)
+
+_RE_SITE_SEARCH = re.compile(
+    rf"\b(?:"
+    rf"open\s+({_SITE_NAMES_RE})\s+and\s+search\s+(?:for\s+)?(.+)|"
+    rf"search\s+(?:on\s+)?({_SITE_NAMES_RE})\s+for\s+(.+)|"
+    rf"search\s+for\s+(.+?)\s+on\s+({_SITE_NAMES_RE})|"
+    rf"search\s+(.+?)\s+on\s+({_SITE_NAMES_RE})|"
+    rf"look\s+up\s+(.+?)\s+on\s+({_SITE_NAMES_RE})|"
+    rf"find\s+(.+?)\s+on\s+({_SITE_NAMES_RE})"
+    rf")\b",
+    re.IGNORECASE,
+)
+
+_RE_SITE_PLAY = re.compile(
+    r"\bplay\s+(.+?)\s+on\s+(spotify(?:\s+web)?|youtube\s+music|yt\s*music|youtube|yt|soundcloud)\b",
+    re.IGNORECASE,
+)
+
+_OPEN_SITE_NAMES_RE = (
+    _SITE_NAMES_RE +
+    r"|chatgpt|chat\s+gpt|claude(?:\s+ai)?|gemini|google\s+gemini|deepseek|deep\s+seek|qwen(?:\s+ai)?|tongyi|perplexity(?:\s+ai)?|copilot|grok"
+)
+
+_RE_OPEN_SITE = re.compile(
+    rf"\b(?:open|launch|go\s+to|visit)\s+({_OPEN_SITE_NAMES_RE})\b",
+    re.IGNORECASE,
+)
+
+_AI_CHAT_NAMES_RE = (
+    r"chatgpt|chat\s+gpt|claude(?:\s+ai)?|gemini|google\s+gemini|deepseek|deep\s+seek|"
+    r"qwen(?:\s+ai)?|tongyi|perplexity(?:\s+ai)?|copilot|grok"
+)
+
+_RE_AI_CHAT_ASK = re.compile(
+    rf"\b(?:"
+    rf"open\s+({_AI_CHAT_NAMES_RE})\s+and\s+ask\s+(?:it\s+)?(?:to\s+|for\s+)?(.+)|"
+    rf"ask\s+({_AI_CHAT_NAMES_RE})\s+(?:to\s+|for\s+|about\s+|that\s+)?(.+)|"
+    rf"query\s+({_AI_CHAT_NAMES_RE})\s+(?:for\s+|about\s+)?(.+)|"
+    rf"send\s+(?:a\s+)?(?:prompt\s+)?(?:to\s+)({_AI_CHAT_NAMES_RE})\s*[:,-]?\s*(.+)"
+    rf")\b",
+    re.IGNORECASE,
+)
+
 _RE_URL = re.compile(
     r"\b((?:https?://|www\.)[^\s]+)\b|"
     r"\b(?:open|go\s+to|visit|browse\s+to)\s+([a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)+)\b",
     re.IGNORECASE)
 _RE_WIKI = re.compile(r"\bwiki(?:pedia)?\b\s*(?:about|for|on)?\s*(.+)", re.IGNORECASE)
 _RE_WHOIS = re.compile(r"^(?:who|what)\s+(?:is|was|are)\s+(.+?)[?.!]*$", re.IGNORECASE)
+_RE_SET_VOLUME = re.compile(
+    r"\b(?:set|turn|change|put|adjust)\s+(?:the\s+)?(?:sound\s+|audio\s+)?(?:volume|sound|audio)\s+(?:(?:up|down)\s+)?(?:to|at|on)?\s*(\d{1,3})\s*%?|"
+    r"\b(?:volume|sound|audio)\s+(?:to|at|on|=)?\s*(\d{1,3})\s*%?|"
+    r"\b(?:turn\s+(?:it\s+)?(?:up|down)\s+to)\s*(\d{1,3})\s*%?",
+    re.IGNORECASE,
+)
 _RE_VOLUME = re.compile(
-    r"\b(?:volume\s+(?:up|down)|turn\s+(?:the\s+volume|it)\s+(?:up|down)|"
+    r"\b(?:volume\s+(?:up|down)|turn\s+(?:the\s+volume|the|it)?\s*(?:up|down)|"
     r"mute|unmute|louder|quieter|sound\s+(?:up|down))\b", re.IGNORECASE)
 _RE_MEDIA = re.compile(
     r"\b(?:play|pause|resume)\b(?:\s+(?:the\s+)?(?:music|song|track|audio|video))?|"
@@ -1825,23 +2741,63 @@ _RE_SHOT = re.compile(
     r"\b(?:take|grab|capture|snap)\s+(?:a\s+)?(?:screen\s*shot|screenshot|screen\s+capture)\b|"
     r"\bscreenshot\b", re.IGNORECASE)
 _RE_LOCK = re.compile(
-    r"\block\s+(?:my\s+|the\s+)?(?:screen|pc|computer|workstation|machine|laptop)\b", re.IGNORECASE)
+    r"\b(?:lock\s+(?:(?:down|the|my)\s+)*(?:sys(?:tem)?|screen|pc|computer|workstation|machine|laptop|desktop)|lock\s+down)\b",
+    re.IGNORECASE,
+)
 _RE_REMEMBER = re.compile(
     r"\b(?:remember|note\s+down|keep\s+in\s+mind)\s+(?:that\s+)?(.+)", re.IGNORECASE)
+_RE_SENSITIVE_SECRET = re.compile(
+    r"\b(?:password|passcode|pin|api\s*key|secret\s*key|private\s*key|auth\s*token)\b",
+    re.IGNORECASE,
+)
+_RE_LIST_REMINDERS = re.compile(
+    r"\b(?:what\s+(?:are\s+)?(?:all\s+|my\s+|the\s+)?reminders?|"
+    r"list\s+(?:all\s+|my\s+|the\s+)*reminders?|"
+    r"show\s+(?:all\s+|my\s+|the\s+)*reminders?|"
+    r"check\s+(?:all\s+|my\s+|the\s+)*reminders?|"
+    r"view\s+(?:all\s+|my\s+|the\s+)*reminders?|"
+    r"active\s+reminders?|any\s+reminders?)\b",
+    re.IGNORECASE,
+)
+_RE_COPY_CLIPBOARD = re.compile(
+    r"\bcopy\s+(.+?)\s+(?:to|into|in|onto)\s+(?:my\s+|the\s+)?clipboard\b|"
+    r"\b(?:copy\s+(?:to|into|in|onto)\s+(?:the\s+|my\s+)?clipboard|put\s+(?:on|in|into)\s+(?:the\s+|my\s+)?clipboard)\b",
+    re.IGNORECASE,
+)
+_RE_FIND_FILE = re.compile(
+    r"\b(?:find|locate|search\s+for|look\s+for)\s+(?:all\s+)?(?:the\s+|my\s+)?(?:files?|documents?)\s+(?:called|named|with|matching|for)\s+(.+?)[?.!]*$|"
+    r"\b(?:where\s+is|where\s+are)\s+(?:the\s+|my\s+)?(?:files?|documents?)\s+(?:called|named|with|matching|for)\s+(.+?)[?.!]*$|"
+    r"\bfind\s+(?:my\s+|the\s+)?file\s+(.+?)[?.!]*$|"
+    r"\b(?:find|locate|search\s+for|look\s+for)\s+(?:my\s+|the\s+)?(.+?)\s+file[s]?[?.!]*$|"
+    r"\b(?:find|locate|where\s+is|where\s+are)\s+(?:the\s+|my\s+)?([a-z0-9_\-.]+\.[a-z0-9]{2,5})\b",
+    re.IGNORECASE,
+)
+_RE_GIT_STATUS = re.compile(
+    r"\b(?:git\s+status|what\s+git\s+branch|what\s+branch\s+am\s+i\s+on|git\s+branch|git\s+changes|git\s+diff\s+summary)\b",
+    re.IGNORECASE,
+)
+_RE_WIFI_INFO = re.compile(
+    r"\b(?:what\s+wi-?fi|wi-?fi\s+(?:info|status|network|details)|what\s+is\s+my\s+local\s+ip|my\s+ip\s+address|network\s+ip)\b",
+    re.IGNORECASE,
+)
+_RE_DATE_MATH = re.compile(
+    r"\b(?:how\s+many\s+days\s+(?:until|to|till)|days\s+(?:until|to|till)|what\s+date\s+is\s+(?:it\s+)?in\s+\d+\s+(?:days?|weeks?|months?))\b",
+    re.IGNORECASE,
+)
 # Declarative personal facts worth storing even without "remember": a
 # possessive + stable-attribute noun + "is" + value. Question words and
 # verbs of state disqualify (that's chitchat, not a fact to store).
 _RE_PERSONAL_FACT = re.compile(
     r"^\s*(?:hey\s+\w+,?\s*)?(?:please\s+)?my\s+"
-    r"(codename|code\s*name|callsign|call\s*sign|nickname|name|password|"
-    r"passcode|pin|birthday|anniversary|email(?:\s*address)?|phone(?:\s*number)?|"
+    r"(codename|code\s*name|callsign|call\s*sign|nickname|name|"
+    r"birthday|anniversary|email(?:\s*address)?|phone(?:\s*number)?|"
     r"address|timezone|favourite|favorite)\s+(?:is|=)\s+(.{2,80}?)[.!?]*\s*$",
     re.IGNORECASE,
 )
 _RE_MY_ATTR_Q = re.compile(
     r"^\s*what(?:'s| is|\s+was)\s+(?:my|our)\s+"
-    r"(?:codename|code\s*name|callsign|call\s*sign|nickname|name|password|"
-    r"passcode|pin|birthday|anniversary|email(?:\s*address)?|phone(?:\s*number)?|"
+    r"(?:codename|code\s*name|callsign|call\s*sign|nickname|name|"
+    r"birthday|anniversary|email(?:\s*address)?|phone(?:\s*number)?|"
     r"address|timezone|favourite|favorite)\b[?.!]*\s*$",
     re.IGNORECASE,
 )
@@ -1866,9 +2822,13 @@ _RE_DESTRUCTIVE = re.compile(
     re.IGNORECASE)
 
 _RE_ACTIVE_WIN = re.compile(
-    r"\b(?:what (?:app|application|window|file) am i (?:on|in|using|editing)|"
-    r"what(?:'s| is) (?:my |the )?(?:active|current) (?:window|app|application|file)|"
-    r"active window|current window|active app|current app)\b",
+    r"\b(?:"
+    r"(?:what|which)\s+(?:app|application|window|file|program)\s+(?:am\s+i\s+(?:on|in|using|editing|looking\s+at)|is\s+(?:currently\s+)?(?:open|active|in\s+use|focused|running))(?:\s+(?:right\s+now|now|currently|at\s+the\s+moment))?|"
+    r"(?:what|which)\s+(?:app|application|window|file|program)\s+am\s+i\s+(?:on|in|using|editing|looking\s+at)?(?:\s+(?:right\s+now|now|currently|at\s+the\s+moment))|"
+    r"(?:what|which)\s+(?:am\s+i|are\s+we)\s+(?:using|on|in|editing|looking\s+at)(?:\s+(?:right\s+now|now|currently|at\s+the\s+moment))?|"
+    r"what(?:'s| is)\s+(?:my\s+|the\s+)?(?:active|current|foreground)\s+(?:window|app|application|program|file)|"
+    r"active\s+window|current\s+window|active\s+app|current\s+app|foreground\s+window|foreground\s+app"
+    r")\b",
     re.IGNORECASE,
 )
 _RE_SCREEN_INSPECT = re.compile(
@@ -2102,8 +3062,8 @@ def _parse_units(text: str) -> Optional[str]:
 
 
 _RE_AFFIRM = re.compile(
-    r"^\s*(?:yes|yeah|yep|yup|ok|okay|sure|proceed|go ahead|go on|do it|"
-    r"confirm|please do|affirmative|sounds good)\b",
+    r"^\s*(?:yes|yeah|yep|yup|ok|okay|sure|proceed|go ahead|go on|do it|do that|"
+    r"confirm|please do|please|yes please|affirmative|sounds good|draft it|create it|y)\b",
     re.IGNORECASE,
 )
 _RE_DECLINE = re.compile(
@@ -2295,6 +3255,9 @@ def route_tools(
         _PENDING_CONFIRM = None
 
     # 1 — reminders (checked first: "remind me in 1 minute to X")
+    if _RE_LIST_REMINDERS.search(text):
+        run(list_reminders, label="list_reminders")
+        return results
     if _RE_REMIND_CANCEL.search(text):
         run(cancel_reminders, label="cancel_reminders")
         return results
@@ -2393,16 +3356,32 @@ def route_tools(
         results.append(("unit_convert", ures))
         return results
 
+    # 2d-ai — AI web chat prompt routing ("ask gemini why is the sky blue", "ask claude to write ...")
+    m_ai = _RE_AI_CHAT_ASK.search(text)
+    if m_ai:
+        vals = [g.strip() for g in m_ai.groups() if g is not None]
+        if len(vals) >= 2:
+            run(open_ai_webchat, vals[0], vals[1], label="ai_webchat")
+            return results
+
     # 2d — open document / file / folder ("open the file", "open the document", "open it", "open documents folder")
     m = _RE_OPEN_DOC.search(text)
     if m:
         run(open_document, text, label="open_document")
         return results
 
-    # 2e — document location query ("where is the document location", "where was it saved")
+    # 2d' — document location query ("where is the document location", "where was it saved", "where did you save the document")
     if _RE_DOC_LOCATION.search(text):
         run(get_document_location, label="document_location")
         return results
+
+    # 2d'' — find file across user folders
+    m_find = _RE_FIND_FILE.search(text)
+    if m_find:
+        target = next((g.strip() for g in m_find.groups() if g and g.strip()), "")
+        if target:
+            run(find_file, _clean(target), label="find_file")
+            return results
 
     # 3 — document drafting
     m = _RE_DOC.search(text)
@@ -2421,6 +3400,24 @@ def route_tools(
             # handle the under-specified request instead.
             if clarify != "off":
                 results.append(("clarify", f"Certainly, sir — what should the {kind} cover?"))
+                return results
+        elif kind == "meeting_notes":
+            clean_top = _clean_doc_topic(topic)
+            wiki_title, sentences = _fetch_topic_knowledge(clean_top)
+            if sentences:
+                disp_title = wiki_title or clean_top.title()
+                _PENDING_CONFIRM = {
+                    "label": "create_document",
+                    "func": create_document,
+                    "args": ("document", topic),
+                }
+                results.append((
+                    "clarify",
+                    f"I have no record of a meeting regarding '{disp_title}', sir. Would you like me to draft a concise document on {disp_title} instead?"
+                ))
+                return results
+            else:
+                run(create_document, kind, topic, label="create_document")
                 return results
         elif clarify == "confirm_all":
             _PENDING_CONFIRM = {
@@ -2441,11 +3438,19 @@ def route_tools(
         run(convert_currency, cur[0], cur[1], cur[2], label="convert_currency")
         return results
 
-    # 3c — explicit URL → fetch page (mini-RAG: model summarises the text)
-    m = _RE_URL.search(text)
-    if m and m.group(1):
-        run(fetch_page, m.group(1), label="fetch_page")
-        return results
+    # 3c — URL handling:
+    # Explicit open/visit/launch command → open_url (launches browser)
+    # Read/summarize/inspect or question with URL → fetch_page (extracts text)
+    m_url = _RE_URL.search(text)
+    if m_url:
+        target_url = m_url.group(1) or m_url.group(2)
+        is_open_intent = bool(re.search(r"\b(?:open|launch|visit|go\s+to|browse\s+to)\b", text, re.IGNORECASE))
+        if is_open_intent:
+            run(open_url, target_url, label="open_url")
+            return results
+        if m_url.group(1):
+            run(fetch_page, m_url.group(1), label="fetch_page")
+            return results
 
     # 3d — wikipedia lookup
     m = _RE_WIKI.search(text)
@@ -2459,34 +3464,56 @@ def route_tools(
     if _RE_WEATHER.search(text):
         cm = _RE_CITY.search(text)
         city = _clean(cm.group(1)) if cm else None
-        if city and city.lower() in ("the", "a", "it", "this", "my", "here"):
+        if city and city.lower() in ("the", "a", "it", "this", "my", "here", "near me", "outside"):
             city = None
-        if city is None:
-            if clarify != "off":
-                # Ask once; the next bare place name completes the request.
-                _WEATHER_PENDING = True
-                results.append(("clarify", WEATHER_ASK))
-                return results
-        else:
-            run(get_weather, city, label="get_weather")
-            return results
-
-    # 5 — time / date
-    if _RE_TIME.search(text):
-        run(get_time, label="get_time")
+        run(get_weather, city, label="get_weather")
         return results
 
-    # 6 — system status
+    # 5 — date delta math
+    if _RE_DATE_MATH.search(text):
+        dm = date_math(text)
+        if dm:
+            results.append(("date_math", dm))
+            return results
+
+    # 5b — time / date / clock (any timezone)
+    if _RE_TIME.search(text):
+        m_loc = re.search(r"\b(?:in|at|for)\s+([A-Za-z .'-]{2,25})(?:\s*(?:right\s+now|now|\?|!|\.|$))", text, re.IGNORECASE)
+        loc = m_loc.group(1).strip() if m_loc else None
+        if loc and loc.lower() in ("the morning", "the evening", "the afternoon", "the moment", "the night", "my time", "here", "local time"):
+            loc = None
+        run(get_time, loc, label="get_time")
+        return results
+
+    # 6 — system status & git status
+    if _RE_GIT_STATUS.search(text):
+        run(git_status, label="git_status")
+        return results
     if _RE_STATUS.search(text):
         run(system_status, label="system_status")
         return results
 
-    # 6b — network status
+    # 6b — network status & wifi info
+    if _RE_WIFI_INFO.search(text):
+        run(wifi_info, label="wifi_info")
+        return results
     if _RE_NET_STATUS.search(text):
         run(network_status, label="network_status")
         return results
 
-    # 7 — clipboard
+    # 7 — clipboard (read and write)
+    m_copy = _RE_COPY_CLIPBOARD.search(text)
+    if m_copy:
+        to_copy = ""
+        m_x = re.search(r"\bcopy\s+(.+?)\s+(?:to|into|in|onto)\s+(?:my\s+|the\s+)?clipboard\b", text, re.I)
+        if m_x:
+            to_copy = m_x.group(1).strip()
+        elif m_copy.group(1):
+            to_copy = m_copy.group(1).strip()
+        if not to_copy:
+            to_copy = text
+        run(clipboard_write, to_copy, label="clipboard_write")
+        return results
     if _RE_CLIP.search(text):
         action = "summarize" if re.search(r"\bsummar\w+", text, re.I) else \
                  "rewrite" if re.search(r"\b(rewrite|rephrase|improve)\b", text, re.I) else \
@@ -2495,12 +3522,29 @@ def route_tools(
         return results
 
     # 7b — volume & media keys
+    m_vol_set = _RE_SET_VOLUME.search(text)
+    if m_vol_set:
+        val_s = m_vol_set.group(1) or m_vol_set.group(2) or m_vol_set.group(3)
+        if val_s:
+            run(set_volume_percent, int(val_s), label="set_volume")
+            return results
     if _RE_VOLUME.search(text):
         act = "mute" if re.search(r"\b(?:mute|unmute)\b", text, re.I) else \
               "volume_down" if re.search(r"\b(?:down|quieter)\b", text, re.I) else \
               "volume_up"
         run(media_control, act, label="media_control")
         return results
+    m_site_play = _RE_SITE_PLAY.search(text)
+    if m_site_play:
+        p_query = m_site_play.group(1).strip()
+        p_site = _norm_site_name(m_site_play.group(2))
+        template = _SITE_SEARCH_URLS.get(p_site)
+        if template:
+            import urllib.parse
+            url = template.format(q=urllib.parse.quote_plus(p_query))
+            run(open_url, url, label="site_search")
+            return results
+
     if _RE_MEDIA.search(text):
         act = "next" if re.search(r"\b(?:next|skip)\b", text, re.I) else \
               "prev" if re.search(r"\b(?:previous|prev)\b", text, re.I) else \
@@ -2514,6 +3558,14 @@ def route_tools(
         return results
     if _RE_LOCK.search(text):
         run(lock_workstation, label="lock")
+        return results
+
+    # 7d0 — security guard: refuse to write cleartext passwords, PINs, or API keys to notes
+    if _RE_SENSITIVE_SECRET.search(text) and (
+        _RE_REMEMBER.search(text) or re.search(r"\b(?:my|save|store|keep|record)\s+(?:password|passcode|pin|api\s*key|secret)", text, re.I)
+    ):
+        refusal = "For your security, sir, I do not store sensitive credentials such as passwords, PINs, or API keys in plain text notes."
+        results.append(("security_refusal", refusal))
         return results
 
     # 7d — quick memory: recall before remember (longer trigger first)
@@ -2541,6 +3593,34 @@ def route_tools(
     if m:
         run(recall_fact, _clean(m.group(0)), label="recall")
         return results
+
+    # 7e0 — specific site search ("open youtube and search for ryan trahan", "search spotify for ...")
+    m_site_search = _RE_SITE_SEARCH.search(text)
+    if m_site_search:
+        vals = [g.strip() for g in m_site_search.groups() if g is not None]
+        if len(vals) >= 2:
+            s_name1 = _norm_site_name(vals[0])
+            s_name2 = _norm_site_name(vals[1])
+            if s_name1 in _SITE_SEARCH_URLS:
+                s_name, s_query = s_name1, vals[1]
+            elif s_name2 in _SITE_SEARCH_URLS:
+                s_name, s_query = s_name2, vals[0]
+            else:
+                s_name, s_query = s_name1, vals[1]
+            template = _SITE_SEARCH_URLS.get(s_name)
+            if template:
+                import urllib.parse
+                url = template.format(q=urllib.parse.quote_plus(s_query))
+                run(open_url, url, label="site_search")
+                return results
+
+    # 7e1 — open known website ("open youtube", "open reddit", "launch spotify web", "open gemini")
+    m_site = _RE_OPEN_SITE.search(text)
+    if m_site:
+        s_name = _norm_site_name(m_site.group(1))
+        if s_name in _SITE_URLS:
+            run(open_url, _SITE_URLS[s_name], label="open_site")
+            return results
 
     # 7e — open a website (must run before launch_app grabs the domain)
     m = _RE_URL.search(text)
@@ -2790,12 +3870,65 @@ def canned_reply(label: str, result: str) -> Optional[str]:
             target = re.sub(r"^(?:my|your|the|a|an)\s+", "", raw, flags=re.IGNORECASE).strip()
             return f"I don't have any notes saved about {target or raw}, sir."
         return result
-    if label == "safety_refusal":
+    if label in ("safety_refusal", "security_refusal"):
         return result
+    if label in ("fetch_page", "fetch_url"):
+        if result and ("offline" in result.lower() or "could not fetch" in result.lower()):
+            return result.strip()
+        return None
     if label == "active_window":
-        return f"You are currently working in {result}, sir."
+        if not result or "No active foreground window" in result:
+            return "I could not detect an active window at the moment, sir."
+        clean_res = result.rstrip(".")
+        if "Web Page: " in clean_res:
+            m_web = re.search(r"Application:\s*(.+?),\s*Web Page:\s*'(.+?)'", clean_res)
+            if m_web:
+                app, page = m_web.group(1).strip(), m_web.group(2).strip()
+                return f"You are currently viewing '{page}' in {app}, sir."
+        if clean_res.startswith("Application: "):
+            if ", Window Title: " in clean_res:
+                app_part, rest = clean_res.split(", Window Title: ", 1)
+                app = app_part.replace("Application: ", "").strip()
+                title = rest.split(", Active File: ")[0].strip("'\" ")
+                return f"You are currently using {app} ('{title}'), sir."
+            else:
+                app = clean_res.replace("Application: ", "").strip()
+                return f"You are currently using {app}, sir."
+        return f"You are currently in {clean_res}, sir."
     if label == "running_apps":
         return f"{result}, sir."
     if label == "speak":
         return "Spoken aloud, sir."
+    if label == "launch_app":
+        if result and result.lower().startswith("could not find"):
+            return result
+        return result.rstrip(".") + ", sir."
+    if label == "system_status":
+        return result
+    if label == "todo_list":
+        return result
+    if label == "create_document":
+        return result
+    if label == "set_volume":
+        m = re.search(r"(\d+)%", result)
+        pct = m.group(1) if m else ""
+        return f"Setting the volume to {pct}%, sir." if pct else "Volume adjusted, sir."
+    if label in ("list_reminders", "clipboard_write", "find_file", "git_status", "wifi_info", "date_math"):
+        return result
+    if label == "clipboard_assist":
+        if not result or result == "The clipboard is empty.":
+            return "Your clipboard is currently empty, sir."
+        if result.startswith("Clipboard content: "):
+            val = result.replace("Clipboard content: ", "").strip()
+            return f"Your clipboard contains: '{val}', sir."
+        return result
+    if label == "ai_webchat":
+        return f"{result}, sir."
+    if label == "site_search":
+        return "Opening that search in your browser, sir."
+    if label == "open_site":
+        return "Opening that website in your browser, sir."
+    if label == "open_url":
+        host = result.replace("opened: ", "").strip()
+        return f"Opening {host} in your browser, sir."
     return None

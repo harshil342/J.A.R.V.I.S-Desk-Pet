@@ -16,9 +16,9 @@ ROOT="$(cd "$HERE/.." && pwd)"
 cd "$ROOT"
 
 if [[ ! -d ".venv" ]]; then
-  echo "==> .venv 不存在，先跑 uv sync ..."
+  echo "==> .venv missing, running uv sync first ..."
   if ! command -v uv >/dev/null 2>&1; then
-    echo "uv 未安装。请先 curl -LsSf https://astral.sh/uv/install.sh | sh" >&2
+    echo "uv not installed. Install first: curl -LsSf https://astral.sh/uv/install.sh | sh" >&2
     exit 1
   fi
   uv sync

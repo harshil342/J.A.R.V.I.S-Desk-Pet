@@ -79,13 +79,13 @@ test("detectRemoteShell: Windows cmd remote → windows-cmd", async () => {
 });
 
 test("detectRemoteShell: GBK-encoded cmd stderr still classifies as windows-cmd", async () => {
-  // Chinese Windows cmd error bytes for "'uname' 不是内部或外部命令" don't
+  // GBK-encoded cmd stderr for the "'uname' is not recognized" error does not
   // matter for classification — uname's non-zero exit + ver's success is
   // what makes the call. This test confirms we don't crash on weird bytes
   // and still reach the Windows branch.
   const garbled = Buffer.from([
     0x27, 0x75, 0x6e, 0x61, 0x6d, 0x65, 0x27, 0x20,
-    0xb2, 0xbb, 0xca, 0xc7, 0xc4, 0xda, 0xb2, 0xbf, // 不是内部 in GBK
+    0xb2, 0xbb, 0xca, 0xc7, 0xc4, 0xda, 0xb2, 0xbf, // GBK for part of the message
   ]);
   const { spawn } = makeRecordingSpawn([
     { code: 1, stderr: garbled },

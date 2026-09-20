@@ -11,13 +11,13 @@ tags:
 
 # MiniCPM5-1B NekoQA v2 LoRA
 
-本地开发副本。公开版本见 Hugging Face：
+Local dev copy. Public releases on Hugging Face:
 
 - **PEFT**: [DennisHuang648/MiniCPM5-1B-NekoQA-v2-LoRA](https://huggingface.co/DennisHuang648/MiniCPM5-1B-NekoQA-v2-LoRA)
 - **GGUF**: [DennisHuang648/MiniCPM5-1B-NekoQA-v2-LoRA-GGUF](https://huggingface.co/DennisHuang648/MiniCPM5-1B-NekoQA-v2-LoRA-GGUF)
 
-## 训练数据
+## Training data
 
-本 LoRA 的微调数据来源为 **neko30k** 数据集（Hugging Face: [liumindmind/NekoQA-30K](https://huggingface.co/datasets/liumindmind/NekoQA-30K)），共 30,834 条猫娘 QA 对话。
+This LoRA was fine-tuned on the **neko30k** dataset (Hugging Face: [liumindmind/NekoQA-30K](https://huggingface.co/datasets/liumindmind/NekoQA-30K)), 30,834 cat-girl QA pairs.
 
-详细用法见 `USAGE.md`。
+See `USAGE.md` for details.

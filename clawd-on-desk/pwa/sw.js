@@ -25,7 +25,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // WS 请求不拦截
+  // Don't intercept WS requests
   if (event.request.url.includes("/ws")) return;
 
   event.respondWith(
@@ -46,7 +46,7 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// 通知点击：聚焦到已有窗口
+// Notification click: focus existing window
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(

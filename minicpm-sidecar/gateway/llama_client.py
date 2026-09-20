@@ -191,9 +191,9 @@ def detect_backend() -> dict:
     # proxy without dragging in the cuda-python wheel.
     if shutil.which("nvidia-smi"):
         backends.append("cuda")
-        reasons["cuda"] = "NVIDIA GPU 检测到（nvidia-smi）"
+        reasons["cuda"] = "NVIDIA GPU detected (nvidia-smi)"
     backends.append("cpu")
-    reasons["cpu"] = "纯 CPU 推理，速度较慢但任何机器都能跑"
+    reasons["cpu"] = "Plain CPU inference, slower but runs on any machine"
     return {
         "available": backends,
         "recommended": backends[0],
@@ -312,8 +312,8 @@ class LlamaServer:
                 continue
         searched = "\n  ".join(str(p) for p in _candidate_binary_paths(self.device))
         raise FileNotFoundError(
-            "找不到 llama-server。请先下载官方 llama.cpp release：cd minicpm-sidecar && ./scripts/fetch-llama-release.sh。\n"
-            f"  已检查的路径:\n  {searched}"
+            "llama-server not found. Download the official llama.cpp release first: cd minicpm-sidecar && ./scripts/fetch-llama-release.sh.\n"
+            f"  Searched paths:\n  {searched}"
         )
 
     def _build_argv(self) -> list[str]:

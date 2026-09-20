@@ -72,3 +72,23 @@ async def test_execute_active_window_via_registry():
     assert res.success is True
     assert isinstance(res.result, str)
     assert res.source == "native"
+
+
+def test_extract_browser_tab():
+    from gateway.screen_context import _extract_browser_tab, ActiveWindowInfo
+
+    tab = _extract_browser_tab("FastAPI Documentation - Google Chrome", "Google Chrome")
+    assert tab == "FastAPI Documentation"
+
+    tab_edge = _extract_browser_tab("GitHub: Where the world builds software - Personal - Microsoft Edge", "Microsoft Edge")
+    assert tab_edge == "GitHub: Where the world builds software"
+
+    tab_firefox = _extract_browser_tab("DeskPet / J.A.R.V.I.S — Mozilla Firefox", "Firefox")
+    assert tab_firefox == "DeskPet / J.A.R.V.I.S"
+
+    # Non-browser app should return None
+    assert _extract_browser_tab("main.py - DeskPet - Visual Studio Code", "Visual Studio Code") is None
+
+    # Formatted ActiveWindowInfo with web_page
+    info = ActiveWindowInfo(title="FastAPI - Google Chrome", app_name="Google Chrome", web_page="FastAPI")
+    assert "Web Page: 'FastAPI'" in info.formatted()

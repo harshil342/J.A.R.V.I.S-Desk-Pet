@@ -1,3 +1,8 @@
+!macro customInit
+  nsExec::Exec 'taskkill /F /IM llama-server.exe /T'
+  nsExec::Exec 'taskkill /F /IM minicpm-sidecar.exe /T'
+!macroend
+
 !macro customInstall
   SetOutPath "$INSTDIR"
   File "/oname=$INSTDIR\uninstall-claude-hooks.ps1" "${BUILD_RESOURCES_DIR}\uninstall-claude-hooks.ps1"
@@ -15,6 +20,8 @@
 !macroend
 
 !macro customUnInstall
+  nsExec::Exec 'taskkill /F /IM llama-server.exe /T'
+  nsExec::Exec 'taskkill /F /IM minicpm-sidecar.exe /T'
   StrCpy $1 "$PROFILE"
   IfFileExists "$INSTDIR\.clawd-install-user-home" 0 clawd_node_cleanup_home_done
     FileOpen $0 "$INSTDIR\.clawd-install-user-home" r

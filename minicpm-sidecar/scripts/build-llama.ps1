@@ -45,8 +45,8 @@ switch ($accel) {
   default  { Write-Error "Unknown LLAMA_ACCEL=$accel (expected vulkan|cuda|cpu)" }
 }
 
-# Vulkan 后端需要 SPIRV-Headers 的 CMake config。LunarG 精简 SDK 不带，
-# 如果本地环境通过 vcpkg 提供 SPIRV-Headers，可用 VCPKG_INSTALLED_DIR 指向它。
+# Vulkan backend needs the SPIRV-Headers CMake config. The slim LunarG SDK omits it,
+# so point VCPKG_INSTALLED_DIR at a local vcpkg checkout that provides SPIRV-Headers if needed.
 if ($accel -eq "vulkan" -and $env:VCPKG_INSTALLED_DIR) {
   Write-Host "==> Using vcpkg prefix: $env:VCPKG_INSTALLED_DIR" -ForegroundColor Cyan
   $flags += "-DCMAKE_PREFIX_PATH=$env:VCPKG_INSTALLED_DIR"

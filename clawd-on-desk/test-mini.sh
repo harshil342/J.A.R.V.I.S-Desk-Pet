@@ -1,7 +1,7 @@
 #!/bin/bash
-# 极简模式 SVG 动画测试脚本
-# 用法: bash test-mini.sh [每个动画秒数，默认6]
-# 注意: 先 npm start 启动应用，再运行此脚本
+# Minimal-mode SVG animation test script
+# Usage: bash test-mini.sh [seconds per animation, default 6]
+# Note: start the app with npm start first, then run this script
 
 DELAY=${1:-6}
 

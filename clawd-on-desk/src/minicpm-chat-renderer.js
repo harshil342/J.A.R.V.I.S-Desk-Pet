@@ -88,9 +88,12 @@ const SIDECAR_URL = "http://127.0.0.1:18765";
 const bubble = document.getElementById("bubble");
 const content = document.getElementById("content");
 const updPill = document.getElementById("updPill");
+const expandBtn = document.getElementById("expandBtn");
+const expandIcon = document.getElementById("expandIcon");
 
 // ── module state ──
 let phase = "hidden";        // hidden | starting | ask | thinking | speak | error
+let currentExpandMode = "compact"; // compact | large | fullscreen
 let booted = false;
 let sidecarUrl = null;
 let history = [];            // ACTIVE session's messages — aliases the v2 session store
@@ -101,7 +104,43 @@ let inputEl = null;          // <textarea> while in ask state
 // re-render its label on a language change without losing the version.
 let updPillRevision = null;
 
-// Persisted default lives in minicpm-prefs.json (Settings → 默认思考模式).
+// ponytail: toggle between compact bubble and expanded reader / fullscreen window
+async function toggleExpandMode(targetMode) {
+  if (targetMode) {
+    currentExpandMode = targetMode;
+  } else if (currentExpandMode === "compact") {
+    currentExpandMode = "large";
+  } else if (currentExpandMode === "large") {
+    currentExpandMode = "fullscreen";
+  } else {
+    currentExpandMode = "compact";
+  }
+  document.body.setAttribute("data-expand-mode", currentExpandMode);
+  updateExpandBtnState();
+  if (window.minicpm && typeof window.minicpm.setExpandMode === "function") {
+    await window.minicpm.setExpandMode(currentExpandMode);
+  }
+}
+
+function updateExpandBtnState() {
+  if (!expandBtn || !expandIcon) return;
+  if (currentExpandMode === "compact") {
+    expandBtn.title = "Expand to reader window";
+    expandIcon.innerHTML = '<polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line>';
+  } else if (currentExpandMode === "large") {
+    expandBtn.title = "Full screen";
+    expandIcon.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line>';
+  } else {
+    expandBtn.title = "Restore compact";
+    expandIcon.innerHTML = '<polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line>';
+  }
+}
+
+if (expandBtn) {
+  expandBtn.addEventListener("click", () => void toggleExpandMode());
+}
+
+// Persisted default lives in minicpm-prefs.json (Settings → Default thinking mode).
 // thinkingOverride is a per-session override from ⌘⇧T; null means follow
 // the persisted default on each submit.
 let thinkingOverride = null;
@@ -502,7 +541,7 @@ async function renderMemoryTab() {
   if (!body) return;
   body.innerHTML =
     '<div class="drawer-form">' +
-      '<input id="drawer-mem-search" class="drawer-input" type="text" placeholder="' + t("drawerMemPlaceholder") + '" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" />' +
+      '<input id="drawer-mem-search" class="drawer-input" type="text" placeholder="' + escapeHtml(t("drawerMemPlaceholder")) + '" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" />' +
       '<button id="drawer-mem-add-btn" class="drawer-add" title="' + escapeHtml(t("drawerSet")) + '">' +
         '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' +
       '</button>' +
@@ -597,6 +636,8 @@ function clearFade() {
 }
 
 async function setBubbleSize(width, height) {
+  // ponytail: if expanded (large or fullscreen), do not resize to compact bounds
+  if (currentExpandMode !== "compact") return;
   // shell has 7px inset on each side (just enough for the tail to poke out)
   if (window.minicpm && window.minicpm.resize) {
     await window.minicpm.resize(width + 14, height + 14);
@@ -772,6 +813,10 @@ async function onAskKey(e) {
     await submit(text);
   } else if (e.key === "Escape") {
     e.preventDefault();
+    if (currentExpandMode !== "compact") {
+      await toggleExpandMode("compact");
+      return;
+    }
     await dismiss();
   }
 }
@@ -951,6 +996,12 @@ const widthMeasurer = (() => {
 })();
 
 async function measureAndShow({ animate = true, width = null } = {}) {
+  // ponytail: if expanded (large or fullscreen), keep existing bounds
+  if (currentExpandMode !== "compact") {
+    if (animate) showBubble();
+    else bubble.classList.add("show");
+    return;
+  }
   const padY = 14;
   bubble.style.height = "auto";
   const cw = width !== null
@@ -1732,7 +1783,7 @@ if (window.minicpm) {
   if (window.minicpm.onUpdateStatus) window.minicpm.onUpdateStatus(updateBadge);
   if (window.minicpm.onUpdateApplying) window.minicpm.onUpdateApplying(showUpdateProgress);
   if (window.minicpm.onNarrate) window.minicpm.onNarrate(showNarration);
-  // Out-of-band system messages (e.g. "已切换到 X" pushed from the
+  // Out-of-band system messages (e.g. "switched to X" pushed from the
   // Settings panel after an adapter swap). Routed to the same
   // showCommandReply path the in-chat commands use, with optional
   // history wipe so the new persona starts clean.

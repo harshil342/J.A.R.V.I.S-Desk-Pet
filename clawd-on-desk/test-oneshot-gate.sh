@@ -1,24 +1,24 @@
 #!/bin/bash
-# Clawd ONESHOT gate 测试脚本
-# 用法:
-#   bash test-oneshot-gate.sh               # 全测 5 个状态，间隔 6s
-#   bash test-oneshot-gate.sh error         # 只测 error
+# Clawd ONESHOT gate test script
+# Usage:
+#   bash test-oneshot-gate.sh               # all 5 states, 6s interval
+#   bash test-oneshot-gate.sh error         # error only
 #   bash test-oneshot-gate.sh notification
 #   bash test-oneshot-gate.sh sweeping
 #   bash test-oneshot-gate.sh attention
 #   bash test-oneshot-gate.sh carrying
-#   bash test-oneshot-gate.sh all 10        # 全测，间隔 10s
+#   bash test-oneshot-gate.sh all 10        # all, 10s interval
 #
-# 测试场景:
-#   1) Animation Map 里把对应行开关关掉 → 跑脚本 → 桌宠应不出对应动画（gate 生效）
-#   2) 再把开关打开 → 跑脚本 → 桌宠应恢复播放对应动画（反向验证）
+# Test scenarios:
+#   1) Turn off the matching row in Animation Map -> run script -> pet should skip that animation (gate active)
+#   2) Turn the switch back on -> run script -> pet should play that animation again (reverse check)
 
 STATE=${1:-all}
 DELAY=${2:-6}
 AGENT=${3:-claude-code}
 URL="http://127.0.0.1:23333/state"
 
-# state → event 映射（对应 agents/claude-code.js 的事件名）
+# state -> event mapping (matches event names in agents/claude-code.js)
 get_event() {
   case $1 in
     error)        echo "PostToolUseFailure" ;;
@@ -39,24 +39,24 @@ send_state() {
   curl -s -X POST "$URL" -H "Content-Type: application/json" -d "$payload" -w "HTTP %{http_code}\n"
 }
 
-# 健康检查
+# Health check
 if ! curl -s "$URL" | grep -q '"ok":true'; then
-  echo "✗ Clawd 服务未运行（预期 127.0.0.1:23333）。先 npm start"
+  echo "✗ Clawd service not running (expected 127.0.0.1:23333). Start with npm start"
   exit 1
 fi
 
 if [ "$STATE" = "all" ]; then
-  echo "=== Clawd ONESHOT gate 全测：5 个状态，间隔 ${DELAY}s ==="
+  echo "=== Clawd ONESHOT gate full test: 5 states, ${DELAY}s interval ==="
   for s in error notification sweeping attention carrying; do
     send_state "$s"
     sleep "$DELAY"
   done
-  echo "=== 完成 ==="
+  echo "=== Done ==="
 else
   event=$(get_event "$STATE")
   if [ -z "$event" ]; then
-    echo "✗ 未知 state: $STATE"
-    echo "  有效值: error | notification | sweeping | attention | carrying | all"
+    echo "✗ Unknown state: $STATE"
+    echo "  valid values: error | notification | sweeping | attention | carrying | all"
     exit 1
   fi
   send_state "$STATE"

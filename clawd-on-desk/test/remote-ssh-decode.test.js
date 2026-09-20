@@ -28,15 +28,15 @@ test("decodeShellBytes: CP936/GBK Chinese stderr (Windows cmd) decodes cleanly",
   // "command not recognized" error. We encode via TextEncoder is not an
   // option (UTF-8 only), so handcraft the byte sequence for a known phrase.
   //
-  // "创建" in GBK:  B4 B4 BD A8
-  // "失败" in GBK:  CA A7 B0 DC
+  // "create" in GBK:  B4 B4 BD A8
+  // "fail" in GBK:  CA A7 B0 DC
   const bytes = Buffer.from([0xb4, 0xb4, 0xbd, 0xa8, 0xca, 0xa7, 0xb0, 0xdc]);
   const decoded = decodeShellBytes(bytes);
   assert.equal(decoded, "创建失败");
 });
 
 test("decodeShellBytes: GBK fallback wins when UTF-8 produces replacements", () => {
-  // 系统找不到指定的路径 (Windows "system can't find the specified path")
+  // Windows "system can't find the specified path" in GBK
   // GBK bytes: CF B5 CD B3 D5 D2 B2 BB B5 BD D6 B8 B6 A8 B5 C4 C2 B7 BE B6
   const gbkBytes = Buffer.from([
     0xcf, 0xb5, 0xcd, 0xb3, 0xd5, 0xd2, 0xb2, 0xbb,

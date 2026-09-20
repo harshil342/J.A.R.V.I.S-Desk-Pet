@@ -1,188 +1,188 @@
 # Core State Specs
 
-### idle (eye-follow) final spec ⭐ 锁定 2026-04-25
+### idle (eye-follow) final spec ⭐ locked 2026-04-25
 
-**视觉**: 软橡胶白云朵 + 紫蓝豆豆眼 (V2 定稿). 渲染时 viewBox 扩到 `-12 -12 48 48` (主体几何仍在 [0,24], 周围空白翻倍, 给鼠标远距离行为留空间).
+**Visuals**: soft-rubber white cloud + purple-blue bean eyes (V2 final). At render, viewBox expands to `-12 -12 48 48` (core geometry stays in [0,24], doubled margin around it leaves room for far-range mouse behavior).
 
-**运动语言**: 整体 SVG `transform="rotate scale"` (无离散 path, 无噪声). **眼睛主导身体响应**:
-- 鼠标在画布内: 眼睛 1:1 匀速跟鼠标 (不缓动, 不"诶?")
-- 云朵跟眼睛: lag 跟随 rotate (eye.x 驱动云朵 rotate, 有延迟)
-- **鼠标距 cloudling 越远 → 整体 scale up** (主动"凑过去看", 小活泼性格)
-- 鼠标移出画布: 眼睛 + 云朵 + scale 全部缓动回中
+**Motion language**: whole-SVG `transform="rotate scale"` (no discrete paths, no noise). **Eyes lead, body responds**:
+- Mouse inside canvas: eyes track the mouse 1:1 at constant speed (no easing, no "huh?")
+- Cloud follows eyes: lagged rotate follow (eye.x drives cloud rotate, with delay)
+- **Farther mouse from cloudling → bigger overall scale up** (actively "leans in to look", a lively little personality)
+- Mouse leaves canvas: eyes + cloud + scale all ease back to center
 
-**锁定参数** (打开 idle-follow.svg.html 默认即是):
+**Locked params** (opening idle-follow.svg.html defaults):
 
-| 参数 | 值 |
+| Param | Value |
 |------|-----|
-| 呼吸 scale 下界 / 上界 | 0.96 / 1.00 |
-| 呼吸周期 | 5.0 s |
-| 眼睛全偏时云朵 rotate | 20° |
-| 云朵跟眼睛 lag (lerp/frame) | 0.20 |
-| 眼睛最大偏移 | 0.50 单位 |
-| 眼睛回中时长 | 0.45 s |
-| 流动渐变周期 | 5.5 s |
-| 流动渐变幅度 | 4 单位 |
-| 眨眼间隔 | 6.0 s ±20% |
-| 眨眼时长 | 160 ms |
-| 距离 scale 触发起点 | 6 单位 |
-| 距离 scale 饱和距离 | 20 单位 |
-| 距离 scale 最大倍数 | 1.15× |
-| 距离 scale 缓动 | 0.50 s |
-| 眼睛玻璃描边宽度 | 0.08 |
-| 眼睛玻璃描边颜色 / 透明度 | `#ffffff` / 0.70 |
-| 云朵 drop shadow opacity | 0.18 (V3 从 0.22 调暗, 平衡白描边亮度) |
+| breathing scale lo / hi | 0.96 / 1.00 |
+| breathing period | 5.0 s |
+| cloud rotate at full eye deflect | 20° |
+| cloud eye-follow lag (lerp/frame) | 0.20 |
+| eye max offset | 0.50 units |
+| eye recenter time | 0.45 s |
+| flow gradient period | 5.5 s |
+| flow gradient amplitude | 4 units |
+| blink interval | 6.0 s ±20% |
+| blink duration | 160 ms |
+| distance-scale trigger range | 6 units |
+| distance-scale saturate range | 20 units |
+| distance-scale max | 1.15× |
+| distance-scale easing | 0.50 s |
+| eye glass stroke width | 0.08 |
+| eye glass stroke color / opacity | `#ffffff` / 0.70 |
+| cloud drop shadow opacity | 0.18 (V3 darkened from 0.22 to balance the white outline) |
 
-**进 clawd 方式**: SVG + JS 驱动 (Cloudling 全 SVG 路线, 2026-04-26 拍板). idle 实时跟鼠标 = SVG + JS 是天然适配, 现在变成 Cloudling 全状态的标准做法.
+**Clawd entry**: SVG + JS driven (Cloudling all-SVG route, decided 2026-04-26). idle tracks the mouse live = SVG + JS is the natural fit, now the standard for all Cloudling states.
 
-**性格落地**: "小活泼" = 4-8s 缓周期 + 5-10% 微妙幅度 + 眼睛主导 + 距离驱动 scale 主动凑过去 (像被吸引). 不是抖, 不是夸张, 是恰好的活泼.
+**Personality**: "lively" = 4-8s slow periods + 5-10% subtle amplitudes + eyes lead + distance-driven scale leaning in (like being drawn to it). Not jitter, not exaggeration — exactly the right liveliness.
 
-**关键决断历程教训** (写进来防止下次状态磨制时再犯):
-1. **idle 不是 Canvas 适用场景** — 简单 rotate + scale + 眼睛追随, SVG 完爆 Canvas. CLAUDE.md 早就写了 idle 走 SVG, 但实际写代码时选了 Canvas (跑偏 1 次)
-2. **方向跑偏 4 次** — 橡胶 squash / 漂浮 / path 法向噪声 (鹿鹿评"幽灵") → 正解是整体 rotate + scale (对齐 codex 官方视频). 写 demo 之前先看官方资源能省 4 个跑偏方向
-3. **STLabs canvas 工具链的恰当用法** — 当**调参工具**好用 (鹿鹿用 Canvas demo 调出锁定数值后迁 SVG). **调参 ≠ 最终交付**, 这是分工
+**Key decision lessons** (written down so the next state doesn't repeat them):
+1. **idle is not a Canvas case** — simple rotate + scale + eye follow, SVG beats Canvas outright. CLAUDE.md already said idle goes SVG, but the code picked Canvas anyway (1 detour)
+2. **4 direction detours** — rubber squash / float / path-normal noise (Lulu: "ghost") → the fix is whole-body rotate + scale (matches the official codex video). Checking official assets before writing demos saves 4 detours
+3. **Proper use of the STlabs canvas toolchain** — great as a **tuning tool** (Lulu tuned the locked numbers on a Canvas demo, then migrated to SVG). **Tuning ≠ final deliverable**, that's the split
 
-### typing final spec ⭐ 精修锁定 2026-04-27
+### typing final spec ⭐ polished + locked 2026-04-27
 
-**当前精修锁定文件 (2026-04-27)**: `experiments/codex-pet/confirmed/states/typing-original-polish-v2.svg.html`.
+**Current polished lock (2026-04-27)**: `experiments/codex-pet/confirmed/states/typing-original-polish-v2.svg.html`.
 
-**2026-04-27 精修结论 + 2026-05-02 小修**: 保留原版 190° 卡顿旋转、代码眼、角速度联动和两眼互斥。不要把 typing 重做成固定成对 glyph / 小节拍版本; `typing-code-eyes-v2.svg.html` 被鹿鹿否掉, 原因是太规整、削掉"真的在码字"的活感。2026-05-02 把裸随机 token 改成 A/B 档伪随机组合: A 档可停留, B 档只在高速运动段短暂出现, 停止和快停止区间强制回到 A 档。
+**2026-04-27 polish verdict + 2026-05-02 touch-up**: keep the original 190° sticky rotation, code eyes, angular-velocity linkage, and mutual eye exclusion. Don't rebuild typing as fixed glyph pairs / little-beat versions; `typing-code-eyes-v2.svg.html` was rejected by Lulu for being too tidy and killing the "really typing" feel. On 2026-05-02 bare random tokens became A/B-tier pseudo-random combos: tier-A may rest, tier-B only flashes during fast-motion segments, and stop / near-stop windows force back to tier-A.
 
-**视觉**: 软橡胶白云朵 + 紫蓝代码符号眼睛 (描边版, 跟 happy / eye-shape-library 同 stroke + linecap=round + 渐变).
+**Visuals**: soft-rubber white cloud + purple-blue code-symbol eyes (outline build, same stroke + linecap=round + gradient as happy / eye-shape-library).
 
-**运动语言**: **卡顿旋转 + 角速度联动字符切换 + 大幅呼吸**:
-- 云朵整体逆时针 4 阶段旋转循环 (转出 → 顶端卡停 → 回弹 → 归位卡停)
-- 眼睛跟着 scale 不跟着 rotate (字符直立)
-- 字符切换跟外圈角速度联动 — **转得快才换 token, 卡停就不换** (像"打字遇到卡顿暂停"的语感)
+**Motion language**: **sticky rotation + angular-velocity-linked glyph switching + deep breathing**:
+- Whole cloud rotates counter-clockwise in a 4-phase loop (spin out → stuck at top → spring back → stuck at home)
+- Eyes scale along, never rotate (glyphs stay upright)
+- Glyph switching links to outer-ring angular velocity — **tokens only swap while spinning fast, freeze during sticks** (the "typing hit a hitch" feel)
 
-**token 库** (8 个): `> < _ : = + / \` (`*` `{` `}` 否决, 见下方教训). **两眼互斥 + 组合档位**: 任何时刻两眼不会一样, 像真在码字; 切换时按左右眼组合池过滤候选, 再用 deterministic pseudo-random 选择下一个 token。
+**Token pool** (8): `> < _ : = + / \` (`` `*` `` `{` `}` rejected, see lessons). **Mutual exclusion + combo tiers**: the two eyes are never identical at any moment, like real typing; on switch, filter candidates by the left/right combo pool, then deterministic pseudo-random picks the next token.
 
-**组合档位**:
-- A 档可高频出现和停留: `<>`, `<=`, `>=`, `=>`, `=<`, `>_`, `<_`, `/_`, `_\`, `=/`, `=\`.
-- B 档只在高速运动段短暂出现: `:>`, `:/`, `:\`, `:_`, `+_`, `/+`, `\+`.
-- C 档删除: `:=`, `:+`, `+:`, `++`, `::`, `><`, `/\`, `\/`.
+**Combo tiers**:
+- Tier A (may appear often and rest): `<>`, `<=`, `>=`, `=>`, `=<`, `>_`, `<_`, `/_`, `_\`, `=/`, `=\`.
+- Tier B (only flashes during fast motion): `:>`, `:/`, `:\`, `:_`, `+_`, `/+`, `\+`.
+- Tier C (deleted): `:=`, `:+`, `+:`, `++`, `::`, `><`, `/\`, `\/`.
 
-**停止规则**: 转出段最后 20%、回弹段最后 25%、顶端卡停和归位卡停全部只允许 A 档; 如果进入这些区间时当前组合不是 A 档, 立刻用同款 90ms soften 切回 A 档。
+**Stop rules**: last 20% of spin-out, last 25% of spring-back, top stick, and home stick allow tier-A only; if the current combo isn't tier-A on entering these windows, cut back to tier-A at once with the same 90ms soften.
 
-**锁定参数** (打开 `typing-original-polish-v2.svg.html` 默认即是; 保留原版主节奏):
+**Locked params** (opening `typing-original-polish-v2.svg.html` defaults; original master rhythm kept):
 
-| 参数 | 值 |
+| Param | Value |
 |------|-----|
-| 字符尺寸 EYE_SIZE | **1.40×** (以字符中心为锚等比缩放, stroke 跟随) |
-| stroke 粗细 (主: > < _) | 1.25 |
-| stroke 粗细 (多线: = +) | 0.9 |
-| stroke 颜色 | `url(#eye-grad)` (跟流动渐变联动) |
-| `:` 渲染模式 | fill (圆点), 半径 0.78, 间距 ±1.05 |
-| 总旋转角度 | 190° |
-| 旋转方向 | -1 (逆时针) |
-| 转出时长 T_SPIN | 1.40 s |
-| 拧过头 overshoot | 8° |
-| 顶端卡停 T_HOLD_FAR | 0.85 s |
-| 回弹时长 T_BACK | 1.00 s |
-| 归位卡停 T_HOLD_HOME | 1.20 s |
-| **总周期** | **4.45 s** |
-| 呼吸 scale 下界 / 上界 | 0.94 / 1.05 |
-| 呼吸周期 | 1.60 s |
-| 切换阈值 (左/右眼) | 96° / 96° (累积转过角度) |
-| 切换抖动 | ±25 %, 使用 deterministic pseudo-random |
-| 流动渐变周期 | 3.0 s |
-| 流动渐变幅度 | 4 单位 |
+| glyph size EYE_SIZE | **1.40×** (uniform scale about glyph center, stroke follows) |
+| stroke weight (single: > < _) | 1.25 |
+| stroke weight (multi-line: = +) | 0.9 |
+| stroke color | `url(#eye-grad)` (links with flow gradient) |
+| `:` render mode | fill (dots), radius 0.78, spacing ±1.05 |
+| total rotation | 190° |
+| rotation direction | -1 (counter-clockwise) |
+| spin-out T_SPIN | 1.40 s |
+| overshoot | 8° |
+| top stick T_HOLD_FAR | 0.85 s |
+| spring-back T_BACK | 1.00 s |
+| home stick T_HOLD_HOME | 1.20 s |
+| **total period** | **4.45 s** |
+| breathing scale lo / hi | 0.94 / 1.05 |
+| breathing period | 1.60 s |
+| switch threshold (left/right eye) | 96° / 96° (accumulated rotation) |
+| switch jitter | ±25 %, deterministic pseudo-random |
+| flow gradient period | 3.0 s |
+| flow gradient amplitude | 4 units |
 
-**关键决断历程教训** (写进来防止下次状态磨制时再犯):
-1. **v3 翻车 fill 实心 + 内阴影** — 字符走 emoji 块感, 跟 happy 弧形眼 stroke 圆头风格不统一. **正解: stroke-only 描边 + linecap=round** (跟 eye-shape-library 锁定的代码符号同款做法)
-2. **`*` asterisk 否决** — 4 线交叉密集即使 stroke 0.7 视觉上也偏闹, 跟其他简洁 token 不一致 (跟"心形/星形否决"同逻辑)
-3. **`{` `}` 花括号否决** — 试过加, 鹿鹿评 "太喜感, 少了精致感". 花括号视觉语义比 `>` `<` `=` 更"亲切/卡通", 跟 Cloudling 苹果精致风冲突. `/` `\` 单线斜杠没这问题, 简洁不带情绪. **教训: token 不只看几何能不能画, 还要看视觉语义跟整体风格符不符**
-4. **字符尺寸要单独旋钮** — 字符在 24×24 viewBox 内显小, 1.20× 还是不够, 1.40× 正好. 上限受双眼间距 6 单位限制, 1.40× 接近临界
-5. **角速度联动切换 ≠ 匀速切换** — 切换跟旋转角度积分, 卡停时不换, 才像"打字遇到卡顿暂停". 阈值 96°/切意味着旋转一圈约换 1-2 次, 频率刚好不闹
-6. **两眼互斥规则** — 切 token 时同时排除自己上一帧 + 另一只眼当前. 两眼一样会显呆/对称, 互斥后视觉活泼且更像"真在码字" (鹿鹿原话).
-7. **纯随机组合会撞丑 pair** — 2026-05-02 小修: `pickToken(side, prev, otherEye, aOnly)` 先从 A/B 组合池找能和另一只眼组成合法 pair 的候选, 再伪随机选择. 这保留原版活感, 但过滤掉 `:=`, `:+`, `++`, `><`, `/\`, `\/` 等组合; 停止和快停止区间用 `settleToA()` 保证定格画面只展示 A 档。
+**Key decision lessons** (written down so the next state doesn't repeat them):
+1. **v3 failed on filled + inner shadow** — glyphs read emoji-chunky, clashing with happy's arc-eye stroke round-cap style. **Fix: stroke-only outlines + linecap=round** (same build as the code symbols locked in eye-shape-library)
+2. **`*` asterisk rejected** — 4 crossing strokes read noisy even at stroke 0.7, inconsistent with the other spare tokens (same logic as the heart/star rejection)
+3. **`{` `}` braces rejected** — tried and Lulu said "too jokey, loses the polish". Braces read friendlier/cartoonier than `>` `<` `=`, clashing with Cloudling's Apple-grade polish. `/` `\` single slashes don't have this problem — spare, no mood. **Lesson: judge tokens by visual semantics vs overall style, not just drawable geometry**
+4. **Glyph size needs its own knob** — glyphs read small inside the 24×24 viewBox, 1.20× still short, 1.40× right. Capped by the 6-unit eye spacing, 1.40× is near the limit
+5. **Angular-velocity-linked switching ≠ constant-rate switching** — switches integrate rotation angle and freeze during sticks, the "typing hit a hitch" feel. 96°/switch means ~1-2 swaps per revolution, exactly busy enough
+6. **Mutual-exclusion rule** — when swapping a token, exclude both your own last frame + the other eye's current token. Identical eyes read dead/symmetric; exclusion reads lively and more "really typing" (Lulu's words).
+7. **Pure-random combos hit ugly pairs** — 2026-05-02 touch-up: `pickToken(side, prev, otherEye, aOnly)` first finds candidates in the A/B combo pools that form a legal pair with the other eye, then pseudo-random picks. Keeps the original liveliness but filters `:=`, `:+`, `++`, `><`, `/\`, `\/` etc.; stop / near-stop windows use `settleToA()` so resting frames only ever show tier-A.
 
-**进 clawd 方式**: SVG + JS 驱动 (Cloudling 全 SVG 路线, 2026-04-26 拍板). 当前接入优先用 `confirmed/states/typing-original-polish-v2.svg.html`, 不需要导帧. typing 是循环动画, 4.45s 周期无缝 loop.
+**Clawd entry**: SVG + JS driven (Cloudling all-SVG route, decided 2026-04-26). Prefer `confirmed/states/typing-original-polish-v2.svg.html` for integration, no frame export needed. typing loops, 4.45s seamless cycle.
 
-### thinking final spec ⭐ 精修锁定 2026-04-27
+### thinking final spec ⭐ polished + locked 2026-04-27
 
-**当前精修锁定文件 (2026-04-27)**: `experiments/codex-pet/confirmed/states/thinking-lens-code-v2.svg.html`.
+**Current polished lock (2026-04-27)**: `experiments/codex-pet/confirmed/states/thinking-lens-code-v2.svg.html`.
 
-**历史基线文件**: `experiments/codex-pet/wip/thinking.svg.html` / `experiments/codex-pet/confirmed/states/thinking.svg.html` (v5).
+**History baseline**: `experiments/codex-pet/wip/thinking.svg.html` / `experiments/codex-pet/confirmed/states/thinking.svg.html` (v5).
 
-**视觉 / 运动语言**: 保留"放大镜里跑代码"的创意, 但 2026-04-27 精修版把大灰圈 + 大 token 改成轻玻璃镜片 + 镜片内代码扫描流. 镜片仍在左右眼之间弧线扫视, 云朵轻微歪头但眼睛保持竖直; focus 时镜片内出现 3 行小 glyph / scan 光, 末段回到 capsule 后眨 2 下.
+**Visuals / motion language**: keeps the "code running inside a magnifier" idea, but the 2026-04-27 polish swaps the big gray ring + big tokens for a light glass lens + in-lens code scan flow. The lens still sweeps an arc between the eyes, the cloud tilts slightly while eyes stay vertical; on focus 3 small glyph/scan lines appear in the lens, and the ending returns to capsule with 2 blinks.
 
-**2026-04-27 删除项**:
-- 删除中心 pulse 圆: 会被读成莫名其妙的圆球 / 锚点.
-- 删除 transit 中心曲线: 会被读成镜片瑕疵.
-- 删除眨眼浅色遮盖块: 在透明镜片里会露出矩形补丁; 改成裁剪 capsule + 闭眼线.
+**2026-04-27 removals**:
+- Removed center pulse circle: reads as a mystery ball / anchor.
+- Removed transit center curve: reads as a lens defect.
+- Removed blink light-cover block: shows as a rectangle patch inside the transparent lens; replaced with clipped capsule + closed-eye line.
 
-**锁定参数**: 以 `thinking-lens-code-v2.svg.html` 默认滑杆值为准. 当前重点数值: 总周期 6.0s, 定睛/滑动比 3.00, rotate 幅度 7.0°, scale 高/低 1.10 / 1.00, 镜片弧线高度 1.15, 浮动 0.12 / 3.1s, 代码扫描 0.78s, 加速强度 1.65, capsule 眨眼 0.22s ×2.
+**Locked params**: `thinking-lens-code-v2.svg.html` default slider values are the truth. Current key numbers: 6.0s total, focus/slide ratio 3.00, rotate amplitude 7.0°, scale hi/lo 1.10 / 1.00, lens arc height 1.15, float 0.12 / 3.1s, code scan 0.78s, accel strength 1.65, capsule blink 0.22s ×2.
 
-**状态记录**: 鹿鹿 2026-04-26 拍板 thinking 概念成立; 2026-04-27 拍板 `thinking-lens-code-v2` 更漂亮. 后续不要删放大镜/代码流, 只在这套语言内继续精修.
+**State log**: Lulu approved the thinking concept on 2026-04-26; approved `thinking-lens-code-v2` as prettier on 2026-04-27. Don't drop the magnifier/code-flow later — keep polishing inside this language.
 
-### notification final spec ⭐ 精修锁定 2026-04-27
+### notification final spec ⭐ polished + locked 2026-04-27
 
-**当前精修锁定文件 (2026-04-27)**: `experiments/codex-pet/confirmed/states/notification-alert-polish-v2.svg.html`.
+**Current polished lock (2026-04-27)**: `experiments/codex-pet/confirmed/states/notification-alert-polish-v2.svg.html`.
 
-**历史基线文件**: `experiments/codex-pet/wip/notification-pulse-explore.svg.html` / `experiments/codex-pet/confirmed/states/notification-pulse-explore.svg.html`. 旧版备份: `experiments/codex-pet/wip/notification-pulse-v1-rings-backup.svg.html`.
+**History baseline**: `experiments/codex-pet/wip/notification-pulse-explore.svg.html` / `experiments/codex-pet/confirmed/states/notification-pulse-explore.svg.html`. Old backup: `experiments/codex-pet/wip/notification-pulse-v1-rings-backup.svg.html`.
 
-**核心语义**: notification 是"任务来了, 小云崽被提醒声震了一下", 不是雷达靶心 / 魔法阵 / 头顶装饰. 鹿鹿确认 notification 必须强提醒、够显眼; 问题不在"太吵", 而在视觉语言不能像外部 UI 气泡或雷达广播.
+**Core semantics**: notification is "a task arrived and the little cloudling got rattled by the ping" — not a radar target / magic circle / head-top decor. Lulu confirmed notification must alert hard and read loud; the problem was never "too noisy" but a visual language reading like external UI bubbles or radar broadcast.
 
-**锁定节奏**:
-- 总周期 `2600ms`, A/B/C = `0.22 / 0.50 / 0.28`.
-- A 段暖色预警; B 段 7Hz 强摇晃 + 双 ping 破碎冲击弧; C 段余光回落.
-- 这套强提醒和摇晃不要弱化. 后续只允许微调视觉强度和局部参数.
+**Locked rhythm**:
+- Total `2600ms`, A/B/C = `0.22 / 0.50 / 0.28`.
+- Segment A warm-color warning; segment B 7Hz hard shake + double-ping shatter arcs; segment C afterglow decay.
+- Keep this hard alert + shake untouched. Only micro-tuning of visual intensity and local params from here.
 
-**视觉锁定**:
-- 脉冲从广播式左右长弧改成**暖色破碎冲击弧** (`path` arc, round linecap, soft glow). 主体必须是第一视觉, 暖色只负责提醒强度.
-- 不要头顶 notification badge / 感叹号气泡 / 小球. 鹿鹿明确反馈"脑袋上气泡不好看"; 桌宠本体摇晃 + 暖色冲击已经足够显眼.
-- B 段眼睛保持 Cloudling 的 capsule 豆豆眼, 明显睁大但不切 `><`.
-- 保留云朵边缘 `rim flash`, 它比 badge 更像 Cloudling 自己被通知击中.
+**Visual lock**:
+- Pulses change from broadcast-style long left/right arcs to **warm shatter arcs** (`path` arc, round linecap, soft glow). The body must stay the first read; warm color only carries alert intensity.
+- No head-top notification badge / exclamation bubble / ball. Lulu's explicit feedback: "head bubbles look bad"; body shake + warm arcs are already loud enough.
+- Segment B eyes stay Cloudling capsule bean eyes, visibly widened but never cut to `><`.
+- Keep the cloud-edge `rim flash` — it reads more like Cloudling itself getting hit by the notification than any badge does.
 
-**当前默认关键参数**:
+**Current default key params**:
 
-| 参数 | 值 |
+| Param | Value |
 |------|-----|
-| 总周期 | 2600 ms |
-| A / B 占比 | 0.22 / 0.50 |
-| 摇晃幅度 / 频率 | 14deg / 7Hz |
-| 微跳 / squash | 0.46 / 0.040 |
+| total period | 2600 ms |
+| A / B share | 0.22 / 0.50 |
+| shake amplitude / freq | 14deg / 7Hz |
+| hop / squash | 0.46 / 0.040 |
 | micro / macro scale | 0.034 / 0.060 |
-| A / B 弧生命 | 760ms / 520ms |
-| 弧终值 scale | 1.54 |
-| 弧描边 / glow | 0.76 / 0.36 |
-| 弧出生半径 | 8.9 |
-| 眼睛加宽 | 0.22 |
+| A / B arc life | 760ms / 520ms |
+| arc end scale | 1.54 |
+| arc stroke / glow | 0.76 / 0.36 |
+| arc birth radius | 8.9 |
+| eye widen | 0.22 |
 
-**这次沉淀的流程教训**:
-1. "节奏对"不代表视觉对. 先保留时间线, 单独重做视觉语法, 迭代成本最低.
-2. notification 的语义可以靠 Cloudling 本体摇晃 + 暖色冲击成立, 不需要头顶 badge. Cloudling 的本体轮廓不要随便贴小物件.
-3. `><` 这类库眼睛不是通用兴奋符号; 在 notification 里会像按钮/字符, 抢走 Cloudling 自己的精致感.
+**Lessons from this round**:
+1. "Right rhythm" ≠ right visuals. Keep the timeline, redo the visual grammar alone — cheapest iteration.
+2. Notification semantics can stand on Cloudling body shake + warm arcs; no head-top badge needed. Don't casually stick props onto Cloudling's outline.
+3. Library eyes like `><` aren't generic excitement symbols; inside notification they read as buttons/glyphs and steal Cloudling's polish.
 
-### carrying (吃云) final spec ⭐ 锁定 2026-04-28
+### carrying (cloud-eating) final spec ⭐ locked 2026-04-28
 
-**当前锁定文件 (2026-04-28)**: `experiments/codex-pet/confirmed/states/carrying-eat-cloud-v5.svg.html`.
+**Current lock (2026-04-28)**: `experiments/codex-pet/confirmed/states/carrying-eat-cloud-v5.svg.html`.
 
-**核心语义**: Cloudling 没有嘴, 所以"吃云"不能靠嘴线 / 咬合 / 吸入线表达. 正解是软体边缘吸收: 小食物云贴到侧边, Cloudling 侧边向外鼓出一个临时 puff 包住它, 食物云同化成身体颜色, 外鼓释放后再 smile + duang 回弹.
+**Core semantics**: Cloudling has no mouth, so "eating clouds" can't use a mouth line / bite / suction lines. The fix is soft-body edge absorption: a small food cloud touches the flank, Cloudling's flank bulges out a temporary puff to wrap it, the food cloud assimilates into body color, then the bulge releases into a smile + duang rebound.
 
-**运动语言**:
-- 双口镜像循环, 总周期 `4.5s`: 右侧食物云先从右上进入, 左侧食物云再从左下进入.
-- 食物云大小不同: 右云倍率 `1.08`, 左云倍率 `0.82`; 都使用白蓝食物云渐变, 避免 v3 偏灰硬块感.
-- 接触前食物云在背景层; 接触后切到主体表面层, 保持可见.
-- 主体不是凹进去藏住小云, 而是接触侧外鼓包裹. 包住窗口要短: v5 `T_SWALLOW_END = 1.24`, 1.08s 左右包住, 1.16s 开始明显融, 1.24s 融完开始笑, 1.30s 开始弹.
-- spring 必须发生在完全融入后, 不能在接触瞬间弹; 否则读感会变成"撞到东西".
+**Motion language**:
+- Mirrored two-bite loop, `4.5s` total: right food cloud enters from upper right first, left food cloud from lower left second.
+- Food clouds differ in size: right cloud factor `1.08`, left `0.82`; both use the white-blue food-cloud gradient, avoiding the v3 gray-hard-chunk feel.
+- Food cloud rides the background layer before contact; cuts to the body surface layer after contact, stays visible.
+- The body never dents inward to hide the small cloud; the contact flank bulges outward to wrap. Keep the wrap window short: v5 `T_SWALLOW_END = 1.24` — wrapped ~1.08s, visibly melting at 1.16s, melted by 1.24s into a smile, rebound from 1.30s.
+- The spring must fire only after full assimilation, never on contact — or it reads as "bumped into something".
 
-**锁定参数**:
+**Locked params**:
 
-| 参数 | 值 |
+| Param | Value |
 |------|-----|
-| 总周期 `T_CYCLE` | 4.5 s |
-| 食物入场 / 起飞 / 接触 / 融完 / 回中 | 0.00 / 0.55 / 1.00 / 1.24 / 1.95 s |
+| total `T_CYCLE` | 4.5 s |
+| food enter / liftoff / contact / melted / recenter | 0.00 / 0.55 / 1.00 / 1.24 / 1.95 s |
 | spring amp / freq / damping / duration | 0.16 / 4.0Hz / 5.0 / 0.65s |
-| 食物起点 X / 贴边 X / Y | 24 / 13.5 / 12 |
-| 右云 / 左云倍率 | 1.08 / 0.82 |
-| 包裹强度 | 0.90 |
-| 外鼓距离 / 同化贴近 | 1.55 / 1.2 |
-| 同化横压 / 纵鼓 | 0.64 / 1.16 |
-| 拦截 X / 对角 Y 联动 | 5.0 / on |
+| food start X / edge X / Y | 24 / 13.5 / 12 |
+| right / left cloud factor | 1.08 / 0.82 |
+| wrap strength | 0.90 |
+| bulge distance / assimilate approach | 1.55 / 1.2 |
+| assimilate X-squash / Y-bulge | 0.64 / 1.16 |
+| intercept X / diagonal Y link | 5.0 / on |
 
-**关键决断历程教训**:
-1. **凹进去 = 躲藏, 不是吃** — v2 的逻辑是边缘凹进去, 小云往洞里缩, 读成藏起来. "包裹吃云"的主视觉必须是侧边外鼓成临时 puff.
-2. **食物云接触后不能在背景层消失** — v1 把食物云放在主体后面, 关键帧 0.95-1.08s 直接被盖掉, 只剩突然 smile/spring. 接触后必须切到表面层.
-3. **颜色要接近主体但仍可分辨** — 食物云偏灰会像异物, 过白会完全消失. v4/v5 白蓝渐变 + 淡 rim 是当前平衡.
-4. **包住停顿要短** — 展示太久会像卡住. v5 把融完从 1.34s 提到 1.24s, 保留可读瞬间但避免拖沓.
+**Key decision lessons**:
+1. **Denting inward = hiding, not eating** — v2 dented the edge inward with the small cloud shrinking into the hole, reading as hiding. "Wrap-eating" must read as a flank bulging outward into a temporary puff.
+2. **Food cloud must not vanish into the background layer on contact** — v1 kept it behind the body and it got covered at frames 0.95-1.08s, leaving only a sudden smile/spring. Cut to the surface layer on contact.
+3. **Color close to the body but still separable** — grayish food reads foreign, full white vanishes. v4/v5 white-blue gradient + faint rim is the current balance.
+4. **Keep the wrapped hold short** — lingering reads stuck. v5 moved melt-done from 1.34s to 1.24s, keeping a readable beat without drag.

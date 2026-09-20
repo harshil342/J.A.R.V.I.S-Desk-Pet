@@ -127,10 +127,15 @@ class ToolRegistry:
 
         self.register_native(
             name="get_time",
-            description="Get the current local date, time, and day of the week.",
+            description="Get the current date and time, either local or for a specified city or timezone.",
             parameters={
                 "type": "object",
-                "properties": {},
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "City or timezone name, e.g. 'Tokyo', 'London', 'New York', 'UTC', 'PST', 'IST'. If omitted, returns local time.",
+                    }
+                },
                 "required": [],
             },
             handler=tools.get_time,
@@ -420,6 +425,22 @@ class ToolRegistry:
         )
 
         self.register_native(
+            name="fetch_url",
+            description="Download a webpage URL and extract cleaned text content for reading or summarizing.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "The HTTP or HTTPS URL to fetch.",
+                    }
+                },
+                "required": ["url"],
+            },
+            handler=tools.fetch_page,
+        )
+
+        self.register_native(
             name="wikipedia_summary",
             description="Look up a summary article from Wikipedia for a concept, person, or term.",
             parameters={
@@ -603,6 +624,154 @@ class ToolRegistry:
                 "required": ["name", "delay_seconds"],
             },
             handler=task_dispatcher.schedule_task_tool,
+        )
+
+        self.register_native(
+            name="list_reminders",
+            description="List all currently active pending timers and reminders.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=tools.list_reminders,
+        )
+
+        self.register_native(
+            name="clipboard_write",
+            description="Copy text to the system clipboard.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "Text content to copy onto the clipboard.",
+                    }
+                },
+                "required": ["text"],
+            },
+            handler=tools.clipboard_write,
+        )
+
+        self.register_native(
+            name="find_file",
+            description="Search user Documents, Downloads, and Desktop folders for matching files.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "File name or keyword to search for.",
+                    }
+                },
+                "required": ["query"],
+            },
+            handler=tools.find_file,
+        )
+
+        self.register_native(
+            name="git_status",
+            description="Check the current Git branch and uncommitted changes in the repository.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=tools.git_status,
+        )
+
+        self.register_native(
+            name="wifi_info",
+            description="Inspect the current Wi-Fi network SSID, signal quality, and local IP address.",
+            parameters={"type": "object", "properties": {}, "required": []},
+            handler=tools.wifi_info,
+        )
+
+        self.register_native(
+            name="date_math",
+            description="Calculate days until an upcoming holiday or future calendar date.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Calendar query, e.g. 'days until Christmas', 'date in 3 weeks'.",
+                    }
+                },
+                "required": ["query"],
+            },
+            handler=tools.date_math,
+        )
+
+        self.register_native(
+            name="set_volume_percent",
+            description="Set the system audio volume to a specific percentage between 0 and 100.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "level": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "description": "Target volume percentage (0 to 100).",
+                    }
+                },
+                "required": ["level"],
+            },
+            handler=tools.set_volume_percent,
+        )
+
+        self.register_native(
+            name="site_search",
+            description="Search for a query on major web platforms (Spotify, YouTube Music, YouTube, Reddit, Twitter/X, Facebook, GitHub, etc.).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "site": {
+                        "type": "string",
+                        "description": "Platform or site name, e.g. 'spotify', 'youtube music', 'reddit', 'x', 'facebook', 'github', 'wikipedia'.",
+                    },
+                    "query": {
+                        "type": "string",
+                        "description": "Search query, track title, or artist name.",
+                    },
+                },
+                "required": ["site", "query"],
+            },
+            handler=lambda site, query: tools.open_url(
+                tools._SITE_SEARCH_URLS.get(tools._norm_site_name(site), "https://www.google.com/search?q={q}").format(
+                    q=__import__("urllib.parse").parse.quote_plus(query)
+                )
+            ),
+        )
+
+        self.register_native(
+            name="open_site",
+            description="Open a popular website or web service directly in the default browser.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "site": {
+                        "type": "string",
+                        "description": "Site name, e.g. 'spotify', 'yt music', 'reddit', 'facebook', 'twitter', 'github', 'amazon', 'netflix'.",
+                    }
+                },
+                "required": ["site"],
+            },
+            handler=lambda site: tools.open_url(tools._SITE_URLS.get(tools._norm_site_name(site), f"https://www.{site}.com")),
+        )
+
+        self.register_native(
+            name="open_ai_webchat",
+            description="Rebuild and send a user prompt to an AI web chat (Gemini, Claude, ChatGPT, DeepSeek, Qwen, Perplexity) and submit it.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "provider": {
+                        "type": "string",
+                        "enum": ["gemini", "claude", "chatgpt", "deepseek", "qwen", "perplexity", "copilot", "grok"],
+                        "description": "Target AI chat service.",
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "The rebuilt question or instruction to ask the model.",
+                    },
+                },
+                "required": ["provider", "prompt"],
+            },
+            handler=tools.open_ai_webchat,
         )
 
     def register_native(

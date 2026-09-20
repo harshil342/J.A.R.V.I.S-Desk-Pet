@@ -47,7 +47,7 @@ version_lt() {
 }
 
 if [[ ! -e "$SRC/.git" ]]; then
-  red "$SRC 不存在。请先初始化 submodule：git submodule update --init llama.cpp"
+  red "$SRC missing. Init submodule first: git submodule update --init llama.cpp"
   exit 1
 fi
 
@@ -72,7 +72,7 @@ case "$(uname -s)-$(uname -m)" in
     ACCEL="${LLAMA_ACCEL:-cpu}"
     ;;
   *)
-    red "不支持的 host: $(uname -s) $(uname -m)。Windows 请用 build-llama.ps1。"
+    red "Unsupported host: $(uname -s) $(uname -m). For Windows use build-llama.ps1."
     exit 1
     ;;
 esac
@@ -127,13 +127,13 @@ case "$ACCEL" in
     CMAKE_FLAGS+=( -DGGML_METAL=OFF -DGGML_CUDA=OFF -DGGML_VULKAN=OFF )
     ;;
   *)
-    red "未知 LLAMA_ACCEL=$ACCEL（应为 metal/vulkan/cuda/cpu）"
+    red "Unknown LLAMA_ACCEL=$ACCEL (expected metal/vulkan/cuda/cpu)"
     exit 1
     ;;
 esac
 
-# Vulkan 后端需要 SPIRV-Headers 的 CMake config。LunarG SDK 把它放在
-# $VULKAN_SDK/share/cmake/ 或子目录下；显式加进 CMAKE_PREFIX_PATH 兜底。
+# Vulkan backend needs the SPIRV-Headers CMake config. The LunarG SDK places it under
+# $VULKAN_SDK/share/cmake/ or a subdir; add it to CMAKE_PREFIX_PATH as a fallback.
 if [[ "$ACCEL" == "vulkan" && -n "${VULKAN_SDK:-}" ]]; then
   cyan "==> Using VULKAN_SDK: $VULKAN_SDK"
   CMAKE_FLAGS+=( "-DCMAKE_PREFIX_PATH=$VULKAN_SDK" )
@@ -146,7 +146,7 @@ if [[ -n "$MACOS_DEPLOYMENT_TARGET" ]]; then
 fi
 
 if ! command -v cmake >/dev/null 2>&1; then
-  red "找不到 cmake。请先安装：brew install cmake / apt install cmake"
+  red "cmake not found. Install first: brew install cmake / apt install cmake"
   exit 1
 fi
 
@@ -156,7 +156,7 @@ mkdir -p "$BUILD"
 # found OpenSSL keeps the libssl/libcrypto link edges forever and the
 # resulting binary still hardcodes /opt/homebrew/opt/openssl@3/... .
 if [[ -f "$BUILD/CMakeCache.txt" ]]; then
-  cyan "==> 清理 CMake 缓存（确保 OpenSSL 等可选包关闭生效）"
+  cyan "==> Cleaning CMake cache (so OpenSSL opt-out flags take effect)"
   rm -f "$BUILD/CMakeCache.txt"
   rm -rf "$BUILD/CMakeFiles"
 fi
@@ -181,7 +181,7 @@ for cand in \
 done
 
 if [[ -z "$SERVER" ]]; then
-  red "构建似乎成功但没找到 llama-server。请检查 $BUILD/bin"
+  red "Build seemed OK but llama-server not found. Check $BUILD/bin"
   exit 1
 fi
 
@@ -199,25 +199,25 @@ done
 #    failure mode is cpp-httplib sneaking OpenSSL back in, producing a
 #    binary that depends on /opt/homebrew/opt/openssl@3/lib/lib{ssl,crypto}.3.dylib
 #    and crashing at first launch on any user without that exact prefix.
-cyan "==> 校验 llama-server 动态链接（防 OpenSSL / Homebrew 绝对路径回归）"
+cyan "==> Verifying llama-server linkage (no OpenSSL / Homebrew absolute-path regression)"
 case "$(uname -s)" in
   Darwin)
     if ! command -v otool >/dev/null 2>&1; then
-      red "缺少 otool，无法校验链接。请安装 Xcode Command Line Tools。"
+      red "otool missing, cannot verify linkage. Install Xcode Command Line Tools."
       exit 1
     fi
     DEPS="$(otool -L "$OUT/llama-server" | tail -n +2 || true)"
     BAD="$(printf '%s\n' "$DEPS" | grep -Ei '/(opt/homebrew|usr/local/opt|usr/local/Cellar|opt/local)/' || true)"
     if [[ -n "$BAD" ]]; then
-      red "==> 构建产物仍然依赖宿主机 Homebrew/MacPorts 路径，用户机器上会启动失败："
+      red "==> Built binary still depends on host Homebrew/MacPorts paths, will fail on user machines:"
       printf '%s\n' "$BAD" >&2
-      red "请确认 -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON 等关闭可选包的 flag 已生效，"
-      red "并删除 $BUILD 重新干净构建。"
+      red "Confirm opt-out flags like -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON took effect,"
+      red "then delete $BUILD and rebuild clean."
       exit 1
     fi
     SSL_BAD="$(printf '%s\n' "$DEPS" | grep -Ei 'libssl|libcrypto|openssl' || true)"
     if [[ -n "$SSL_BAD" ]]; then
-      red "==> 构建产物仍然链接了 OpenSSL，用户机器上大概率缺库："
+      red "==> Built binary still links OpenSSL, likely missing on user machines:"
       printf '%s\n' "$SSL_BAD" >&2
       exit 1
     fi
@@ -233,12 +233,12 @@ case "$(uname -s)" in
         )"
       fi
       if [[ -z "$MINOS" ]]; then
-        red "==> 无法读取 llama-server 的 macOS minimum runtime（LC_BUILD_VERSION/LC_VERSION_MIN_MACOSX）。"
+        red "==> Cannot read llama-server macOS minimum runtime (LC_BUILD_VERSION/LC_VERSION_MIN_MACOSX)."
         exit 1
       fi
       if ! version_le "$MINOS" "$MACOS_DEPLOYMENT_TARGET"; then
         red "==> llama-server minimum macOS runtime is $MINOS, expected <= $MACOS_DEPLOYMENT_TARGET."
-        red "    在旧版 macOS 上会出现 dyld Symbol not found / built for newer OS。"
+        red "    On older macOS this shows dyld Symbol not found / built for newer OS."
         exit 1
       fi
       if command -v nm >/dev/null 2>&1 && version_lt "$MACOS_DEPLOYMENT_TARGET" "15.0"; then
@@ -256,7 +256,7 @@ case "$(uname -s)" in
     if command -v ldd >/dev/null 2>&1; then
       SSL_BAD="$(ldd "$OUT/llama-server" 2>/dev/null | grep -Ei 'libssl|libcrypto' || true)"
       if [[ -n "$SSL_BAD" ]]; then
-        red "==> 构建产物仍然链接了 OpenSSL："
+        red "==> Built binary still links OpenSSL:"
         printf '%s\n' "$SSL_BAD" >&2
         exit 1
       fi
@@ -265,4 +265,4 @@ case "$(uname -s)" in
 esac
 
 green "==> OK -> $OUT/$(basename "$SERVER")"
-green "    试跑: $OUT/llama-server --version"
+green "    smoke test: $OUT/llama-server --version"

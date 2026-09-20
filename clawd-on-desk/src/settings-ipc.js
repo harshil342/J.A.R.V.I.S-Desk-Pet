@@ -498,7 +498,7 @@ function registerSettingsIpc(options = {}) {
       let lanIp = "127.0.0.1";
       const interfaces = os.networkInterfaces();
       const wlanPattern = /WLAN|Wi-?Fi|Wireless|无线/i;
-      // 1) 优先找 WLAN 接口
+      // 1) Prefer WLAN interfaces
       for (const name of Object.keys(interfaces)) {
         if (wlanPattern.test(name)) {
           for (const iface of interfaces[name]) {
@@ -507,7 +507,7 @@ function registerSettingsIpc(options = {}) {
           if (lanIp !== "127.0.0.1") break;
         }
       }
-      // 2) fallback：第一个非 internal IPv4
+      // 2) fallback: first non-internal IPv4
       if (lanIp === "127.0.0.1") {
         for (const name of Object.keys(interfaces)) {
           for (const iface of interfaces[name]) {

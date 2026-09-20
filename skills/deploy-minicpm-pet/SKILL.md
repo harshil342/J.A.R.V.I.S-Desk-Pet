@@ -1,17 +1,17 @@
 ---
 name: deploy-minicpm-pet
 description: >-
-  [开发者向] 帮 contributor / 开发者从源码 dev 模式跑通 MiniCPM-Desk-Pet。
-  普通用户应直接下载 dmg 安装包，跟着 Onboarding 引导走，不应触发本 skill。
+  [Developer] Help a contributor / developer run MiniCPM-Desk-Pet from source in dev mode.
+  End users should download the dmg installer and follow Onboarding instead — do not trigger this skill for them.
   Use when a developer clones the repo and wants to run it from source, or asks to
   "部署桌宠 (从源码)", "跑起来 MiniCPM dev 模式", or hits errors during go.sh / npm start / uv sync.
 ---
 
-# Deploying MiniCPM-Desk-Pet (开发者从源码)
+# Deploying MiniCPM-Desk-Pet (from source, developers)
 
-> **重要**：这个 Skill 只针对开发者。普通最终用户走的是 **下载 dmg → Onboarding** 流程，不应使用本 Skill。如果对方只是想"用一下这个应用"，请引导他们去 [Releases](https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases) 下载 dmg。
+> **Note**: this Skill is for developers only. End users take the **download dmg → Onboarding** flow instead — do not use this Skill for them. If someone just wants to "try the app", point them at [Releases](https://github.com/OpenBMB/MiniCPM-Desk-Pet/releases) to download the dmg.
 
-> v0.8 起推理后端从 PyTorch / transformers 切换到 llama.cpp。本 Skill 已按 v0.9 平铺布局更新；sidecar 结构与构建方式以 [`minicpm-sidecar/README.md`](../../minicpm-sidecar/README.md) 为准。
+> Since v0.8 the inference backend moved from PyTorch / transformers to llama.cpp. This Skill is updated for the v0.9 flat layout; sidecar structure and build follow [`minicpm-sidecar/README.md`](../../minicpm-sidecar/README.md).
 
 This skill walks the agent through deploying the MiniCPM-Desk-Pet project on a colleague's machine **from source**. The project has 3 moving parts that need to come up in the right order: `llama-server` (compiled from vendored llama.cpp), the FastAPI `gateway`, and the Electron `clawd-on-desk` app.
 
@@ -111,7 +111,7 @@ curl -s http://127.0.0.1:18765/api/health | python3 -m json.tool
 
 Expected `ok: true` plus reported backend (`metal` on Apple Silicon, `cuda`, or `cpu`).
 
-Then click the pet (or `⌘⇧M`), type "你好" — pet should think and reply within a few seconds.
+Then click the pet (or `⌘⇧M`), type "hello" — pet should think and reply within a few seconds.
 
 ## Common deploy failures & fixes
 
@@ -146,7 +146,7 @@ MINICPM_MODEL_DIR=/abs/path/to/dir ./go.sh start
 # or point directly at one file via Onboarding's "选本地模型"
 ```
 
-### Pet starts but "气泡聊天没反应 / 卡住"
+### Pet starts but bubble chat is unresponsive / stuck
 
 Probably the sidecar didn't come up. In the `clawd-on-desk` terminal, look for `[sidecar]` lines.
 

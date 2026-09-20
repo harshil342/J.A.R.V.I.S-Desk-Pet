@@ -277,9 +277,19 @@ function downloadUrlToFile({
     let bytesDone = 0;
     const targetFilename = filename || path.basename(destination);
 
+    let existingBytes = 0;
+    try {
+      if (fs.existsSync(tmp)) {
+        const st = fs.statSync(tmp);
+        if (st.size > 0) {
+          existingBytes = st.size;
+        }
+      }
+    } catch {}
+
     function fail(err) {
       try { if (file) file.destroy(); } catch {}
-      removeQuietly(tmp);
+      // Keep existing tmp on disk so subsequent retry can resume rather than starting at 0%
       reject(err);
     }
 
@@ -287,13 +297,17 @@ function downloadUrlToFile({
       let u;
       try { u = new URL(currentUrl); } catch (err) { fail(err); return; }
       const client = u.protocol === "https:" ? https : http;
+      const headers = buildHeaders(providerId, currentUrl, env);
+      if (existingBytes > 0) {
+        headers["Range"] = `bytes=${existingBytes}-`;
+      }
       const req = client.request({
         protocol: u.protocol,
         hostname: u.hostname,
         port: u.port || undefined,
         path: u.pathname + (u.search || ""),
         method: "GET",
-        headers: buildHeaders(providerId, currentUrl, env),
+        headers,
         agent,
       }, (res) => {
         const status = res.statusCode || 0;
@@ -308,14 +322,30 @@ function downloadUrlToFile({
           return;
         }
 
+        if (status === 416) {
+          // Range not satisfiable: clean stale .part and restart fresh
+          res.resume();
+          removeQuietly(tmp);
+          existingBytes = 0;
+          request(currentUrl, redirectsLeft);
+          return;
+        }
+
         if (status < 200 || status >= 300) {
           res.resume();
           fail(new Error(`download failed with HTTP ${status}`));
           return;
         }
 
-        const total = Number(res.headers["content-length"]) || expectedSize || MODEL_SIZE_BYTES;
-        file = fs.createWriteStream(tmp);
+        const isPartial = status === 206 && existingBytes > 0;
+        const incomingLen = Number(res.headers["content-length"]) || 0;
+        const total = isPartial
+          ? (incomingLen ? existingBytes + incomingLen : expectedSize || MODEL_SIZE_BYTES)
+          : (incomingLen || expectedSize || MODEL_SIZE_BYTES);
+
+        bytesDone = isPartial ? existingBytes : 0;
+        file = fs.createWriteStream(tmp, { flags: isPartial ? "a" : "w" });
+
         res.on("error", fail);
         res.on("data", (chunk) => {
           bytesDone += chunk.length;
@@ -350,7 +380,6 @@ function downloadUrlToFile({
       req.end();
     }
 
-    removeQuietly(tmp);
     request(url, maxRedirects);
   });
 }

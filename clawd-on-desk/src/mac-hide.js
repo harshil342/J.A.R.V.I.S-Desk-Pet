@@ -4,7 +4,7 @@
 //
 // The pet windows are created with setCanHide:NO so they stay put across all
 // Spaces and survive app deactivation. The side effect: macOS "Hide" (⌘H /
-// Dock right-click → 隐藏) marks the *app* hidden but the windows refuse to
+// Dock right-click → Hide) marks the *app* hidden but the windows refuse to
 // vanish, so the pet appears to ignore Hide entirely. Worse, an inactive-app
 // Dock Hide fires NO `did-resign-active`, so there is no reliable Electron
 // event to react to.

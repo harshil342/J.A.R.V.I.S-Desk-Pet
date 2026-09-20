@@ -146,8 +146,20 @@ class SemanticMemoryStore:
             self._path.parent.mkdir(parents=True, exist_ok=True)
             serializable = [item.to_dict() for item in self._items.values()]
             self._path.write_text(json.dumps(serializable, indent=2, ensure_ascii=False), encoding="utf-8")
+            self._sync_notes_file()
         except Exception as exc:
             log.warning("Failed to persist memory store: %s", exc)
+
+    def _sync_notes_file(self) -> None:
+        """Keep notes.md strictly synchronized with active semantic memories."""
+        try:
+            notes_p = self._path.parent / "notes.md"
+            lines = ["# DeskPet Memory\n"]
+            for item in self._items.values():
+                lines.append(f"- {item.text}")
+            notes_p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        except Exception:
+            pass
 
     def _migrate_legacy_txt(self, legacy_file: Path) -> None:
         try:

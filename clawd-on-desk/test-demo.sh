@@ -1,6 +1,6 @@
 #!/bin/bash
-# Clawd 动画全播放测试脚本
-# 用法: bash test-demo.sh [每个动画秒数，默认8]
+# Clawd full animation playback test script
+# Usage: bash test-demo.sh [seconds per animation, default 8]
 
 DELAY=${1:-8}
 

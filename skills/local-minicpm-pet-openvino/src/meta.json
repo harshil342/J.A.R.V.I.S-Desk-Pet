@@ -1,14 +1,14 @@
 {
-  "display_name": "MiniCPM 桌宠体验环境",
-  "display_description": "一键部署 MiniCPM 桌宠 + OpenVINO 推理后端（仅限 Intel AIPC 平台）",
-  "detail_describe": "在 Intel AIPC 本地硬件上部署完整的 MiniCPM 桌宠体验环境。后端采用 OpenVINO 推理引擎运行 MiniCPM5-1B INT8 模型，前端从源码启动 Electron 桌宠应用。部署完成后可直接通过桌宠界面进行本地 AI 对话，支持 Hybrid Reasoning，无需联网。",
+  "display_name": "MiniCPM Desk Pet Playground",
+  "display_description": "One-click MiniCPM desk pet + OpenVINO inference backend (Intel AI PC only)",
+  "detail_describe": "Deploy a complete MiniCPM desk-pet playground on local Intel AI PC hardware. The backend runs the MiniCPM5-1B INT8 model on OpenVINO, and the frontend launches the Electron desk-pet app from source. After deploy, chat with the pet locally, with Hybrid Reasoning support, no network needed.",
   "name": "local-minicpm-pet-openvino",
   "icon": "",
   "use_cases": [
-    "部署 MiniCPM 桌宠体验环境",
-    "搭建本地 AI 桌宠 + OpenVINO 后端",
-    "在 Intel AIPC 上运行离线 AI 桌宠",
-    "一键体验 MiniCPM 本地推理桌宠"
+    "Deploy the MiniCPM desk-pet playground",
+    "Set up a local AI desk pet + OpenVINO backend",
+    "Run an offline AI desk pet on Intel AI PC",
+    "One-click local MiniCPM inference desk pet"
   ],
   "author": "MiniCPM",
   "version": "1.0.0"

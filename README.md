@@ -74,6 +74,15 @@
 > *"Remember that our staging database is on port 5433"* ➔ *"What port does staging use?"*
 - Hybrid semantic memory retrieves relevant technical notes, credentials, and project instructions using TF-IDF + cosine concept matching.
 
+### 5. 3-Mode Adaptive Chat & Deep Reader Interface
+> *"Can I read long architectural analyses without scrolling a tiny bubble?"*
+- Seamlessly transition between **Compact Bubble** (300px HUD bubble), **Reader Mode** (560px reading pane with rich markdown formatting, syntax-highlighted code blocks, and copy buttons), and **Full Screen** focus mode via the window toggle button in the bubble header. Press <kbd>Esc</kbd> anytime to collapse back down.
+
+### 6. Universal Site Search & AI Web Chat Automation
+> *"Search Spotify for Daft Punk"* or *"Ask Claude to architect a distributed queue"*
+- J.A.R.V.I.S. recognizes targeted search queries across YouTube, YouTube Music, Spotify, Reddit, GitHub, X (Twitter), Facebook, Twitch, and Wikipedia, launching directly to results in your browser.
+- For heavy prompts requiring frontier cloud reasoning, J.A.R.V.I.S. opens your browser to Claude, ChatGPT, Gemini, DeepSeek, Qwen, or Perplexity, automatically populating the prompt and initiating the chat.
+
 ---
 
 ## 🐾 Meet The 3 J.A.R.V.I.S. Companions
@@ -126,7 +135,7 @@ Explore the full collection of real-time animated vector themes created for this
 
 ## 📊 Quantized Models & Hardware Matrix
 
-J.A.R.V.I.S. runs on an optimized **1B Edge Language Model architecture** designed for extreme token efficiency and instant response times:
+J.A.R.V.I.S. runs on an optimized **1B Edge Language Model architecture** designed for extreme token efficiency and instant response times. First launch onboarding offers **MiniCPM5-1B** (lightweight) or **MiniCPM5-2B** (higher quality) with resumable downloads:
 
 ### Model Quantization Tiers
 
@@ -166,9 +175,10 @@ J.A.R.V.I.S. includes a comprehensive suite of **native micro-tools** and **live
 | **`fetch_page`** | 🌐 Mini-RAG | **HTTPX Fetch Engine** + Clean HTML Parser | None (Local RAG) | Fetches arbitrary web pages / technical documentation, strips noise, and streams cleaned text to the local LLM for instant summarization. |
 | **`calculate`** | 🧮 Math Engine | **Python AST Sandbox Evaluator** (No `eval()`) | Offline (Deterministic) | Order of operations, `sqrt`, trigonometry (`sin`, `cos`, `tan`), `log`, `pow`, percentages with zero hallucination. |
 | **`convert_units`** | 📐 Measurements | **Built-in Physical Unit Matrices** | Offline (Deterministic) | Converts length (m, km, mi, ft, in), mass/weight (kg, g, lbs, oz), temperature (°C, °F, K), digital data (bytes to TB), and speed (km/h, mph, knots). |
-| **`get_time`** | ⏰ Clock | **Local System RTC** | Offline | Exact local date, 24-hour time, and day of the week. |
+| **`get_time`** | ⏰ Clock | **Local System RTC** + Timezone Resolver | Offline | Exact date, 24-hour time, and day of the week — local or for any city/timezone (e.g., "time in Tokyo"). |
 | **`launch_app`** | 🚀 App Launcher | **Win32 App Paths Registry**, Start Menu `.lnk` Parser, Protocol URIs | Native OS | Launches developer IDEs (VS Code, Terminal), desktop apps (Spotify, Discord, Notepad, Calc), Windows Settings (`ms-settings:`), or web fallbacks. |
 | **`create_document`** | 📝 Documents | **Local Markdown Template Engine** (`Documents/DeskPet/`) | Offline | Generates structured templates for `meeting_notes`, `readme`, `video_script`, `changelog`, `todo_list`, `email`, or general `document`. |
+| **`open_document`** | 📂 Doc Opener | **System Default App Dispatcher** (`Documents/DeskPet/`) | Native OS | Opens drafted documents instantly in the default viewer/editor (e.g., "open the meeting notes"). |
 | **`set_reminder`** | 🔔 Proactive Alerts | **Durable JSON Store** (`pending-reminders.json`) + `winotify` Toasts | Native Windows Toasts | Background timers surviving app reboots, auto-rearming on launch, desktop companion notification push. |
 | **`todo_*`** | ✅ Task Manager | **Persistent Markdown Ledger** (`Documents/DeskPet/todo.md`) | Offline | Add, list, check off, remove, and clear tasks. Supports morning briefings and evening summaries. |
 | **`system_status`** | 📊 Diagnostics | **`psutil` Hardware Engine** | Offline | Real-time CPU usage %, RAM utilization (MB/GB), battery status/level %, disk usage, and boot uptime. |
@@ -176,6 +186,16 @@ J.A.R.V.I.S. includes a comprehensive suite of **native micro-tools** and **live
 | **`remember_fact`** / **`recall_fact`** | 🧠 Memory | **Semantic Vector Store (TF-IDF + Cosine)** + `notes.md` | Local Hybrid Vector | Retains developer ports, staging credentials, personal notes, preferences, and recalls them contextually. |
 | **`get_active_window`** / **`read_screen_text`** | 👁️ Zero-Copy OCR | **Local Screen Perception & Win32 Window Inspector** | Offline (<15ms OCR) | Reads compiler errors, stack traces, active file paths, and focused window titles directly from the screen. |
 | **`media_control`** | 🎵 Media Keys | **Windows Shell WScript COM `SendKeys`** | Native OS | Hardware volume adjustments (`volume_up`, `volume_down`, `mute`) and playback control (`play_pause`, `next`, `prev`). |
+| **`set_volume_percent`** | 🔊 Volume Control | **Windows CoreAudio / PowerShell Bridge** | Native OS | Sets exact master system volume percentage (e.g., "set volume to 65%"). |
+| **`site_search`** | 🔎 Site Search | **Direct Site Routing & Query Dispatch** | Free / Web | Targeted search across YouTube, YT Music, Spotify, Reddit, GitHub, X (Twitter), Facebook, Twitch, Wikipedia. |
+| **`open_site`** | 🌐 Quick Bookmarks | **System Default Browser URI Handler** | Native OS | Instant 1-click launch for common developer & media portals (GitHub, YouTube, Spotify, Reddit, Docs). |
+| **`open_ai_webchat`** | 🤖 AI Web Relay | **Browser Automation & Prompt Dispatch** | Free / Web | Opens Claude, ChatGPT, Gemini, DeepSeek, Qwen, or Perplexity with your prompt pre-filled and submitted. |
+| **`clipboard_write`** | 📋 Clipboard Copy | **PowerShell / System Clipboard Bridge** | Local OS | Copies text, code, or terminal commands directly into the OS clipboard on voice or chat command. |
+| **`find_file`** | 📂 File Search | **Windows File Index & Directory Traversal** | Offline | Rapidly locates files and directories across user libraries and developer projects. |
+| **`git_status`** | 🐙 Git Inspector | **Local Git CLI Bridge** | Offline | Reads active repo branch, unstaged modifications, staged files, and commit ahead/behind status. |
+| **`wifi_info`** | 📶 Network Info | **`netsh wlan` / OS Network Bridge** | Native OS | Queries current Wi-Fi SSID, connection state, signal quality percentage, and interface status. |
+| **`date_math`** | 📅 Calendar Math | **Python `datetime` Engine** | Offline (Deterministic) | Calculates elapsed days, deadlines, milestone countdowns, and relative dates with zero hallucination. |
+| **`list_reminders`** | 🔔 Alerts List | **Durable Reminder Store Inspector** | Offline | Displays all scheduled, pending background timers and proactive notification alerts. |
 | **`take_screenshot`** | 📸 Screen Capture | **System Drawing / VirtualScreen API** | Offline | Captures full multi-monitor desktop screenshots and saves timestamped PNGs to `Documents/DeskPet/`. |
 | **`lock_workstation`**| 🔒 Security | **Windows `user32.dll,LockWorkStation`** | Native OS | Instantly locks the workstation. |
 | **`mcp_*`** | 🔌 MCP Tools | **Model Context Protocol JSON-RPC 2.0 Client** | Extensible Stdio | Dynamically discovers and invokes tools from any connected MCP server (Filesystem, GitHub, SQLite, PostgreSQL, Brave Search). |
@@ -231,7 +251,7 @@ iwr -useb https://raw.githubusercontent.com/harshil342/J.A.R.V.I.S-Desk-Pet/main
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> | **Toggle J.A.R.V.I.S. Chat Bubble** — Instant keyboard-first prompt overlay. |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> | **Instant Zero-Click Screen Diagnosis** — Runs <15ms OCR on active IDE window & speaks fix. |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> | **Toggle Deep Reasoning Mode** — Engages high-intensity chain-of-thought analysis. |
-| <kbd>Esc</kbd> | <kbd>Esc</kbd> | **Dismiss Bubble / Return to Idle**. |
+| <kbd>Esc</kbd> | <kbd>Esc</kbd> | **Dismiss Bubble / Exit Reader & Fullscreen Mode** — Collapses reader pane or dismisses prompt overlay. |
 | **Right-Click Pet** | **Right-Click Pet** | **Context Menu** — Settings, Persona LoRAs, Model Manager, Mini-Dock Mode. |
 
 ---
@@ -286,8 +306,13 @@ Connect any external MCP tool server over standard stdio JSON-RPC 2.0. Configure
 ]
 ```
 
+### Dual-Engine Tool Calling Architecture
+J.A.R.V.I.S. pairs ultra-low-latency deterministic execution with native edge model tool calling:
+1. **0ms Heuristic Regex Router**: Common intents (weather, calculator, app launch, volume, site search, clipboard) match instantly and execute synchronously before response generation.
+2. **Native JSON Schema Function Calling**: If a prompt bypasses heuristics, the request is dispatched to `llama-server` with comprehensive OpenAI-compatible tool schemas (`tool_registry.py`), empowering MiniCPM to output structured tool calls with zero hallucinations.
+
 ### Sidecar REST Endpoints (`http://127.0.0.1:18765`)
-- `POST /api/chat` — Streaming chat with auto-tool execution and thought-bubble responses.
+- `POST /api/chat` — Streaming chat with auto-tool execution, thought-bubble responses, and tool_mode selection (`auto`, `regex`, `native`, `off`).
 - `GET /api/mcp/servers` — List registered MCP servers and connection status.
 - `POST /api/mcp/servers` — Dynamically connect a new MCP server.
 - `POST /api/tasks` — Create asynchronous background timers and proactive alerts.
@@ -297,7 +322,7 @@ Connect any external MCP tool server over standard stdio JSON-RPC 2.0. Configure
 
 ## 🧪 Quality & Test Verification Matrix
 
-J.A.R.V.I.S. Desk Pet is rigorously verified with **4,618 automated tests** passing with 0 failures across both the Electron desktop shell and the Python FastAPI sidecar gateway:
+J.A.R.V.I.S. Desk Pet is rigorously verified with **4,659 automated tests** passing with 0 failures across both the Electron desktop shell and the Python FastAPI sidecar gateway:
 
 ```
 ========================================================================================
@@ -305,20 +330,20 @@ J.A.R.V.I.S. Desk Pet is rigorously verified with **4,618 automated tests** pass
 ========================================================================================
  Suite Layer                 | Passed   | Failed | Skipped | Test Suites / Files
 -----------------------------+----------+--------+---------+----------------------------
- Electron & UI Runtime       | 4,374    | 0      | 12      | 496 suites (1,247 test units)
- Python FastAPI Gateway      | 244      | 0      | 2       | 246 test items
+ Electron & UI Runtime       | 4,378    | 0      | 12      | 496 suites (1,247 test units)
+ Python FastAPI Gateway      | 281      | 0      | 2       | 281 test items
 -----------------------------+----------+--------+---------+----------------------------
- TOTAL VERIFIED TESTS        | 4,618    | 0      | 14      | 100% Passing Pass Rate
+ TOTAL VERIFIED TESTS        | 4,659    | 0      | 14      | 100% Passing Pass Rate
 ========================================================================================
 ```
 
 ### Reproduce Test Verification
 
 ```powershell
-# 1. Run the complete Electron & J.A.R.V.I.S. test suite (4,374 tests)
+# 1. Run the complete Electron & J.A.R.V.I.S. test suite (4,378 tests)
 cd clawd-on-desk && node test/run-tests.js
 
-# 2. Run Python FastAPI Gateway test suite (244 tests)
+# 2. Run Python FastAPI Gateway test suite (281 tests)
 uv run --project minicpm-sidecar pytest minicpm-sidecar/tests
 ```
 

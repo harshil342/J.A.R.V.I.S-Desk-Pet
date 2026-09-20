@@ -19,5 +19,5 @@ case "$(uname -s)-$(uname -m)" in
 esac
 
 ROOT="$(cd "$HERE/.." && pwd)"
-printf "\n\033[32m==> 所有产物位于：%s\033[0m\n" "$ROOT/bin/$TARGET"
+printf "\n\033[32m==> All artifacts in: %s\033[0m\n" "$ROOT/bin/$TARGET"
 ls -la "$ROOT/bin/$TARGET" || true

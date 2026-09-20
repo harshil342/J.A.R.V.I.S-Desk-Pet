@@ -1,11 +1,12 @@
 // test/theme-override.test.js — Path A / Phase 3b theme overrides
 //
 // Covers three layers:
-//   1. state.js applyState() gate：oneshot state 被 ctx.isOneshotDisabled(state)
-//      标记为禁用时，visual + sound 都被跳过，回落到 resolveDisplayState
-//   2. settings-actions setThemeOverrideDisabled / resetThemeOverrides 的白名单
-//      校验 + commit 计算
-//   3. settings-actions setAnimationOverride 的 file / transition / autoReturn 写入
+//   1. state.js applyState() gate: when ctx.isOneshotDisabled(state)
+//      marks a oneshot state disabled, both visual + sound are skipped,
+//      falling back to resolveDisplayState
+//   2. settings-actions setThemeOverrideDisabled / resetThemeOverrides whitelist
+//      validation + commit computation
+//   3. settings-actions setAnimationOverride file / transition / autoReturn writes
 
 "use strict";
 
@@ -63,7 +64,7 @@ function makeCtx(overrides = {}) {
   return ctx;
 }
 
-// 返回仅当 disabled 集合包含该 state 时 true 的辅助
+// Helper returning true only when the disabled set contains that state
 function disabledSet(set) {
   return (stateKey) => set.has(stateKey);
 }
@@ -73,29 +74,29 @@ describe("state.js applyState() gate", () => {
   let ctx;
   afterEach(() => { if (api) api.cleanup(); api = null; });
 
-  it("non-disabled oneshot: attention 正常播放", () => {
+  it("non-disabled oneshot: attention plays normally", () => {
     ctx = makeCtx({ isOneshotDisabled: () => false });
     api = require("../src/state")(ctx);
     ctx._stateChanges.length = 0;
     ctx._sounds.length = 0;
     api.applyState("attention");
     const played = ctx._stateChanges.map((a) => a[0]);
-    assert.ok(played.includes("attention"), "attention 应该播放");
-    assert.ok(ctx._sounds.includes("complete"), "attention 应该响 complete 音");
+    assert.ok(played.includes("attention"), "attention should play");
+    assert.ok(ctx._sounds.includes("complete"), "attention should play complete sound");
   });
 
-  it("disabled attention: 不播 visual、不响音、回落到 idle", () => {
+  it("disabled attention: no visual, no sound, falls back to idle", () => {
     ctx = makeCtx({ isOneshotDisabled: disabledSet(new Set(["attention"])) });
     api = require("../src/state")(ctx);
     ctx._stateChanges.length = 0;
     ctx._sounds.length = 0;
     api.applyState("attention");
     const played = ctx._stateChanges.map((a) => a[0]);
-    assert.ok(!played.includes("attention"), "不应该播 attention");
-    assert.ok(!ctx._sounds.includes("complete"), "不应该响 complete");
+    assert.ok(!played.includes("attention"), "should not play attention");
+    assert.ok(!ctx._sounds.includes("complete"), "should not play complete");
   });
 
-  it("disabled notification: mini-mode 下也不播 mini-alert（gate 在 mini 映射之前）", () => {
+  it("disabled notification: no mini-alert in mini-mode either (gate runs before mini mapping)", () => {
     ctx = makeCtx({
       miniMode: true,
       isOneshotDisabled: disabledSet(new Set(["notification"])),
@@ -105,12 +106,12 @@ describe("state.js applyState() gate", () => {
     ctx._sounds.length = 0;
     api.applyState("notification");
     const played = ctx._stateChanges.map((a) => a[0]);
-    assert.ok(!played.includes("notification"), "不播 notification");
-    assert.ok(!played.includes("mini-alert"), "也不播 mini-alert");
-    assert.ok(!ctx._sounds.includes("confirm"), "不响 confirm");
+    assert.ok(!played.includes("notification"), "should not play notification");
+    assert.ok(!played.includes("mini-alert"), "should not play mini-alert either");
+    assert.ok(!ctx._sounds.includes("confirm"), "should not play confirm");
   });
 
-  it("disabled attention: mini-mode 下不映射 mini-happy", () => {
+  it("disabled attention: no mini-happy mapping in mini-mode", () => {
     ctx = makeCtx({
       miniMode: true,
       isOneshotDisabled: disabledSet(new Set(["attention"])),
@@ -119,10 +120,10 @@ describe("state.js applyState() gate", () => {
     ctx._stateChanges.length = 0;
     api.applyState("attention");
     const played = ctx._stateChanges.map((a) => a[0]);
-    assert.ok(!played.includes("mini-happy"), "不应该出现 mini-happy");
+    assert.ok(!played.includes("mini-happy"), "mini-happy should not appear");
   });
 
-  it("PermissionRequest path (updateSession) 被 gate 拦住", () => {
+  it("PermissionRequest path (updateSession) blocked by gate", () => {
     ctx = makeCtx({ isOneshotDisabled: disabledSet(new Set(["notification"])) });
     api = require("../src/state")(ctx);
     ctx._stateChanges.length = 0;
@@ -132,21 +133,21 @@ describe("state.js applyState() gate", () => {
       agentId: "claude-code",
     });
     const played = ctx._stateChanges.map((a) => a[0]);
-    assert.ok(!played.includes("notification"), "PermissionRequest 路径不该播 notification");
-    assert.ok(!ctx._sounds.includes("confirm"), "不响 confirm");
+    assert.ok(!played.includes("notification"), "PermissionRequest path should not play notification");
+    assert.ok(!ctx._sounds.includes("confirm"), "should not play confirm");
   });
 
-  it("non-oneshot state 不受 gate 影响（即便 ctx.isOneshotDisabled 错报 true）", () => {
-    // 模拟有 bug 的 ctx：对所有 state 都返回 true
+  it("non-oneshot state unaffected by gate (even when ctx.isOneshotDisabled wrongly returns true)", () => {
+    // Simulate a buggy ctx: returns true for every state
     ctx = makeCtx({ isOneshotDisabled: () => true });
     api = require("../src/state")(ctx);
     ctx._stateChanges.length = 0;
     api.applyState("working");
     const played = ctx._stateChanges.map((a) => a[0]);
-    assert.ok(played.includes("working"), "working 非 oneshot，gate 不应该消费");
+    assert.ok(played.includes("working"), "working is not oneshot, gate should not consume it");
   });
 
-  it("全部 5 个 oneshot 禁用：applyState(attention) 回落到 idle（无 session）", () => {
+  it("all 5 oneshots disabled: applyState(attention) falls back to idle (no session)", () => {
     ctx = makeCtx({
       isOneshotDisabled: disabledSet(new Set([
         "attention", "error", "sweeping", "notification", "carrying",
@@ -156,8 +157,8 @@ describe("state.js applyState() gate", () => {
     ctx._stateChanges.length = 0;
     api.applyState("attention");
     const played = ctx._stateChanges.map((a) => a[0]);
-    // gate fallback 到 resolveDisplayState() → sessions 空 → "idle"
-    // initial state 本身也是 idle，可能 sameState 导致 0 次 emit；只要不出现 attention 就对
+    // gate falls back to resolveDisplayState() -> empty sessions -> "idle"
+    // initial state is itself idle, so sameState may emit 0 times; absence of attention is what matters
     assert.ok(!played.includes("attention"));
     assert.ok(!played.includes("error"));
     assert.ok(!played.includes("sweeping"));
@@ -165,10 +166,10 @@ describe("state.js applyState() gate", () => {
     assert.ok(!played.includes("carrying"));
   });
 
-  it("attention disabled + working session: 回落到 working 而不是 attention", () => {
+  it("attention disabled + working session: falls back to working, not attention", () => {
     ctx = makeCtx({ isOneshotDisabled: disabledSet(new Set(["attention"])) });
     api = require("../src/state")(ctx);
-    // 先触发 working session 让 resolveDisplayState 返回 working
+    // Trigger a working session first so resolveDisplayState returns working
     api.updateSession("s1", "working", "PreToolUse", {
       cwd: "/tmp",
       agentId: "claude-code",
@@ -178,7 +179,7 @@ describe("state.js applyState() gate", () => {
     api.applyState("attention");
     const played = ctx._stateChanges.map((a) => a[0]);
     assert.ok(!played.includes("attention"));
-    // 回落目标是 working 或 sameState 不 emit，两者都合法
+    // Fallback target is working, or sameState no-emit; both are valid
     if (played.length > 0) {
       assert.strictEqual(played[0], "working");
     }
@@ -191,7 +192,7 @@ describe("setThemeOverrideDisabled", () => {
   const action = commandRegistry.setThemeOverrideDisabled;
   const baseSnap = () => ({ ...prefs.getDefaults(), themeOverrides: {} });
 
-  it("enable (disabled:true) 首次写入生成 {disabled:true}", () => {
+  it("enable (disabled:true) first write produces {disabled:true}", () => {
     const r = action(
       { themeId: "clawd", stateKey: "attention", disabled: true },
       { snapshot: baseSnap() },
@@ -202,7 +203,7 @@ describe("setThemeOverrideDisabled", () => {
     });
   });
 
-  it("同值 noop 不产生 commit", () => {
+  it("same-value noop produces no commit", () => {
     const snap = baseSnap();
     snap.themeOverrides = { clawd: { states: { attention: { disabled: true } } } };
     const r = action(
@@ -214,7 +215,7 @@ describe("setThemeOverrideDisabled", () => {
     assert.ok(!r.commit);
   });
 
-  it("disabled:false 清理 key 且整个 theme map 空后删除 theme 条目", () => {
+  it("disabled:false cleans up key and removes theme entry when theme map goes empty", () => {
     const snap = baseSnap();
     snap.themeOverrides = { clawd: { states: { attention: { disabled: true } } } };
     const r = action(
@@ -225,7 +226,7 @@ describe("setThemeOverrideDisabled", () => {
     assert.deepStrictEqual(r.commit.themeOverrides, {});
   });
 
-  it("disabled:false 保留其他被禁用的 state", () => {
+  it("disabled:false keeps other disabled states", () => {
     const snap = baseSnap();
     snap.themeOverrides = {
       clawd: {
@@ -244,7 +245,7 @@ describe("setThemeOverrideDisabled", () => {
     });
   });
 
-  it("disabled:false 遇到 file-form 条目时保留 file 字段（forward-compat）", () => {
+  it("disabled:false preserves file field on file-form entries (forward-compat)", () => {
     const snap = baseSnap();
     snap.themeOverrides = {
       clawd: {
@@ -262,7 +263,7 @@ describe("setThemeOverrideDisabled", () => {
     });
   });
 
-  it("主题隔离：themeA 的禁用不影响 themeB", () => {
+  it("theme isolation: disabling in themeA does not affect themeB", () => {
     const snap = baseSnap();
     snap.themeOverrides = { calico: { states: { attention: { disabled: true } } } };
     const r = action(
@@ -275,27 +276,27 @@ describe("setThemeOverrideDisabled", () => {
     });
   });
 
-  it("非白名单 stateKey 被拒绝", () => {
+  it("non-whitelisted stateKey is rejected", () => {
     for (const badKey of ["idle", "working", "juggling", "thinking", "sleeping", "waking"]) {
       const r = action(
         { themeId: "clawd", stateKey: badKey, disabled: true },
         { snapshot: baseSnap() },
       );
-      assert.strictEqual(r.status, "error", `${badKey} 应该被拒绝`);
+      assert.strictEqual(r.status, "error", `${badKey} should be rejected`);
     }
   });
 
-  it("白名单 stateKey 全部接受", () => {
+  it("all whitelisted stateKeys are accepted", () => {
     for (const key of ONESHOT_OVERRIDE_STATES) {
       const r = action(
         { themeId: "clawd", stateKey: key, disabled: true },
         { snapshot: baseSnap() },
       );
-      assert.strictEqual(r.status, "ok", `${key} 应该被接受`);
+      assert.strictEqual(r.status, "ok", `${key} should be accepted`);
     }
   });
 
-  it("disabled 必须是 boolean", () => {
+  it("disabled must be boolean", () => {
     const r = action(
       { themeId: "clawd", stateKey: "attention", disabled: "yes" },
       { snapshot: baseSnap() },
@@ -303,7 +304,7 @@ describe("setThemeOverrideDisabled", () => {
     assert.strictEqual(r.status, "error");
   });
 
-  it("themeId 必须非空字符串", () => {
+  it("themeId must be a non-empty string", () => {
     const r1 = action(
       { themeId: "", stateKey: "attention", disabled: true },
       { snapshot: baseSnap() },
@@ -316,7 +317,7 @@ describe("setThemeOverrideDisabled", () => {
     assert.strictEqual(r2.status, "error");
   });
 
-  it("payload 非 object 报错", () => {
+  it("non-object payload errors", () => {
     assert.strictEqual(action(null, { snapshot: baseSnap() }).status, "error");
     assert.strictEqual(action("clawd", { snapshot: baseSnap() }).status, "error");
   });
@@ -326,7 +327,7 @@ describe("resetThemeOverrides", () => {
   const action = commandRegistry.resetThemeOverrides;
   const baseSnap = () => ({ ...prefs.getDefaults(), themeOverrides: {} });
 
-  it("清空当前主题的所有 overrides", () => {
+  it("clears all overrides of the current theme", () => {
     const snap = baseSnap();
     snap.theme = "calico";
     snap.themeOverrides = {
@@ -340,20 +341,20 @@ describe("resetThemeOverrides", () => {
     };
     const r = action({ themeId: "clawd" }, { snapshot: snap });
     assert.strictEqual(r.status, "ok");
-    // clawd 整条清掉，calico 保留
+    // clawd cleared entirely, calico kept
     assert.deepStrictEqual(r.commit.themeOverrides, {
       calico: { states: { error: { disabled: true } } },
     });
   });
 
-  it("该主题没有 override 时 noop", () => {
+  it("noop when the theme has no overrides", () => {
     const r = action({ themeId: "clawd" }, { snapshot: baseSnap() });
     assert.strictEqual(r.status, "ok");
     assert.strictEqual(r.noop, true);
     assert.ok(!r.commit);
   });
 
-  it("接受字符串 payload 简写", () => {
+  it("accepts string payload shorthand", () => {
     const snap = baseSnap();
     snap.theme = "calico";
     snap.themeOverrides = { clawd: { states: { attention: { disabled: true } } } };
@@ -362,12 +363,12 @@ describe("resetThemeOverrides", () => {
     assert.deepStrictEqual(r.commit.themeOverrides, {});
   });
 
-  it("空 themeId 报错", () => {
+  it("empty themeId errors", () => {
     const r = action({ themeId: "" }, { snapshot: baseSnap() });
     assert.strictEqual(r.status, "error");
   });
 
-  it("当前主题 reset 时会显式重载运行时 theme（overrideMap=null）", () => {
+  it("reset on current theme explicitly reloads runtime theme (overrideMap=null)", () => {
     const snap = baseSnap();
     snap.theme = "clawd";
     snap.themeOverrides = {
@@ -392,7 +393,7 @@ describe("resetThemeOverrides", () => {
     assert.deepStrictEqual(r.commit.themeOverrides, {});
   });
 
-  it("当前主题 reset 缺少 activateTheme 依赖时返回 error", () => {
+  it("reset on current theme without activateTheme dep returns error", () => {
     const snap = baseSnap();
     snap.theme = "clawd";
     snap.themeOverrides = {
@@ -408,7 +409,7 @@ describe("setAnimationOverride", () => {
   const action = commandRegistry.setAnimationOverride;
   const baseSnap = () => ({ ...prefs.getDefaults(), theme: "clawd", themeOverrides: {} });
 
-  it("写 state file + transition + autoReturn 到嵌套 schema", () => {
+  it("writes state file + transition + autoReturn into nested schema", () => {
     const calls = [];
     const r = action(
       {
@@ -444,7 +445,7 @@ describe("setAnimationOverride", () => {
     });
   });
 
-  it("写 tier file + transition，用 originalFile 作 key", () => {
+  it("writes tier file + transition, keyed by originalFile", () => {
     const r = action(
       {
         themeId: "clawd",
@@ -474,7 +475,7 @@ describe("setAnimationOverride", () => {
     });
   });
 
-  it("写 idleAnimation file + transition + duration，用 originalFile 作 key", () => {
+  it("writes idleAnimation file + transition + duration, keyed by originalFile", () => {
     const r = action(
       {
         themeId: "clawd",
@@ -503,7 +504,7 @@ describe("setAnimationOverride", () => {
     });
   });
 
-  it("非当前主题不触发 activateTheme，但照样提交 override", () => {
+  it("non-current theme skips activateTheme but still commits override", () => {
     const calls = [];
     const snap = baseSnap();
     snap.theme = "calico";
@@ -526,7 +527,7 @@ describe("setAnimationOverride", () => {
     });
   });
 
-  it("当前主题缺少 activateTheme 依赖时返回 error", () => {
+  it("current theme without activateTheme dep returns error", () => {
     const r = action(
       {
         themeId: "clawd",

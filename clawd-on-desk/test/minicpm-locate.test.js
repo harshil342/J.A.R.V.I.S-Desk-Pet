@@ -3,7 +3,7 @@
 // Lock down minicpm-chat.js's locator helpers (sidecar binary + dev
 // source dir + Python interpreter). These three functions decide how
 // the Electron host spawns the llama.cpp-backed sidecar; regressions
-// here cause "找不到 sidecar" boot failures.
+// here cause "sidecar not found" boot failures.
 
 const { describe, it, beforeEach, afterEach } = require("node:test");
 const assert = require("node:assert/strict");

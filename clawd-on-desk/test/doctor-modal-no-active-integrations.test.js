@@ -159,7 +159,7 @@ describe("doctor modal: no active integrations (#490 UI copy)", () => {
     const html = HOOKS.renderModalBody(core, result, {});
     assert.ok(html.includes("doctor-overall pass"), "overall pill should be pass");
     assert.ok(!html.includes("doctor-overall critical"), "must not render critical");
-    assert.ok(!html.includes(STRINGS.zh.doctorStatusCritical), "must not show the 严重 label");
+    assert.ok(!html.includes(STRINGS.zh.doctorStatusCritical), "must not show the critical label");
     assert.ok(html.includes(STRINGS.zh.doctorAgentSummaryNoneActive), "agent nudge missing from body");
     assert.ok(html.includes(STRINGS.zh.doctorConnectionNoActivityHint), "no-activity hint missing from body");
   });

@@ -1,7 +1,7 @@
 # MiniCPM5-1B-fixed + neko30k LoRA Adapter (v2, 4-GPU DDP rerun)
 
 LoRA adapter trained on **neko30k** ([liumindmind/NekoQA-30K](https://huggingface.co/datasets/liumindmind/NekoQA-30K) — 30,834 cat-girl QA samples,
-12 categories incl. ACG / 心理疗愈 / 创意写作 / 安全 / 数学 / 代码 / 职场),
+  12 categories incl. ACG / healing / creative writing / safety / math / code / workplace),
 rebuilt on **the fixed base model** at:
 
     /user/yanhui/share_user_long/zhaohengyu/MiniCPM5-models-fixed/official

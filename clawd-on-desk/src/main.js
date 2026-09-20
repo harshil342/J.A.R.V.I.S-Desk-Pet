@@ -1469,9 +1469,9 @@ const _stateCtx = {
     }
     if (_lanWss) { try { _lanWss.onSnapshot(); } catch {} }
   },
-  // Phase 3b: 读 prefs.themeOverrides 判断某个 oneshot state 是否被用户禁用。
-  // state.js gate 调这个做 early-return。不做白名单校验——settings-actions
-  // 负责写入合法性，这里只读。
+  // Phase 3b: read prefs.themeOverrides to check if a oneshot state is user-disabled.
+  // state.js gate calls this for early-return. No allowlist validation here — settings-actions
+  // owns write legality, this only reads.
   isOneshotDisabled: (stateKey) => {
     const theme = getActiveTheme();
     const themeId = theme && theme._id;
@@ -3892,7 +3892,7 @@ if (!gotTheLock) {
       ),
     });
     systemWakeRecovery.start();
-    // macOS: bridge the OS app-hidden state (⌘H / Dock right-click → 隐藏) to the
+    // macOS: bridge the OS app-hidden state (⌘H / Dock right-click → Hide) to the
     // pet. Pet windows are setCanHide:NO, so the OS marks the app hidden but the
     // windows refuse to vanish, and an inactive-app Dock Hide fires no
     // did-resign-active — so we poll app.isHidden() and drive setPetHidden(). (#416)

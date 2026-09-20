@@ -4,174 +4,174 @@ This document holds the state machine, theme system, UI runtime, and platform ca
 
 ## Dual-Window Model
 
-桌宠使用两个独立的顶层窗口：
+The pet uses two independent top-level windows:
 
-- 渲染窗口（`win`）：透明大窗口，永久 `setIgnoreMouseEvents(true)`，只负责显示 SVG 动画和眼球追踪
-- 输入窗口（`hitWin`）：小矩形窗口，`transparent: true` + `setShape` 覆盖 hitbox 区域，`focusable: true`，永久 `setIgnoreMouseEvents(false)`，接收所有 pointer 事件
+- Render window (`win`): transparent full-size window, permanent `setIgnoreMouseEvents(true)`, only renders SVG animation + eye tracking
+- Input window (`hitWin`): small rect window, `transparent: true` + `setShape` over the hitbox, `focusable: true`, permanent `setIgnoreMouseEvents(false)`, receives all pointer events
 
-输入事件流：`hitWin renderer → IPC → main → renderWin renderer`
+Input flow: `hitWin renderer → IPC → main → renderWin renderer`
 
-这个架构解决了 Windows 上的拖拽失效 bug：`WS_EX_NOACTIVATE` + layered window + Chromium child HWND 的组合在 z-order 变化后会走进激活死路径。分离后输入窗口保持 `focusable: true`，避开了这个问题。
+This split fixes the Windows drag-dead bug: `WS_EX_NOACTIVATE` + layered window + Chromium child HWND falls into an activation dead-end after z-order changes. With the split, the input window stays `focusable: true` and sidesteps it.
 
 ## State Machine
 
-- 多会话追踪：`sessions` Map 按 `session_id` 独立记录状态，`resolveDisplayState()` 取最高优先级
-- 状态优先级：`error(8) > notification(7) > sweeping(6) > attention(5) > carrying/juggling(4) > working(3) > thinking(2) > idle(1) > sleeping(0)`
-- 最小显示时长：防止快速闪切（`error=5s`、`attention/notification=4s`、`carrying=3s`、`sweeping=2s`、`working/thinking=1s`）
-- 一次性状态：`attention/error/sweeping/notification/carrying` 显示后自动回退（`AUTO_RETURN_MS`）
-- 睡眠序列：20s 鼠标静止 → idle-look → 60s → yawning(3s) → dozing → 10min → collapsing(0.8s) → sleeping；鼠标移动触发 waking(1.5s) → 恢复
-- DND 模式：跳过 dozing，直接 yawning → collapsing → sleeping；同时屏蔽 hook 事件
-- 隐藏桌宠（petHidden，入口：托盘 / 右键菜单 / 快捷键）：语义是「看不见宠物」而非免打扰——隐藏时收起宠物、Session HUD、update bubble 和当时 pending 的权限气泡（恢复显示时回来），但隐藏期间新到的权限请求仍照常弹气泡，这是有意设计、不要当 bug 修；要连权限气泡都静默是 DND 的职责（它有回终端确认的 fallback）。petHidden 不持久化，重启恢复显示
-- working 子动画：Clawd 主题为 1 个会话 → typing，2 个 → headphones groove，3+ → building；Calico / Cloudling 仍为 typing / juggling / building
-- juggling 子动画：1 个 subagent → juggling，2+ → conducting
+- Multi-session tracking: `sessions` Map records state per `session_id`; `resolveDisplayState()` picks highest priority
+- State priority: `error(8) > notification(7) > sweeping(6) > attention(5) > carrying/juggling(4) > working(3) > thinking(2) > idle(1) > sleeping(0)`
+- Min display time: prevents flicker (`error=5s`, `attention/notification=4s`, `carrying=3s`, `sweeping=2s`, `working/thinking=1s`)
+- One-shot states: `attention/error/sweeping/notification/carrying` auto-fall back after showing (`AUTO_RETURN_MS`)
+- Sleep sequence: 20s mouse idle → idle-look → 60s → yawning(3s) → dozing → 10min → collapsing(0.8s) → sleeping; mouse move triggers waking(1.5s) → resume
+- DND mode: skips dozing, yawning → collapsing → sleeping; also suppresses hook events
+- Hide pet (petHidden, via tray / context menu / hotkey): means "pet invisible", not do-not-disturb — hiding parks the pet, Session HUD, update bubble, and pending permission bubbles (they return when shown again), but new permission requests arriving while hidden still pop normally — by design, don't "fix" it; silencing permission bubbles too is DND's job (it has a return-to-terminal fallback). petHidden doesn't persist; restarts show the pet again
+- working sub-animations: Clawd theme is 1 session → typing, 2 → headphones groove, 3+ → building; Calico / Cloudling stay typing / juggling / building
+- juggling sub-animations: 1 subagent → juggling, 2+ → conducting
 
 ## Theme System
 
-Clawd 是主题化桌宠：动画资源、计时、hitbox、眼球追踪参数都来自主题配置。
+Clawd is a themed pet: animation assets, timing, hitbox, and eye-tracking params all come from theme config.
 
-- 内置主题目录：`themes/clawd/`、`themes/calico/`、`themes/cloudling/`；`themes/template/` 是脚手架模板
-- 用户主题目录：`<userData>/themes/<id>/theme.json`
-- `theme.json` 必需状态：`idle`、`working`、`thinking`
-- 若启用 `eyeTracking.enabled`，idle 资源必须是 SVG 且包含 `#eyes-js`
-- 若 `sleepSequence.mode` 为 `full`（默认），需提供 `yawning / dozing / collapsing / waking`；`direct` 可直接进入 `sleeping`
-- 若 `miniMode.supported` 为 true，需提供 8 个基础 mini 状态；`mini-working` 是可选增强，缺失时优雅跳过
-- 能力缺失时走 `VISUAL_FALLBACK_STATES` 回退链
-- 默认配置集中在 `theme-loader.js` 顶部的 `DEFAULT_*` 常量
-- 变体是白名单 deep-merge；数组和特定字段会整体替换
-- Animation override 是用户 per-slot 覆盖，和作者定义的 variants 正交
-- SVG 会经过白名单消毒，阻断脚本、事件属性、外部资源、`javascript:` 和路径穿越
-- `trustedRuntime.scriptedSvgFiles` 只对 loader 判定为内置的主题生效；外部主题声明该字段会被忽略
-- 支持 SVG / GIF / APNG / WebP / PNG / JPG；动画周期由 `src/animation-cycle.js` 探测
-- 更新视觉遵循主题绑定：`checking` 可选走 `theme.updateVisuals.checking`，未声明时回退到当前主题的 `thinking`；发现新版本时会进入 `available -> notification`；`downloading / success / error` 继续分别走 `carrying / attention / error`
+- Built-in theme dirs: `themes/clawd/`, `themes/calico/`, `themes/cloudling/`; `themes/template/` is the scaffold
+- User theme dir: `<userData>/themes/<id>/theme.json`
+- `theme.json` required states: `idle`, `working`, `thinking`
+- With `eyeTracking.enabled`, the idle asset must be SVG containing `#eyes-js`
+- With `sleepSequence.mode: full` (default), `yawning / dozing / collapsing / waking` are required; `direct` enters `sleeping` straight away
+- With `miniMode.supported: true`, 8 base mini states are required; `mini-working` is an optional extra, gracefully skipped when missing
+- Missing capabilities fall through the `VISUAL_FALLBACK_STATES` chain
+- Defaults live in the `DEFAULT_*` constants at the top of `theme-loader.js`
+- Variants are allowlist deep-merges; arrays and specific fields replace wholesale
+- Animation overrides are per-slot user overrides, orthogonal to author-defined variants
+- SVGs pass through allowlist sanitization blocking scripts, event attrs, external resources, `javascript:`, and path traversal
+- `trustedRuntime.scriptedSvgFiles` only applies to loader-recognized built-in themes; external themes declaring it are ignored
+- Supported formats: SVG / GIF / APNG / WebP / PNG / JPG; cycle length probed by `src/animation-cycle.js`
+- Update visuals follow theme bindings: `checking` optionally uses `theme.updateVisuals.checking`, falling back to the current theme's `thinking` when undeclared; new versions enter `available -> notification`; `downloading / success / error` keep using `carrying / attention / error`
 
-主题创建流程见 `docs/guides/guide-theme-creation.md`。
+Theme creation flow: `docs/guides/guide-theme-creation.md`.
 
 ## Settings Panel
 
-Settings 是独立 `BrowserWindow`，采用 4 层结构：
+Settings is a standalone `BrowserWindow` with 4 layers:
 
-| 层 | 文件 | 职责 |
+| Layer | File | Role |
 |---|---|---|
-| Schema / 持久化 | `src/prefs.js` | `SCHEMA` 定义；`load/save/migrate/validate`；坏文件自动 `.bak` + fallback |
-| 内存 store | `src/settings-store.js` | `createStore()` 返回 `{ getSnapshot, subscribe, _commit }`；`_commit` closure-private |
-| 控制器 | `src/settings-controller.js` | 唯一写入者；`applyUpdate` / `applyBulk` / `applyCommand` / `hydrate`；pre-commit effect gate |
-| UI | `src/settings-renderer.js` + `settings.html` + `preload-settings.js` | 主题卡片、animation overrides、agent 开关、诊断；只通过 IPC 调 controller |
+| Schema / persist | `src/prefs.js` | `SCHEMA` defs; `load/save/migrate/validate`; corrupt files auto-`.bak` + fallback |
+| Memory store | `src/settings-store.js` | `createStore()` returns `{ getSnapshot, subscribe, _commit }`; `_commit` closure-private |
+| Controller | `src/settings-controller.js` | sole writer; `applyUpdate` / `applyBulk` / `applyCommand` / `hydrate`; pre-commit effect gate |
+| UI | `src/settings-renderer.js` + `settings.html` + `preload-settings.js` | theme cards, animation overrides, agent switches, diagnostics; talks to controller via IPC only |
 
-关键取舍：
+Key tradeoffs:
 
-- `applyUpdate` 和 `applyBulk` 对同步/异步 effect 同构
-- `hydrate()` 是唯一跳过 effect 的入口
-- 设置写入路径只有 `controller → store → subscribers`
-- About tab 使用 inline SVG，而不是 `<object>`，因为 `settings.html` CSP 是 `default-src 'none'`
+- `applyUpdate` and `applyBulk` are isomorphic for sync/async effects
+- `hydrate()` is the only effect-skipping entry
+- Write path is only `controller → store → subscribers`
+- About tab uses inline SVG instead of `<object>` because `settings.html` CSP is `default-src 'none'`
 
 ## Mini Mode
 
-角色藏在屏幕右边缘，窗口一半推到屏幕外，由屏幕边缘自然遮挡。
+The character hides at the screen's right edge, window half pushed off-screen, cropped naturally by the edge.
 
-进入方式：
+Entry:
 
-- 拖拽到右边缘（`SNAP_TOLERANCE=30px`）→ 快速滑入 + `mini-enter`
-- 右键菜单 “Mini Mode” → 螃蟹步走到边缘 → 抛物线跳入 → 探头入场
+- Drag to the right edge (`SNAP_TOLERANCE=30px`) → quick slide-in + `mini-enter`
+- Context menu "Mini Mode" → crab-walk to the edge → parabolic jump-in → peek-in entry
 
-核心机制：
+Core mechanics:
 
-- `miniMode` 拦截常规状态，把 notification / attention 映射为 mini 对应状态
-- `miniTransitioning` 在入场期间屏蔽 hook 事件和 peek
-- `checkMiniModeSnap()` 检查所有显示器右边缘
-- `miniIdleNow` 独立于 `idleNow`，只走眼球追踪，不走睡眠序列
-- `animateWindowX()` + `animateWindowParabola()` 负责滑动与抛物线动画
-- `savePrefs()` 会持久化 `miniMode/preMiniX/preMiniY`
+- `miniMode` intercepts normal states, mapping notification / attention to mini counterparts
+- `miniTransitioning` suppresses hook events and peek during entry
+- `checkMiniModeSnap()` checks all monitors' right edges
+- `miniIdleNow` is independent of `idleNow`: eye tracking only, no sleep sequence
+- `animateWindowX()` + `animateWindowParabola()` handle slide and parabola animation
+- `savePrefs()` persists `miniMode/preMiniX/preMiniY`
 
-Mini 状态映射：
+Mini state mapping:
 
-| 状态 | SVG | 用途 |
+| State | SVG | Purpose |
 |------|-----|------|
-| `mini-idle` | `clawd-mini-idle.svg` | 待机：呼吸、眨眼、手臂晃动、眼球追踪 |
-| `mini-enter` | `clawd-mini-enter.svg` | 一次性滑入弹跳 |
-| `mini-peek` | `clawd-mini-peek.svg` | Hover 探头 |
-| `mini-alert` | `clawd-mini-alert.svg` | 通知 |
-| `mini-happy` | `clawd-mini-happy.svg` | 完成 |
-| `mini-crabwalk` | `clawd-mini-crabwalk.svg` | 右键进入时的螃蟹步 |
-| `mini-enter-sleep` | `clawd-mini-enter-sleep.svg` | DND 下入场 |
-| `mini-sleep` | `clawd-mini-sleep.svg` | DND 休眠 |
-| `mini-working` | 主题可选 | 1 会话 mini typing；缺失则静默跳过 |
+| `mini-idle` | `clawd-mini-idle.svg` | idle: breathing, blinking, arm sway, eye tracking |
+| `mini-enter` | `clawd-mini-enter.svg` | one-shot slide-in bounce |
+| `mini-peek` | `clawd-mini-peek.svg` | hover peek |
+| `mini-alert` | `clawd-mini-alert.svg` | notification |
+| `mini-happy` | `clawd-mini-happy.svg` | done |
+| `mini-crabwalk` | `clawd-mini-crabwalk.svg` | crab-walk for menu entry |
+| `mini-enter-sleep` | `clawd-mini-enter-sleep.svg` | entry under DND |
+| `mini-sleep` | `clawd-mini-sleep.svg` | DND sleep |
+| `mini-working` | theme-optional | 1-session mini typing; silently skipped when missing |
 
 ## State To Animation Mapping
 
-权威表格见 `docs/guides/state-mapping.md`。这里只保留实现层面的补充：
+Authoritative table: `docs/guides/state-mapping.md`. Implementation-only extras here:
 
-- working 子动画：Clawd 主题为 1 会话 → typing，2 → headphones groove，3+ → building；Calico / Cloudling 仍为 typing / juggling / building
-- juggling 子动画：1 subagent → juggling，2+ → conducting
-- mini 状态有独立动画槽；`mini-working` 是可选能力
-- 睡眠序列和 DND 行为见上面的 State Machine
-- `attention / error / sweeping / notification / carrying` 是一次性状态，显示后按 `autoReturn` 回退
+- working sub-animations: Clawd theme is 1 session → typing, 2 → headphones groove, 3+ → building; Calico / Cloudling stay typing / juggling / building
+- juggling sub-animations: 1 subagent → juggling, 2+ → conducting
+- mini states have their own animation slots; `mini-working` is an optional capability
+- sleep sequence and DND behavior: see State Machine above
+- `attention / error / sweeping / notification / carrying` are one-shot states, falling back via `autoReturn` after showing
 
 ## Assets
 
-- 素材按主题组织：每个主题目录自带 `assets/`
-- `assets/svg/` 与 `assets/gif/` 是默认 Clawd 主题使用的公共根路径
-- 文档预览 GIF 放在 `assets/gif/`，运行时不直接读
-- 需要编辑的源素材先复制到 `assets/source/`
-- SVG 运行时用 `<object type="image/svg+xml">`，其他位图格式走 `<img>`
-- 默认 SVG 内部 ID：`#eyes-js`、`#body-js`、`#shadow-js`、`#eyes-doze`
+- Assets are organized per theme: each theme dir bundles its own `assets/`
+- `assets/svg/` and `assets/gif/` are the shared root paths used by the default Clawd theme
+- Doc preview GIFs live in `assets/gif/`, never read at runtime
+- Copy source assets to `assets/source/` before editing
+- SVGs render at runtime via `<object type="image/svg+xml">`, other bitmaps via `<img>`
+- Default in-SVG IDs: `#eyes-js`, `#body-js`, `#shadow-js`, `#eyes-doze`
 
 ## Runtime UI Systems
 
 ### Sound
 
-- `app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required")` 要在窗口创建前设置
-- `main.js` 里的 `playSound(name)` 会检查 `soundMuted`、`doNotDisturb` 和 cooldown
-- `renderer.js` 用 `_audioCache` 缓存 `Audio` 对象
-- `attention/mini-happy` 播放 complete，`notification/mini-alert` 播放 confirm
+- `app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required")` must be set before window creation
+- `playSound(name)` in `main.js` checks `soundMuted`, `doNotDisturb`, and cooldown
+- `renderer.js` caches `Audio` objects in `_audioCache`
+- `attention/mini-happy` plays complete, `notification/mini-alert` plays confirm
 
 ### Eye Tracking
 
-- `tick.js` 每 50ms 轮询鼠标
-- 眼球位移量量化到 0.5px 像素网格
-- 鼠标没动时会 dedup 跳过发送
-- 从 `idle-look` 返回 `idle-follow` 时需要 `forceEyeResend`
-- 当前实现**故意不用**跨进程“renderer ready”握手；主进程持续发 `eye-move`，恢复靠延迟 `forceEyeResend` 和 renderer 侧的自检重挂载
-- 任何 `!moved` / dedup 优化都必须保留 `forceEyeResend` 旁路，否则 idle-look 结束后的眼球重定位会被吞掉
+- `tick.js` polls the mouse every 50ms
+- Eye displacement quantizes to a 0.5px pixel grid
+- Unmoved mouse is dedup-skipped, never sent
+- Returning from `idle-look` to `idle-follow` needs `forceEyeResend`
+- Current design **deliberately avoids** a cross-process "renderer ready" handshake; the main process keeps emitting `eye-move`, recovery relies on delayed `forceEyeResend` plus renderer-side self-check remount
+- Any `!moved` / dedup optimization must keep the `forceEyeResend` bypass, or the eye reposition after idle-look gets swallowed
 
 ### Animated SVG Through `<img>`
 
-- `renderer.js` 里给 `<img>` SVG 追加的 `?_t=` cache-bust query 是必需的
-- 原因不是 HTTP 缓存，而是 Chromium 会复用同 URL SVG 的文档与 CSS 动画时间线；`forwards` 的一次性动画第二次加载时会直接停在末帧
-- 相关 dedup 逻辑必须比较规范化后的文件名，而不是带 query 的最终 URL
+- The `?_t=` cache-bust query `renderer.js` appends to `<img>` SVGs is required
+- Cause isn't HTTP caching: Chromium reuses the document + CSS animation timeline for same-URL SVGs; a `forwards` one-shot animation loads stuck on its last frame the second time
+- Related dedup logic must compare normalized filenames, not the final query-bearing URL
 
 ### Click Reactions
 
-- 双击 → 左/右戳反应
-- 4 连击 → 双手拍反应
-- 拖拽 → 持续拖拽反应
-- 反应动画期间会暂时 detach 眼球追踪
+- Double-click → left/right poke reaction
+- 4-click → two-hand pat reaction
+- Drag → sustained drag reaction
+- Reaction animations temporarily detach eye tracking
 
 ## Electron And Platform Notes
 
-- `win.setFocusable(false)`：渲染窗口永不抢焦点
-- `hitWin.focusable: true`：输入窗口允许激活，这是修复拖拽 bug 的关键
-- `win.showInactive()`：显示时不打断用户输入
-- 渲染 / 输入窗口都依赖 `backgroundThrottling: false`；unfocused 节流会放大眼球追踪和输入恢复的时序问题
-- 路径统一用 `path.join(__dirname, ...)`
-- 透明无边框浮窗：`frame: false`, `transparent: true`, `alwaysOnTop: true`
-- 使用单实例锁：`app.requestSingleInstanceLock()`
-- 位置持久化到 `clawd-prefs.json`
-- 多显示器钳制走 `clampToScreen()` + `getNearestWorkArea()`
+- `win.setFocusable(false)`: render window never steals focus
+- `hitWin.focusable: true`: input window may activate — the key to the drag-bug fix
+- `win.showInactive()`: shows without interrupting user input
+- Both render / input windows depend on `backgroundThrottling: false`; unfocused throttling amplifies eye-tracking and input-recovery timing issues
+- Paths always via `path.join(__dirname, ...)`
+- Transparent borderless floaters: `frame: false`, `transparent: true`, `alwaysOnTop: true`
+- Single-instance lock: `app.requestSingleInstanceLock()`
+- Position persists to `clawd-prefs.json`
+- Multi-monitor clamping via `clampToScreen()` + `getNearestWorkArea()`
 
 ## Known Limits
 
-- `hitWin` 点击会短暂抢焦点，这是当前可接受代价
-- 当前开发环境没有 macOS 手测机；所有 macOS 特定路径都只能做 code review + best-effort 推断，真正行为变化需要额外人工验证
-- 启动恢复依赖 `detectRunningClaudeProcesses()` 与后续 hook 事件
-- Windows 前台窗口锁通过 ALT trick + `koffi` FFI 绕过，仍有边缘失败可能
-- hook 脚本依赖 Node.js
-- Windows 终端聚焦依赖 `koffi`；macOS 依赖 `osascript`
-- Codex CLI 以 official hooks 为主、JSONL 轮询为 fallback；WebSearch / compaction / abort 等 hook 未覆盖事件仍可能有轮询延迟
-- Copilot CLI 自动同步 `<COPILOT_HOME 或 ~/.copilot>/hooks/hooks.json`；`disableAllHooks: true` 时 doctor warning 且不挂 Fix 按钮
-- Gemini 无权限气泡，除非未来提供兼容的阻塞式审批协议；Cursor 权限走 stdout；Kiro 没有 global hooks；opencode 权限只能走 event hook + bridge
-- opencode child / subtask session 只有在 `session.created` 明确带 `event.properties.info.parentID` 时才会被标记为 headless；这类后台 child 不进入 HUD / focus / 多会话 fanout
-- 进程存活检测依赖进程名匹配，非标准进程名可能漏检
+- `hitWin` clicks briefly steal focus — accepted cost for now
+- No macOS test machine in the current dev env; all macOS-specific paths are code-review + best-effort inference only, real behavior changes need human verification
+- Startup resume depends on `detectRunningClaudeProcesses()` plus later hook events
+- Windows foreground lock bypasses via ALT trick + `koffi` FFI, edge failures still possible
+- Hook scripts depend on Node.js
+- Windows terminal focus depends on `koffi`; macOS on `osascript`
+- Codex CLI is official-hooks primary, JSONL polling fallback; WebSearch / compaction / abort and other hook-uncovered events may still lag on polling
+- Copilot CLI auto-syncs `<COPILOT_HOME or ~/.copilot>/hooks/hooks.json`; with `disableAllHooks: true` it's a doctor warning with no Fix button
+- Gemini has no permission bubble unless a compatible blocking approval protocol appears later; Cursor permissions go over stdout; Kiro has no global hooks; opencode permissions only go via event hook + bridge
+- opencode child / subtask sessions count as headless only when `session.created` explicitly carries `event.properties.info.parentID`; such background children stay out of HUD / focus / multi-session fanout
+- Process-liveness checks depend on process-name matching; non-standard names may be missed
 
 ## Do Not Fix This Again
 
-Language 子菜单底部截断是 Electron 透明窗口 + Windows DWM 的底层兼容问题，不要再尝试通过纯 JS 调整 `alwaysOnTop` 或透明窗策略来修。
+The Language submenu clipping at the bottom is an Electron transparent-window + Windows DWM low-level compat issue — don't retry fixing it via pure-JS `alwaysOnTop` or transparent-window tweaks.

@@ -90,7 +90,7 @@ def test_api_adapters_merges_manifest(app_with_stub_llama, adapter_dir):
     """Electron drops a `.manifest.json` mirror next to the .gguf files;
     the gateway must surface displayName + aliases + source on every
     /api/adapters response so chat-bubble keyword routing can resolve
-    user-typed aliases like 「猫娘」 to the right adapter."""
+    user-typed CJK aliases to the right adapter."""
     import json
 
     target_path = adapter_dir / "lora_neko.gguf"
@@ -223,7 +223,7 @@ def test_chat_forces_empty_lora_when_no_adapter_active(app_with_stub_llama):
     # No adapter active → gateway must send lora=[] explicitly so
     # llama-server disables every preloaded adapter for this request.
     # Returning None here used to leak the boot-time global scale of
-    # the first --lora into base chat, which surfaced as the 猫娘
+    # the first --lora into base chat, which surfaced as the CJK
     # persona bleeding through even after switching back to Base
     # (real-world bug observed 2026-05-22).
     assert captured["lora_kwarg"] == []

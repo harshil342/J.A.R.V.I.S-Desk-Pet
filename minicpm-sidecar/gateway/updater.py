@@ -12,7 +12,7 @@ Backends:
                                   first .gguf sibling in the repo.
 - file://<absolute-path>       a single local .gguf — used when the user
                                   has pre-staged the weight file via
-                                  Settings ("本地模型路径"). Treated as
+                                  Settings ("local model path"). Treated as
                                   always up-to-date.
 """
 

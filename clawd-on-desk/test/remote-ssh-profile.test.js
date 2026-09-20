@@ -535,9 +535,9 @@ test("settings-actions: remoteSsh.markDeployed can persist detected remote Node 
 
 test("settings-actions: remoteSsh.markDeployed survives concurrent edit (lost-update fix)", () => {
   // Caller captures pre-deploy snapshot at T=0 with label "Pi".
-  // T=10s: user edits label to "树莓派" via remoteSsh.update — settings-controller commits.
+  // T=10s: user edits label to a CJK value via remoteSsh.update — settings-controller commits.
   // T=30s: deploy IPC handler calls markDeployed with id only.
-  // markDeployed reads CURRENT profile (label="树莓派"), not the stale snapshot.
+  // markDeployed reads CURRENT profile (CJK label), not the stale snapshot.
   // Result: lastDeployedAt stamped, label edit survives.
   const cmd = commandRegistry["remoteSsh.markDeployed"];
   const editedProfile = basicProfile({ label: "树莓派" });  // post-edit state

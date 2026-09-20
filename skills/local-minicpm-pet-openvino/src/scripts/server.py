@@ -1,10 +1,10 @@
-"""OpenVINO 推理 HTTP 服务，替代 llama-server + sidecar gateway。
+"""OpenVINO inference HTTP service, replacing llama-server + sidecar gateway.
 
-监听 127.0.0.1:18765，提供与桌宠前端完全兼容的 API：
-- GET  /api/health          健康检查（桌宠前端 + 设置面板轮询）
-- POST /api/chat            桌宠对话接口（SSE 真流式，逐 token 输出）
-- POST /v1/chat/completions OpenAI 兼容接口（备用）
-- POST /api/shutdown        优雅关闭
+Listens on 127.0.0.1:18765 with APIs compatible with the desk-pet frontend:
+- GET  /api/health          health check (polled by frontend + settings panel)
+- POST /api/chat            pet chat API (SSE true streaming, token by token)
+- POST /v1/chat/completions OpenAI-compatible API (fallback)
+- POST /api/shutdown        graceful shutdown
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
-# ── 编码配置 ──────────────────────────────────────────────────────────────────
+# ── Encoding setup ──
 
 def _configure_stream_encoding(stream) -> None:
     reconfigure = getattr(stream, "reconfigure", None)
@@ -35,7 +35,7 @@ def _configure_stream_encoding(stream) -> None:
 _configure_stream_encoding(sys.stdout)
 _configure_stream_encoding(sys.stderr)
 
-# ── 常量 ──────────────────────────────────────────────────────────────────────
+# ── Constants ──
 
 SKILL_NAME = "local-minicpm-pet-openvino"
 SERVER_HOST = "127.0.0.1"
@@ -46,7 +46,7 @@ OPENVINO_ROOT = Path(os.environ.get("USERPROFILE", "~")) / ".openvino"
 MODELS_DIR = OPENVINO_ROOT / "models"
 LOG_DIR = OPENVINO_ROOT / "log"
 
-# ── 日志 ──────────────────────────────────────────────────────────────────────
+# ── Logging ──
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 _log_file = LOG_DIR / f"{SKILL_NAME}-server-{time.strftime('%Y%m%d-%H%M%S')}.log"
@@ -59,7 +59,7 @@ def log(msg: str):
         f.write(line + "\n")
 
 
-# ── 状态 ──────────────────────────────────────────────────────────────────────
+# ── State ──
 
 class ServerState:
     def __init__(self):
@@ -79,10 +79,10 @@ class ServerState:
 
 _state = ServerState()
 
-# ── 设备选择 ──────────────────────────────────────────────────────────────────
+# ── Device selection ──
 
 def _pick_device() -> str:
-    # 优先级: 环境变量 OPENVINO_DEVICE > 自动检测
+    # Priority: OPENVINO_DEVICE env var > auto-detect
     env_device = os.environ.get("OPENVINO_DEVICE", "").upper()
     if env_device in ("NPU", "GPU", "CPU"):
         log(f"Using device from OPENVINO_DEVICE env: {env_device}")
@@ -102,7 +102,7 @@ def _pick_device() -> str:
         return "CPU"
 
 
-# ── 模型管理 ──────────────────────────────────────────────────────────────────
+# ── Model management ──
 
 def _get_info() -> dict:
     info_candidates = [
@@ -186,16 +186,16 @@ def _ensure_models():
         log(f"Model init failed: {e}\n{traceback.format_exc()}")
 
 
-# ── 推理 ──────────────────────────────────────────────────────────────────────
+# ── Inference ──
 
 _SENTINEL = object()
 
 def _do_inference(messages: list, thinking: bool = False, max_tokens: int = 512) -> dict:
-    """非流式推理（用于 /v1/chat/completions）。"""
+    """Non-streaming inference (for /v1/chat/completions)."""
     import openvino_genai
 
     if not _state.pipe or not _state.tokenizer:
-        raise RuntimeError("模型未加载")
+        raise RuntimeError("model not loaded")
 
     tokenized_prompt = _state.tokenizer.apply_chat_template(
         messages,
@@ -234,17 +234,17 @@ def _do_inference(messages: list, thinking: bool = False, max_tokens: int = 512)
 
 
 def _do_inference_streaming(messages: list, thinking: bool = False, max_tokens: int = 512) -> queue.Queue:
-    """流式推理，返回 queue，逐 token 输出子词文本片段。
+    """Streaming inference, returns a queue emitting subword text chunks.
 
-    queue 中的元素：
-    - str: 一个 subword 文本片段
-    - _SENTINEL: 生成结束
-    - Exception: 生成出错
+    Queue items:
+    - str: one subword text chunk
+    - _SENTINEL: generation done
+    - Exception: generation error
     """
     import openvino_genai
 
     if not _state.pipe or not _state.tokenizer:
-        raise RuntimeError("模型未加载")
+        raise RuntimeError("model not loaded")
 
     token_queue: queue.Queue = queue.Queue()
 
@@ -281,14 +281,14 @@ def _do_inference_streaming(messages: list, thinking: bool = False, max_tokens: 
     return token_queue
 
 
-# ── FastAPI 应用 ──────────────────────────────────────────────────────────────
+# ── FastAPI app ──
 
 app = FastAPI(title="MiniCPM OpenVINO Server")
 
 
 @app.get("/api/health")
 def health():
-    """桌宠前端和设置面板轮询此端点判断服务状态。"""
+    """Polled by the frontend and settings panel to check service status."""
     resp = {
         "ok": _state.status == "ok",
         "status": _state.status,
@@ -309,7 +309,7 @@ def health():
     return resp
 
 
-# ── /api/chat — 桌宠前端主要调用入口（SSE 真流式）─────────────────────────────
+# ── /api/chat — main frontend entry (SSE true streaming) ──
 
 class ChatRequest(BaseModel):
     messages: list[dict]
@@ -326,28 +326,28 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat")
 async def api_chat(req: ChatRequest):
-    """桌宠前端对话接口，逐 token SSE 流式输出。
+    """Frontend chat API, token-by-token SSE streaming.
 
-    请求示例:
+    Request example:
         POST /api/chat
-        {"messages": [{"role": "user", "content": "你好"}],
+        {"messages": [{"role": "user", "content": "hello"}],
          "stream": true, "max_new_tokens": 768,
          "temperature": 0.6, "thinking": false}
 
-    响应示例 (SSE text/event-stream):
-        data: {"event":"delta","content":"你"}\n\n
-        data: {"event":"delta","content":"好"}\n\n
-        data: {"event":"delta","content":"！我是MiniCPM"}\n\n
+    Response example (SSE text/event-stream):
+        data: {"event":"delta","content":"Hel"}\n\n
+        data: {"event":"delta","content":"lo"}\n\n
+        data: {"event":"delta","content":"! I am MiniCPM"}\n\n
 
-    thinking=true 时先输出 think 事件再输出 delta:
-        data: {"event":"think","content":"让我想想..."}\n\n
-        data: {"event":"delta","content":"答案是..."}\n\n
+    With thinking=true, think events come before delta:
+        data: {"event":"think","content":"Let me think..."}\n\n
+        data: {"event":"delta","content":"The answer is..."}\n\n
 
-    错误时:
-        data: {"event":"error","message":"模型推理失败"}\n\n
+    On error:
+        data: {"event":"error","message":"model inference failed"}\n\n
     """
     if _state.status != "ok":
-        friendly_msg = "模型尚未就绪，请稍后重试" if _state.status in ("downloading", "loading", "starting") else "模型加载失败，请执行 --debug 排查"
+        friendly_msg = "Model not ready yet, please retry shortly" if _state.status in ("downloading", "loading", "starting") else "Model failed to load, run with --debug to diagnose"
         error_event = json.dumps({"event": "error", "message": friendly_msg})
         return StreamingResponse(
             iter([f"data: {error_event}\n\n"]),
@@ -364,7 +364,7 @@ async def api_chat(req: ChatRequest):
         token_queue = _do_inference_streaming(messages, thinking=thinking, max_tokens=max_tokens)
     except Exception as e:
         log(f"[INTERNAL] Inference startup error: {e}\n{traceback.format_exc()}")
-        error_event = json.dumps({"event": "error", "message": "模型推理启动失败，请检查设备是否支持"})
+        error_event = json.dumps({"event": "error", "message": "Failed to start model inference, check device support"})
         return StreamingResponse(
             iter([f"data: {error_event}\n\n"]),
             media_type="text/event-stream",
@@ -381,7 +381,7 @@ async def api_chat(req: ChatRequest):
                     None, token_queue.get, True, 120.0
                 )
             except Exception:
-                yield f"data: {json.dumps({'event': 'error', 'message': '推理超时，请重试或尝试减小 max_new_tokens'})}\n\n"
+                yield f"data: {json.dumps({'event': 'error', 'message': 'Inference timed out, retry or try a smaller max_new_tokens'})}\n\n"
                 return
 
             if item is _SENTINEL:
@@ -393,7 +393,7 @@ async def api_chat(req: ChatRequest):
 
             if isinstance(item, Exception):
                 log(f"[INTERNAL] Streaming error: {item}\n{traceback.format_exc()}")
-                yield f"data: {json.dumps({'event': 'error', 'message': '模型推理过程中出错，请重试'})}\n\n"
+                yield f"data: {json.dumps({'event': 'error', 'message': 'Error during model inference, please retry'})}\n\n"
                 return
 
             # item is a subword string from the streamer
@@ -438,7 +438,7 @@ async def api_chat(req: ChatRequest):
     return StreamingResponse(generate_sse(), media_type="text/event-stream")
 
 
-# ── /v1/chat/completions — OpenAI 兼容接口（备用）────────────────────────────
+# ── /v1/chat/completions — OpenAI-compatible API (fallback) ──
 
 class ChatMessage(BaseModel):
     role: str
@@ -489,15 +489,15 @@ def chat_completions(req: ChatCompletionRequest):
     }
 
 
-# ── /api/adapters — 桌宠前端查询适配器列表（返回空）─────────────────────────
+# ── /api/adapters — frontend adapter list (returns empty) ──
 
 @app.get("/api/adapters")
 def list_adapters():
-    """OpenVINO 后端不支持 LoRA 适配器，返回空列表。"""
+    """OpenVINO backend has no LoRA adapter support, returns an empty list."""
     return {"items": [], "current": None}
 
 
-# ── /api/update-check — 桌宠前端检查更新（返回无更新）─────────────────────────
+# ── /api/update-check — frontend update check (returns no update) ──
 
 @app.get("/api/update-check")
 def update_check():
@@ -511,7 +511,7 @@ def shutdown():
     return {"ok": True, "message": "Shutting down in 1s"}
 
 
-# ── 入口 ─────────────────────────────────────────────────────────────────────
+# ── Entry point ──
 
 def main():
     log(f"Starting HTTP server on {SERVER_HOST}:{SERVER_PORT}")

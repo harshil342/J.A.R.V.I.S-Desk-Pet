@@ -446,6 +446,10 @@ def test_new_router_triggers_match():
     assert tools._RE_MEDIA.search("next song")
     assert tools._RE_SHOT.search("take a screenshot")
     assert tools._RE_LOCK.search("lock my screen")
+    assert tools._RE_LOCK.search("lock my system")
+    assert tools._RE_LOCK.search("lock the system")
+    assert tools._RE_LOCK.search("lock system")
+    assert tools._RE_LOCK.search("lock down")
     assert tools._RE_REMEMBER.search("remember that the wifi is slow")
     assert tools._RE_RECALL.search("what do you remember about wifi")
     m = tools._RE_URL.search("open github.com")
@@ -821,3 +825,435 @@ def test_open_document_routing_and_reply(tmp_path, monkeypatch):
         assert hits, f"Folder phrase '{folder_phrase}' did not route"
         assert hits[0][0] == "open_document"
         assert "folder" in hits[0][1].lower()
+
+
+def test_lock_sys_variation():
+    hits = tools.route_tools("lock my sys")
+    assert hits and hits[0][0] == "lock"
+    hits2 = tools.route_tools("lock my system")
+    assert hits2 and hits2[0][0] == "lock"
+
+
+def test_media_control_variations():
+    hits = tools.route_tools("turn the down")
+    assert hits and hits[0][0] == "media_control"
+    assert "volume_down" in hits[0][1]
+
+    hits_up = tools.route_tools("turn the volume up")
+    assert hits_up and hits_up[0][0] == "media_control"
+    assert "volume_up" in hits_up[0][1]
+
+    hits_mute = tools.route_tools("mute")
+    assert hits_mute and hits_mute[0][0] == "media_control"
+    assert "mute" in hits_mute[0][1]
+
+
+def test_arithmetic_parentheses():
+    hits = tools.route_tools("what is (145 * 12) / 4?")
+    assert hits and hits[0][0] == "calculate"
+    assert "435" in hits[0][1]
+
+
+def test_todo_clear_space_variations():
+    for phrase in ["clear the todo list", "clear to do list", "clear the to-do list", "wipe my to do list"]:
+        hits = tools.route_tools(phrase)
+        assert hits and hits[0][0] == "todo_clear", f"Phrase '{phrase}' did not route to todo_clear"
+
+
+def test_system_status_and_canned_replies():
+    status = tools.system_status()
+    assert "System status:" in status
+    assert "RAM" in status
+    assert "uptime" in status
+
+    assert tools.canned_reply("launch_app", "Launched Google Chrome.") == "Launched Google Chrome, sir."
+    assert tools.canned_reply("system_status", status) == status
+    assert tools.canned_reply("todo_list", "You have 1 open item(s):") == "You have 1 open item(s):"
+    assert tools.canned_reply("create_document", "Drafted a meeting notes document.") == "Drafted a meeting notes document."
+
+
+def test_volume_percentage_setting_and_canned_reply(monkeypatch):
+    monkeypatch.setattr(tools, "set_volume_percent", lambda lvl: f"volume set to {lvl}%")
+    for text, expected in [("Turn the volume to 100", 100), ("set the volume to 75", 75), ("volume 50%", 50)]:
+        hits = tools.route_tools(text)
+        assert hits and hits[0][0] == "set_volume", f"Failed for {text}"
+        assert str(expected) in hits[0][1]
+        assert tools.canned_reply(hits[0][0], hits[0][1]) == f"Setting the volume to {expected}%, sir."
+
+
+def test_folder_open_variations(monkeypatch, tmp_path):
+    opened = []
+    monkeypatch.setattr("subprocess.Popen", lambda cmd, *args, **kwargs: opened.append(cmd))
+    hits = tools.route_tools("open downloads folder")
+    assert hits and hits[0][0] == "open_document"
+    assert "downloads" in hits[0][1].lower()
+
+
+def test_todo_anaphoric_continuation():
+    tools.todo_clear()
+    add_hit = tools.route_tools("add taking a nap to todo list")
+    assert add_hit and add_hit[0][0] == "todo_add"
+    assert "taking a nap" in add_hit[0][1]
+
+    remove_hit = tools.route_tools("remove it from the to do list")
+    assert remove_hit and remove_hit[0][0] == "todo_remove"
+    assert "taking a nap" in remove_hit[0][1]
+
+
+def test_lock_sys_variations():
+    assert tools.route_tools("lock my sys")[0][0] == "lock"
+    assert tools.route_tools("lock my system")[0][0] == "lock"
+
+
+def test_meeting_notes_clarify_for_encyclopedic_topic(monkeypatch, tmp_path):
+    monkeypatch.setenv("DESKPET_DOCS_DIR", str(tmp_path))
+    monkeypatch.setattr(
+        tools, "wikipedia_summary",
+        lambda term: "From Wikipedia on 'Great Wall of China': The Great Wall is a series of fortifications."
+    )
+    tools._PENDING_CONFIRM = None
+    tools._REMIND_PENDING = False
+    tools._WEATHER_PENDING = False
+    hits = tools.route_tools("can you create meeting notes on the great wall of china")
+    assert hits and hits[0][0] == "clarify"
+    assert "I have no record of a meeting regarding 'Great Wall of China'" in hits[0][1]
+    assert "draft a concise document" in hits[0][1]
+
+    # Confirming proceeds to draft the concise document
+    affirm_hits = tools.route_tools("yes")
+    assert affirm_hits and affirm_hits[0][0] == "create_document"
+    assert "great wall of china" in affirm_hits[0][1].lower()
+
+
+def test_active_window_routing_and_canned_replies(monkeypatch):
+    from gateway import screen_context
+    monkeypatch.setattr(screen_context, "get_active_window", lambda: "Application: Google Chrome, Window Title: 'YouTube - MiniCPM5-2B'.")
+
+    queries = [
+        "which app am i using right now",
+        "what app am i using right now",
+        "which app am i using",
+        "what window am i in",
+        "what is the active window",
+        "what is my active window",
+        "which application am i using right now",
+        "active window",
+        "current app",
+    ]
+    for q in queries:
+        hits = tools.route_tools(q)
+        assert hits and hits[0][0] == "active_window", f"Query '{q}' did not route to active_window"
+        reply = tools.canned_reply(hits[0][0], hits[0][1])
+        assert "Google Chrome" in reply
+        assert "YouTube - MiniCPM5-2B" in reply
+
+    # Test single app name without title
+    reply_single = tools.canned_reply("active_window", "Application: Desktop.")
+    assert reply_single == "You are currently using Desktop, sir."
+
+
+def test_clock_and_timezones():
+    # Local time when no location
+    local_t = tools.get_time()
+    assert "local time" in local_t
+
+    # Major world cities and timezones
+    tokyo_t = tools.get_time("Tokyo")
+    assert "in Tokyo (JST)" in tokyo_t
+    assert tools.canned_reply("get_time", tokyo_t).endswith(", sir.")
+
+    ny_t = tools.get_time("New York")
+    assert "in New York (EDT)" in ny_t
+
+    london_t = tools.get_time("London")
+    assert "in London (BST/GMT)" in london_t
+
+    ist_t = tools.get_time("IST")
+    assert "in India (IST)" in ist_t
+
+    # Routing
+    queries = [
+        ("what time is it in Tokyo", "Tokyo"),
+        ("time in New York", "New York"),
+        ("current time in London", "London"),
+        ("what time is it right now", "local time"),
+    ]
+    for q, expected in queries:
+        hits = tools.route_tools(q)
+        assert hits and hits[0][0] == "get_time", f"Query '{q}' did not route to get_time"
+        assert expected in hits[0][1], f"Expected '{expected}' in '{hits[0][1]}' for query '{q}'"
+
+
+def test_fetch_url_vs_open_url(monkeypatch):
+    monkeypatch.setattr(tools, "open_url", lambda u: f"opened: {u}")
+    monkeypatch.setattr(tools, "fetch_page", lambda u: f"Webpage content ({u}): Sample text")
+
+    # Explicit open commands route to open_url
+    for q in ["open https://google.com", "go to https://youtube.com", "browse to https://github.com"]:
+        hits = tools.route_tools(q)
+        assert hits and hits[0][0] == "open_url", f"Query '{q}' did not route to open_url"
+
+    # Summarize / read / what does it say commands route to fetch_page
+    for q in ["summarize https://example.com", "what does https://example.com say", "fetch https://example.com"]:
+        hits = tools.route_tools(q)
+        assert hits and hits[0][0] == "fetch_page", f"Query '{q}' did not route to fetch_page"
+
+
+def test_sensitive_credential_security_refusal(tmp_path, monkeypatch):
+    notes_file = tmp_path / "notes.md"
+    monkeypatch.setattr(tools, "_notes_file", lambda: notes_file)
+
+    secret_queries = [
+        "remember my password is MySuperSecret123!",
+        "my password is secretpassword",
+        "my pin is 9988",
+        "my passcode is 1234",
+        "remember my api key is sk-abcdef123456",
+    ]
+
+    for q in secret_queries:
+        hits = tools.route_tools(q)
+        assert hits and hits[0][0] == "security_refusal", f"Query '{q}' did not trigger security_refusal"
+        reply = tools.canned_reply(hits[0][0], hits[0][1])
+        assert "passwords, PINs, or API keys" in reply
+        # Verify nothing was written to disk
+        assert not notes_file.exists() or "MySuperSecret" not in notes_file.read_text(encoding="utf-8")
+
+
+def test_list_reminders_tool():
+    # Empty reminders
+    res_empty = tools.list_reminders()
+    assert "no active reminders" in res_empty.lower()
+    hits = tools.route_tools("what reminders do I have?")
+    assert hits and hits[0][0] == "list_reminders"
+
+
+def test_clipboard_write_tool(monkeypatch):
+    monkeypatch.setattr(tools, "clipboard_write", lambda text: f"Copied '{text}' to your clipboard, sir.")
+    hits = tools.route_tools("copy Hello World to clipboard")
+    assert hits and hits[0][0] == "clipboard_write"
+    reply = tools.canned_reply(hits[0][0], hits[0][1])
+    assert "Copied 'Hello World'" in reply
+
+
+def test_find_file_tool(tmp_path, monkeypatch):
+    # Mock find_file
+    monkeypatch.setattr(tools, "find_file", lambda q: f"Found 1 matching file(s), sir:\n• {q}.pdf")
+    hits = tools.route_tools("find file resume.pdf")
+    assert hits and hits[0][0] == "find_file"
+    hits2 = tools.route_tools("where is report.docx")
+    assert hits2 and hits2[0][0] == "find_file"
+
+
+def test_git_status_tool(monkeypatch):
+    monkeypatch.setattr(tools, "git_status", lambda: "On branch 'main', sir. 2 uncommitted change(s).")
+    hits = tools.route_tools("git status")
+    assert hits and hits[0][0] == "git_status"
+    hits2 = tools.route_tools("what git branch am i on")
+    assert hits2 and hits2[0][0] == "git_status"
+
+
+def test_wifi_info_tool(monkeypatch):
+    monkeypatch.setattr(tools, "wifi_info", lambda: "Connected to HomeWifi. Local IP: 192.168.1.5, sir.")
+    hits = tools.route_tools("what wifi am i on")
+    assert hits and hits[0][0] == "wifi_info"
+    hits2 = tools.route_tools("what is my local ip")
+    assert hits2 and hits2[0][0] == "wifi_info"
+
+
+def test_date_math_tool():
+    res_xmas = tools.date_math("how many days until christmas?")
+    assert res_xmas and "day(s) until Christmas" in res_xmas
+
+    res_future = tools.date_math("what date is in 30 days?")
+    assert res_future and "the date will be" in res_future
+
+    hits = tools.route_tools("how many days until new year?")
+    assert hits and hits[0][0] == "date_math"
+
+
+def test_site_search_and_open_routing(monkeypatch):
+    monkeypatch.setattr(tools, "open_url", lambda url: f"opened: {url}")
+    hits = tools.route_tools("open youtube and search for ryan trahan")
+    assert hits and hits[0][0] == "site_search"
+    assert "youtube.com/results?search_query=ryan+trahan" in hits[0][1]
+
+    hits_open = tools.route_tools("open youtube")
+    assert hits_open and hits_open[0][0] == "open_site"
+    assert "youtube.com" in hits_open[0][1]
+
+
+def test_clipboard_into_and_read_routing(monkeypatch):
+    monkeypatch.setattr(tools, "clipboard_write", lambda text: f"Copied '{text}' to your clipboard, sir.")
+    hits = tools.route_tools("copy Hello Deskpet into my clipboard")
+    assert hits and hits[0][0] == "clipboard_write"
+    assert "Hello Deskpet" in hits[0][1]
+
+    monkeypatch.setattr(tools, "_read_clipboard", lambda: "Hello Deskpet")
+    hits_read = tools.route_tools("what is on my clipboard?")
+    assert hits_read and hits_read[0][0] == "clipboard_assist"
+    reply = tools.canned_reply(hits_read[0][0], hits_read[0][1])
+    assert "Hello Deskpet" in reply
+
+
+def test_list_my_reminders_exact_phrase(monkeypatch):
+    hits = tools.route_tools("list my reminders")
+    assert hits and hits[0][0] == "list_reminders"
+
+
+def test_find_file_notes_exact_phrase(monkeypatch):
+    monkeypatch.setattr(tools, "find_file", lambda q: f"Found 1 matching file(s), sir:\n- {q}.md - C:\\notes.md")
+    hits = tools.route_tools("find file notes")
+    assert hits and hits[0][0] == "find_file"
+    assert "notes" in hits[0][1]
+
+
+def test_which_app_am_i_using_routing():
+    hits = tools.route_tools("which app am i using right now")
+    assert hits and hits[0][0] == "active_window"
+    # Test browser web page formatting
+    res_web = "Application: Google Chrome, Web Page: 'FastAPI Documentation', Window Title: 'FastAPI Documentation - Google Chrome'."
+    reply = tools.canned_reply("active_window", res_web)
+    assert reply == "You are currently viewing 'FastAPI Documentation' in Google Chrome, sir."
+
+
+def test_universal_site_search_routing(monkeypatch):
+    import webbrowser as wb
+    opened = []
+    monkeypatch.setattr(wb, "open", lambda u: opened.append(u) or True)
+
+    # Spotify
+    hits = tools.route_tools("open spotify and search for the weeknd")
+    assert hits and hits[0][0] == "site_search"
+    assert "open.spotify.com/search/the+weeknd" in opened[-1]
+
+    hits = tools.route_tools("search spotify for linkin park")
+    assert hits and hits[0][0] == "site_search"
+    assert "open.spotify.com/search/linkin+park" in opened[-1]
+
+    hits = tools.route_tools("search daft punk on spotify")
+    assert hits and hits[0][0] == "site_search"
+    assert "open.spotify.com/search/daft+punk" in opened[-1]
+
+    # YouTube Music & play syntax
+    hits = tools.route_tools("play bohemian rhapsody on yt music")
+    assert hits and hits[0][0] == "site_search"
+    assert "music.youtube.com/search?q=bohemian+rhapsody" in opened[-1]
+
+    hits = tools.route_tools("play starboy on spotify")
+    assert hits and hits[0][0] == "site_search"
+    assert "open.spotify.com/search/starboy" in opened[-1]
+
+    hits = tools.route_tools("search yt music for ed sheeran")
+    assert hits and hits[0][0] == "site_search"
+    assert "music.youtube.com/search?q=ed+sheeran" in opened[-1]
+
+    # Reddit
+    hits = tools.route_tools("search reddit for mechanical keyboards")
+    assert hits and hits[0][0] == "site_search"
+    assert "reddit.com/search/?q=mechanical+keyboards" in opened[-1]
+
+    # Facebook
+    hits = tools.route_tools("search facebook for photography")
+    assert hits and hits[0][0] == "site_search"
+    assert "facebook.com/search/top/?q=photography" in opened[-1]
+
+    # X / Twitter
+    hits = tools.route_tools("search x for artificial intelligence")
+    assert hits and hits[0][0] == "site_search"
+    assert "x.com/search?q=artificial+intelligence" in opened[-1]
+
+    hits = tools.route_tools("search twitter for open source")
+    assert hits and hits[0][0] == "site_search"
+    assert "twitter.com/search?q=open+source" in opened[-1]
+
+    # Direct site opens
+    for site, host in [
+        ("open spotify", "open.spotify.com"),
+        ("open yt music", "music.youtube.com"),
+        ("open reddit", "reddit.com"),
+        ("open facebook", "facebook.com"),
+        ("open x", "x.com"),
+        ("open twitter", "twitter.com"),
+        ("open claude", "claude.ai"),
+        ("open chatgpt", "chatgpt.com"),
+        ("open gemini", "gemini.google.com"),
+        ("open deepseek", "chat.deepseek.com"),
+        ("open qwen", "chat.qwen.ai"),
+        ("open perplexity", "perplexity.ai"),
+    ]:
+        hits = tools.route_tools(site)
+        assert hits and hits[0][0] == "open_site", f"Failed for {site}"
+        assert host in opened[-1], f"Expected {host} in {opened[-1]}"
+
+
+def test_rebuild_ai_prompt_rules():
+    assert tools.rebuild_ai_prompt("why is the sky blue") == "Why is the sky blue?"
+    assert tools.rebuild_ai_prompt("to write a python quicksort script") == "Write a python quicksort script."
+    assert tools.rebuild_ai_prompt("can you explain quantum computing") == "Explain quantum computing."
+    assert tools.rebuild_ai_prompt("how transformer attention works") == "How transformer attention works?"
+    assert tools.rebuild_ai_prompt("what is the capital of France") == "What is the capital of France?"
+    assert tools.rebuild_ai_prompt("it to review this pull request") == "Review this pull request."
+
+
+def test_ai_webchat_routing_and_automation(monkeypatch):
+    import webbrowser as wb
+    opened = []
+    monkeypatch.setattr(wb, "open", lambda u: opened.append(u) or True)
+    monkeypatch.setattr(tools, "clipboard_write", lambda t: None)
+    monkeypatch.setattr(tools, "_send_webchat_input", lambda needs_paste, delay: None)
+
+    # Gemini
+    hits = tools.route_tools("ask gemini why is the sky blue")
+    assert hits and hits[0][0] == "ai_webchat"
+    assert "gemini.google.com/app" in opened[-1]
+    reply = tools.canned_reply(hits[0][0], hits[0][1])
+    assert "Gemini" in reply
+    assert "Why is the sky blue?" in reply
+
+    # Claude
+    hits = tools.route_tools("ask claude to write a python quicksort script")
+    assert hits and hits[0][0] == "ai_webchat"
+    assert "claude.ai/new?q=" in opened[-1]
+    reply = tools.canned_reply(hits[0][0], hits[0][1])
+    assert "Claude" in reply
+    assert "quicksort" in reply
+
+    # ChatGPT
+    hits = tools.route_tools("ask chatgpt how to optimize react re-renders")
+    assert hits and hits[0][0] == "ai_webchat"
+    assert "chatgpt.com/?q=" in opened[-1]
+    reply = tools.canned_reply(hits[0][0], hits[0][1])
+    assert "ChatGPT" in reply
+
+    # DeepSeek
+    hits = tools.route_tools("ask deepseek how transformer attention works")
+    assert hits and hits[0][0] == "ai_webchat"
+    assert "chat.deepseek.com" in opened[-1]
+    reply = tools.canned_reply(hits[0][0], hits[0][1])
+    assert "DeepSeek" in reply
+
+    # Qwen
+    hits = tools.route_tools("ask qwen what is the capital of France")
+    assert hits and hits[0][0] == "ai_webchat"
+    assert "chat.qwen.ai" in opened[-1]
+    reply = tools.canned_reply(hits[0][0], hits[0][1])
+    assert "Qwen" in reply
+
+    # Perplexity
+    hits = tools.route_tools("ask perplexity what is happening with SpaceX today")
+    assert hits and hits[0][0] == "ai_webchat"
+    assert "perplexity.ai/search?q=" in opened[-1]
+    reply = tools.canned_reply(hits[0][0], hits[0][1])
+    assert "Perplexity" in reply
+
+    # Open ... and ask ...
+    hits = tools.route_tools("open claude and ask how to reverse a linked list")
+    assert hits and hits[0][0] == "ai_webchat"
+    assert "claude.ai/new?q=" in opened[-1]
+
+
+
+
+
+

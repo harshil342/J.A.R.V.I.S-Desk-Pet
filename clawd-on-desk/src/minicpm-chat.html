@@ -7,29 +7,26 @@
 <title>Deskpet</title>
 <style>
   :root {
-    /* --bubble-alpha is driven from the bubbleOpacity pref (renderer sets it
-       on :root); --bg-rgb stays per-scheme so both schemes share one alpha. */
-    --bg-rgb: 13, 15, 20;  /* obsidian dark glass */
-    --bg: rgba(var(--bg-rgb), var(--bubble-alpha, 0.94));
+    /* --bubble-alpha is driven from the bubbleOpacity pref; solid dark glass default */
+    --bg: #0F1218;
     --text: #F1F3F5;
     --muted: #94A3B8;
     --accent: #8A939B;
     --accent-rgb: 138, 147, 155;
-    --border: rgba(255, 255, 255, 0.09);
-    --inner-edge: rgba(255, 255, 255, 0.12);
+    --border: rgba(255, 255, 255, 0.12);
+    --inner-edge: rgba(255, 255, 255, 0.15);
     --card-bg: rgba(0, 0, 0, 0.35);
-    --input-bg: rgba(255, 255, 255, 0.05);
+    --input-bg: rgba(255, 255, 255, 0.06);
   }
   @media (prefers-color-scheme: light) {
     :root {
-      --bg-rgb: 248, 250, 252;
-      --bg: rgba(var(--bg-rgb), var(--bubble-alpha, 0.96));
+      --bg: #FFFFFF;
       --text: #0F172A;
       --muted: #64748B;
       --accent: #475569;
       --accent-rgb: 71, 85, 105;
-      --border: rgba(0, 0, 0, 0.09);
-      --inner-edge: rgba(255, 255, 255, 0.85);
+      --border: rgba(0, 0, 0, 0.12);
+      --inner-edge: rgba(255, 255, 255, 0.90);
       --card-bg: rgba(0, 0, 0, 0.03);
       --input-bg: rgba(0, 0, 0, 0.04);
     }
@@ -43,11 +40,9 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Shell hugs the window edges; small inset only on sides where the tail
-     pokes out. The bubble fills the rest exactly so there is no visible
-     halo / shadow plate behind it. */
+  /* Shell hugs window edges with small inset so shadow never clips */
   .shell {
-    position: fixed; inset: 7px;
+    position: fixed; inset: 5px;
     display: grid; place-items: center;
   }
 
@@ -55,16 +50,12 @@
     position: relative;
     width: 100%; max-width: 100%;
     background: var(--bg);
-    backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(180%);
-    -webkit-backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(180%);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 8px 12px;
-    /* Hairline specular highlight + ultra-subtle tinted rim + deep elevation shadow */
+    /* Clean specular rim + crisp subtle elevation shadow (fits within inset) */
     box-shadow: inset 0 1px 0 var(--inner-edge),
-                0 0 0 1px rgba(var(--accent-rgb), 0.14),
-                0 4px 12px rgba(0, 0, 0, 0.35),
-                0 16px 36px -4px rgba(0, 0, 0, 0.65);
+                0 2px 8px rgba(0, 0, 0, 0.45);
     opacity: 0; transform: translateY(2px) scale(0.99);
     transition: opacity 160ms ease, transform 160ms ease;
     pointer-events: none;
@@ -73,8 +64,7 @@
   .bubble.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
   .bubble.fading { opacity: 0; transform: translateY(2px) scale(0.99); }
 
-  /* Bubble tail (small triangle pointing toward the pet). Position adjusts
-     based on which side of the pet we're rendered. */
+  /* Bubble tail (small triangle pointing toward the pet). */
   .tail {
     position: absolute;
     width: 10px; height: 10px;
@@ -82,8 +72,6 @@
     border: 1px solid var(--border);
     transform: rotate(45deg);
     border-radius: 2px;
-    backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(180%);
-    -webkit-backdrop-filter: blur(var(--bubble-blur, 28px)) saturate(180%);
     z-index: 1;
   }
   .bubble[data-side="right"] .tail { left: -5px; top: 50%; margin-top: -5px;
@@ -530,13 +518,114 @@
   .drawer-add:active {
     transform: scale(0.96);
   }
+
+  /* ── Header action bar (expand, update) ───────────────────────────── */
+  .bubble-header-actions {
+    position: absolute;
+    top: 6px; right: 8px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    -webkit-app-region: no-drag;
+  }
+  .action-btn {
+    all: unset;
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    border-radius: 6px;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    transition: background 140ms ease, color 140ms ease, transform 100ms ease;
+  }
+  .action-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: var(--text);
+  }
+  .action-btn:active {
+    transform: scale(0.94);
+  }
+  @media (prefers-color-scheme: light) {
+    .action-btn { background: rgba(0, 0, 0, 0.04); }
+    .action-btn:hover { background: rgba(0, 0, 0, 0.08); }
+  }
+
+  /* ── Expand Modes (Large Reader & Fullscreen) ─────────────────────── */
+  body[data-expand-mode="large"] .shell {
+    inset: 10px;
+  }
+  body[data-expand-mode="large"] .bubble {
+    border-radius: 16px;
+    padding: 14px 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  body[data-expand-mode="large"] .tail,
+  body[data-expand-mode="fullscreen"] .tail {
+    display: none !important;
+  }
+  body[data-expand-mode="large"] #content,
+  body[data-expand-mode="fullscreen"] #content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+  body[data-expand-mode="large"] .chat-pane,
+  body[data-expand-mode="fullscreen"] .chat-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  body[data-expand-mode="large"] .last-reply-region,
+  body[data-expand-mode="large"] .speak {
+    max-height: calc(100vh - 170px);
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  body[data-expand-mode="fullscreen"] .shell {
+    inset: 14px;
+  }
+  body[data-expand-mode="fullscreen"] .bubble {
+    border-radius: 18px;
+    padding: 18px 24px;
+    height: 100%;
+    max-width: 1050px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  body[data-expand-mode="fullscreen"] .last-reply-region,
+  body[data-expand-mode="fullscreen"] .speak {
+    max-height: calc(100vh - 190px);
+    font-size: 15px;
+    line-height: 1.7;
+  }
 </style>
 </head>
 <body>
 <div class="shell">
   <div class="bubble" id="bubble" data-side="right">
     <div class="tail"></div>
-    <div class="upd-pill" id="updPill"></div>
+    <div class="bubble-header-actions" id="headerActions">
+      <div class="upd-pill" id="updPill"></div>
+      <button id="expandBtn" class="action-btn" title="Expand to reader window" aria-label="Expand">
+        <svg id="expandIcon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <polyline points="9 21 3 21 3 15"></polyline>
+          <line x1="21" y1="3" x2="14" y2="10"></line>
+          <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
+      </button>
+    </div>
     <div id="content"></div>
   </div>
 </div>

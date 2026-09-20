@@ -29,11 +29,14 @@ class ActiveWindowInfo:
     app_name: str
     pid: int = 0
     filename: Optional[str] = None
+    web_page: Optional[str] = None
 
     def formatted(self) -> str:
         parts = []
         if self.app_name and self.app_name != "unknown":
             parts.append(f"Application: {self.app_name}")
+        if self.web_page:
+            parts.append(f"Web Page: '{self.web_page}'")
         if self.title:
             parts.append(f"Window Title: '{self.title}'")
         if self.filename:
@@ -48,6 +51,7 @@ class ActiveWindowInfo:
             "app_name": self.app_name,
             "pid": self.pid,
             "filename": self.filename,
+            "web_page": self.web_page,
             "summary": self.formatted(),
         }
 
@@ -73,6 +77,27 @@ def _extract_filename_from_title(title: str, app_name: str) -> Optional[str]:
             return cand
 
     return None
+
+
+def _extract_browser_tab(title: str, app_name: str) -> Optional[str]:
+    """Extract clean web page / tab title from browser window titles."""
+    if not title:
+        return None
+    app_lower = (app_name or "").lower()
+    is_browser = any(b in app_lower for b in ("chrome", "edge", "firefox", "brave", "opera", "arc", "vivaldi", "safari"))
+    if not is_browser:
+        return None
+
+    # Strip browser name suffixes e.g. " - Google Chrome", " — Mozilla Firefox", " - Personal - Microsoft Edge"
+    clean = re.sub(
+        r"\s*[-—]\s*(?:Google\s+Chrome|Microsoft\s+Edge|Mozilla\s+Firefox|Brave|Opera|Arc|Vivaldi|Safari).*$",
+        "",
+        title,
+        flags=re.IGNORECASE,
+    )
+    # Strip profile suffixes e.g. " - Work", " - Personal"
+    clean = re.sub(r"\s*[-—]\s*(?:Work|Personal|Profile\s*\d*)$", "", clean, flags=re.IGNORECASE).strip()
+    return clean if clean and clean.lower() != app_lower else None
 
 
 def get_active_window() -> str:
@@ -102,12 +127,39 @@ def _get_active_window_windows() -> ActiveWindowInfo:
             # Fallback to finding top active GUI process if foreground is 0
             return _find_top_active_gui_process_windows()
 
+        # If DeskPet itself is foreground (user is chatting in the bubble),
+        # walk down the Z-order to find the underlying application in use.
+        curr_hwnd = hwnd
+        ignore_procs = {"deskpet.exe", "electron.exe", "minicpm-sidecar.exe"}
+        ignore_titles = {"deskpet", "deskpet assistant", "program manager"}
+        target_hwnd = hwnd
+
+        while curr_hwnd:
+            pid = ctypes.c_ulong()
+            user32.GetWindowThreadProcessId(curr_hwnd, ctypes.byref(pid))
+            pname = "unknown"
+            if pid.value > 0:
+                try:
+                    pname = psutil.Process(pid.value).name().lower()
+                except Exception:
+                    pass
+            buf = ctypes.create_unicode_buffer(512)
+            user32.GetWindowTextW(curr_hwnd, buf, 512)
+            wtitle = buf.value.strip()
+
+            if pname in ignore_procs or wtitle.lower() in ignore_titles or not wtitle:
+                curr_hwnd = user32.GetWindow(curr_hwnd, 2)  # GW_HWNDNEXT
+                continue
+
+            target_hwnd = curr_hwnd
+            break
+
         buf = ctypes.create_unicode_buffer(512)
-        user32.GetWindowTextW(hwnd, buf, 512)
+        user32.GetWindowTextW(target_hwnd, buf, 512)
         title = buf.value.strip()
 
         pid = ctypes.c_ulong()
-        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        user32.GetWindowThreadProcessId(target_hwnd, ctypes.byref(pid))
         process_pid = pid.value
 
         app_name = "unknown"
@@ -137,12 +189,14 @@ def _get_active_window_windows() -> ActiveWindowInfo:
         }
         display_app = pretty_names.get(app_name.lower(), app_name)
         filename = _extract_filename_from_title(title, display_app)
+        web_page = _extract_browser_tab(title, display_app)
 
         return ActiveWindowInfo(
             title=title,
             app_name=display_app,
             pid=process_pid,
             filename=filename,
+            web_page=web_page,
         )
     except Exception as exc:
         log.warning("Failed to query active window on Windows: %s", exc)

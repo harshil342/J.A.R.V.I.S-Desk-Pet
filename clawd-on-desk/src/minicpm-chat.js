@@ -890,7 +890,7 @@ module.exports = function initMinicpmChat(ctx) {
   // ── Model path resolution ─────────────────────────────────────────────
   // Production: <userData>/models/<model>.gguf (downloaded by Onboarding).
   // Dev: <repo>/models/<model>.gguf (developer convenience).
-  // Users can override via Settings → MiniCPM → 本地模型路径 (writes
+  // Users can override via Settings → MiniCPM → Local model path (writes
   // minicpm-prefs.json model_dir field), or MINICPM_MODEL_DIR env at launch.
   //
   // Legacy v0.7.x onboarding wrote a HuggingFace directory path here. We
@@ -967,7 +967,7 @@ module.exports = function initMinicpmChat(ctx) {
     return null;
   }
 
-  // ── Process tree RSS (Settings → 资源占用) ───────────────────────────
+  // ── Process tree RSS (Settings → Resource usage) ───────────────────────────
   async function listAllProcesses() {
     if (isWin) {
       const ps =
@@ -1120,8 +1120,32 @@ module.exports = function initMinicpmChat(ctx) {
     return screen.getPrimaryDisplay().workArea;
   }
 
+  let bubbleExpandMode = "compact";
+
+  function applyExpandBounds() {
+    if (!bubble || bubble.isDestroyed()) return;
+    const pb = getPetBoundsSafe();
+    const wa = pb ? getWorkAreaForPet(pb) : screen.getPrimaryDisplay().workArea;
+    if (bubbleExpandMode === "large") {
+      const w = Math.min(840, Math.round(wa.width * 0.8));
+      const h = Math.min(640, Math.round(wa.height * 0.85));
+      const x = Math.round(wa.x + (wa.width - w) / 2);
+      const y = Math.round(wa.y + (wa.height - h) / 2);
+      bubble.setBounds({ x, y, width: w, height: h });
+    } else if (bubbleExpandMode === "fullscreen") {
+      bubble.setBounds({ x: wa.x, y: wa.y, width: wa.width, height: wa.height });
+    } else {
+      const { width, height } = bubble.getBounds();
+      chooseAndApplyBounds(width, height);
+    }
+  }
+
   function chooseAndApplyBounds(width, height, { keepSide = false } = {}) {
     if (!bubble || bubble.isDestroyed()) return;
+    if (bubbleExpandMode !== "compact") {
+      applyExpandBounds();
+      return;
+    }
     const pb = getPetBoundsSafe();
     const wa = pb ? getWorkAreaForPet(pb) : screen.getPrimaryDisplay().workArea;
     if (pb) {
@@ -1148,6 +1172,10 @@ module.exports = function initMinicpmChat(ctx) {
 
   function reposition() {
     if (!bubble || bubble.isDestroyed() || !bubble.isVisible()) return;
+    if (bubbleExpandMode !== "compact") {
+      applyExpandBounds();
+      return;
+    }
     const { width, height } = bubble.getBounds();
     // During pet drag we keep recomputing on every move tick; let the
     // bubble re-pick side as the pet crosses regions so it never overlaps.
@@ -1344,7 +1372,7 @@ module.exports = function initMinicpmChat(ctx) {
   // (e.g., Cursor's claude-code companion). Whichever has the richer
   // context wins. Without this, the claude-code event arrives ~ms
   // earlier and gets dispatched with empty title/summary, giving us
-  // generic "主人刚写完一轮代码" prompts.
+  // generic "owner just finished a coding round" prompts.
   const EVENT_MERGE_MS = 700;
   const eventBuffers = new Map();  // sessionId → { data, score, timer }
 
@@ -1828,7 +1856,16 @@ module.exports = function initMinicpmChat(ctx) {
       return minicpmI18n.getMinicpmI18nPayload(lang);
     },
     "minicpm:get-assistant-prefs": async () => getAssistantPrefsSnapshot(),
-    "minicpm:resize": (_evt, { width, height } = {}) => {
+    "minicpm:set-expand-mode": (_evt, { mode } = {}) => {
+      bubbleExpandMode = (mode === "large" || mode === "fullscreen") ? mode : "compact";
+      applyExpandBounds();
+      return { ok: true, mode: bubbleExpandMode };
+    },
+    "minicpm:get-expand-mode": () => ({ ok: true, mode: bubbleExpandMode }),
+    "minicpm:resize": (_evt, { width, height, force } = {}) => {
+      if (bubbleExpandMode !== "compact" && !force) {
+        return { ok: true, mode: bubbleExpandMode };
+      }
       width = Math.max(MIN_WIDTH, Math.min(SPEAK_MAX_WIDTH, Math.round(Number(width) || ASK_WIDTH)));
       height = Math.max(MIN_HEIGHT, Math.min(SPEAK_MAX_HEIGHT, Math.round(Number(height) || ASK_HEIGHT)));
       chooseAndApplyBounds(width, height);
@@ -2538,7 +2575,7 @@ module.exports = function initMinicpmChat(ctx) {
       }
       // Don't call app.relaunch() here directly — the renderer expects an
       // explicit "yes I want to restart" confirmation. The handler just
-      // marks the file; the Settings UI shows a "重启应用" button afterwards.
+      // marks the file; the Settings UI shows a "Restart app" button afterwards.
       return { ok: true };
     },
     "minicpm-settings:relaunch-app": async () => {

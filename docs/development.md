@@ -1,166 +1,166 @@
-# 开发者指南
+# Developer Guide
 
-> 普通用户请直接下载 dmg 安装包（参见 [README.md](../README.md)），跟着应用首次启动的 Onboarding 引导走即可。本文档只面向需要改代码 / 调试 / 出包的开发者。
-
----
-
-## 目录
-
-- [快速上手 (dev 模式)](#快速上手-dev-模式)
-- [仓库结构](#仓库结构)
-- [打包：从源码到 dmg](#打包从源码到-dmg)
-- [Onboarding 流程的开发要点](#onboarding-流程的开发要点)
-- [常用调试技巧](#常用调试技巧)
+> Regular users: just download the dmg installer (see [README.md](../README.md)) and follow the first-launch Onboarding wizard. This document is only for developers who need to modify code / debug / build packages.
 
 ---
 
-## 快速上手 (dev 模式)
+## Table of Contents
+
+- [Quick Start (dev mode)](#quick-start-dev-mode)
+- [Repository Structure](#repository-structure)
+- [Packaging: From Source to dmg](#packaging-from-source-to-dmg)
+- [Onboarding Flow: Developer Notes](#onboarding-flow-developer-notes)
+- [Common Debugging Tips](#common-debugging-tips)
+
+---
+
+## Quick Start (dev mode)
 
 ```bash
 git clone git@github.com:OpenBMB/MiniCPM-Desk-Pet.git
 cd MiniCPM-Desk-Pet
 
-# 把模型放进来 (~2 GB，跟生产用户不一样的是：dev 模式仍然走 <repo>/models/)
+# Drop the model in here (~2 GB; unlike production users, dev mode still uses <repo>/models/)
 mkdir -p models
 ln -s /absolute/path/to/your/minicpm5-0.9b models/minicpm5-0.9b
-# 或者 cp -r
+# or cp -r
 
-./go.sh                  # 自动安装依赖 + 启动
+./go.sh                  # auto-install dependencies + launch
 ```
 
-`./go.sh doctor` 单独检查环境是否 OK；`./go.sh setup` 只装依赖不启动。
+`./go.sh doctor` checks the environment only; `./go.sh setup` installs dependencies without launching.
 
-### 跳过 Onboarding（开发者特权）
+### Skipping Onboarding (Developer Privilege)
 
-第一次启动会弹 Onboarding 向导。如果你已经放好了模型，可以一路点过去（环境检查会自动通过；模型下载步骤会识别本地路径，直接显示 "已存在"）。
+The Onboarding wizard pops up on first launch. If you already placed the model, just click through (the environment check passes automatically; the model-download step detects the local path and shows "already exists").
 
-如果想让某次启动绕开向导（比如调试 settings tab）：
+To bypass the wizard on a given launch (e.g. when debugging the settings tab):
 
 ```bash
-# Onboarding sentinel 写在 userData 下
+# Onboarding sentinel lives under userData
 rm "$HOME/Library/Application Support/Clawd on Desk/minicpm-onboarding.json"
 
-# 或反向：强制再次显示
+# or the reverse: force it to show again
 MINICPM_FORCE_ONBOARDING=1 ./go.sh start
 ```
 
 ---
 
-## 仓库结构
+## Repository Structure
 
 ```
 MiniCPM-Desk-Pet/
-├── clawd-on-desk/              ← Electron 桌宠 (vendored fork of clawd-on-desk@5b1f003)
-│                                  + MiniCPM 集成层：聊天气泡 / Onboarding / Settings
-├── minicpm-sidecar/            ← llama.cpp 推理服务 + 瘦 FastAPI gateway
-├── adapters/                   ← LoRA 适配器（.gguf + safetensors source）
-├── skills/deploy-minicpm-pet/  ← Cursor Agent Skill（dev 部署引导）
-├── docs/                       ← 开发者文档
-├── models/                     ← GGUF 模型文件（gitignored）
-├── go.sh                       ← 开发者快捷脚本
-└── README.md                   ← 用户向（dmg 安装 + 引导）
+├── clawd-on-desk/              ← Electron desktop pet (vendored fork of clawd-on-desk@5b1f003)
+│                                  + MiniCPM integration layer: chat bubbles / Onboarding / Settings
+├── minicpm-sidecar/            ← llama.cpp inference service + thin FastAPI gateway
+├── adapters/                   ← LoRA adapters (.gguf + safetensors source)
+├── skills/deploy-minicpm-pet/  ← Cursor Agent Skill (dev deployment guide)
+├── docs/                       ← developer docs
+├── models/                     ← GGUF model files (gitignored)
+├── go.sh                       ← developer shortcut script
+└── README.md                   ← user-facing (dmg install + guide)
 ```
 
-> v0.7 时代的双份 PyTorch sidecar（`minicpm-pet-bridge/` 与 `minicpm-pet-bridge-uv/`）以及 PyInstaller `build/sidecar.spec` 已在 v0.9 删除。当前 sidecar 结构与构建方式以 [`minicpm-sidecar/README.md`](../minicpm-sidecar/README.md) 为准。
+> The duplicate PyTorch sidecars from the v0.7 era (`minicpm-pet-bridge/` and `minicpm-pet-bridge-uv/`) plus the PyInstaller `build/sidecar.spec` were removed in v0.9. For the current sidecar layout and build method, see [`minicpm-sidecar/README.md`](../minicpm-sidecar/README.md).
 
 ---
 
-## 打包：从源码到 dmg
+## Packaging: From Source to dmg
 
-最终用户拿到的 dmg 内含：
-- Electron 主程序（clawd-on-desk）
-- PyInstaller 打的 sidecar 二进制（无需用户装 Python）
-- LoRA 适配器（adapters/）
-- sidecar 源码（备用 / debug 用）
+The dmg shipped to end users contains:
+- Electron main app (clawd-on-desk)
+- PyInstaller-built sidecar binary (no user Python install required)
+- LoRA adapters (adapters/)
+- sidecar source (fallback / debug use)
 
-模型权重 **不** 在 dmg 里——首次启动由 Onboarding 引导用户下载到 `<userData>/models/`。
+Model weights are **not** in the dmg — first launch guides the user via Onboarding to download them into `<userData>/models/`.
 
-### 单步出包
+### One-Step Build
 
 ```bash
 ./go.sh build
 ```
 
-等价于：
+Equivalent to:
 
 ```bash
-# 1. 下载官方 llama.cpp 的 llama-server + PyInstaller 打 gateway
+# 1. Download official llama.cpp llama-server + PyInstaller-build the gateway
 cd minicpm-sidecar && ./scripts/build-all.sh && cd ..
 
-# 2. electron-builder 出 dmg
+# 2. electron-builder outputs the dmg
 cd clawd-on-desk
 npx electron-builder --mac --arm64 -c.mac.target=dmg
 ```
 
-产物位置：`clawd-on-desk/dist/*.dmg`。
+Build output: `clawd-on-desk/dist/*.dmg`.
 
-### 仅重打 dmg（不重跑 PyInstaller）
+### Repack dmg Only (Without Re-running PyInstaller)
 
-修改 Electron 端代码 / package.json 后，sidecar binary 不需要重打：
+After editing Electron-side code / package.json, the sidecar binary does not need rebuilding:
 
 ```bash
 cd clawd-on-desk && npm run build:mac:repack
 ```
 
-## Windows 打包（x64，已支持）
+## Windows Packaging (x64, Supported)
 
-一条命令出 NSIS 安装包（自动先打 PyInstaller gateway）：
+One command produces the NSIS installer (auto-builds the PyInstaller gateway first):
 
 ```powershell
 cd clawd-on-desk
 npm run build:win:mvp
 ```
 
-等价于：
+Equivalent to:
 
 ```powershell
-# 1. PyInstaller 打 gateway → minicpm-sidecar/bin/win-x64/minicpm-sidecar.exe
-#    （uv sync 会按 pyproject.toml 拉齐依赖，含 winotify）
+# 1. PyInstaller-build the gateway → minicpm-sidecar/bin/win-x64/minicpm-sidecar.exe
+#    (uv sync aligns dependencies per pyproject.toml, including winotify)
 powershell -NoProfile -ExecutionPolicy Bypass -File ..\minicpm-sidecar\scripts\build-gateway.ps1
 
-# 2. electron-builder 出 NSIS 安装包
+# 2. electron-builder outputs the NSIS installer
 cd clawd-on-desk && npx electron-builder --win nsis:x64
 ```
 
-产物位置：`clawd-on-desk/dist/Deskpet-<版本>-x64.exe`。
+Build output: `clawd-on-desk/dist/Deskpet-<version>-x64.exe`.
 
-打包布局契约（gateway 运行时按自身所在目录找 llama-server，见 `gateway/llama_client.py` 的 frozen 分支）：
+Packaging layout contract (at runtime the gateway locates llama-server relative to its own directory; see the frozen branch in `gateway/llama_client.py`):
 
-- `<安装目录>/resources/sidecar-bin/minicpm-sidecar.exe`
-- `<安装目录>/resources/sidecar-bin/llama-server.exe`（或 `backends/<cpu|vulkan|cuda>/llama-server.exe`）
+- `<install-dir>/resources/sidecar-bin/minicpm-sidecar.exe`
+- `<install-dir>/resources/sidecar-bin/llama-server.exe` (or `backends/<cpu|vulkan|cuda>/llama-server.exe`)
 
-以上由 package.json 的 `extraResources` 条目 `../minicpm-sidecar/bin/win-x64 → sidecar-bin` 自动完成。
-llama.cpp 二进制用 `minicpm-sidecar/scripts/fetch-llama-release.ps1` 下载到同一 staging 目录。
+This is handled automatically by the `extraResources` entry `../minicpm-sidecar/bin/win-x64 → sidecar-bin` in package.json.
+The llama.cpp binaries are downloaded into the same staging directory via `minicpm-sidecar/scripts/fetch-llama-release.ps1`.
 
-### Windows 打包验证清单
+### Windows Packaging Verification Checklist
 
-已在 2026-08 验证过的最小 E2E（对应 plan Phase 2 #7）：
+Minimal E2E verified in 2026-08 (corresponds to plan Phase 2 #7):
 
-1. 安装后启动：gateway 进程路径必须是 `...\Programs\Deskpet\resources\sidecar-bin\minicpm-sidecar.exe`
-2. 聊天路由：`who is X` → wikipedia 工具命中
-3. 设置同步：`POST /api/config` 到 gateway 生效（返回回显）
-4. 提醒链路：`remind me in N seconds to X` → 到点后 bridge push + winotify 原生 toast（日志无 "native toast failed"）
-5. userData：`%APPDATA%/deskpet/` 下 clawd-prefs.json / minicpm-chat-history.json / onboarding 哨兵文件正常生成
+1. Launch after install: gateway process path must be `...\Programs\Deskpet\resources\sidecar-bin\minicpm-sidecar.exe`
+2. Chat routing: `who is X` → wikipedia tool hit
+3. Settings sync: `POST /api/config` to the gateway takes effect (returns echo)
+4. Reminder flow: `remind me in N seconds to X` → bridge push + winotify native toast on time (no "native toast failed" in logs)
+5. userData: clawd-prefs.json / minicpm-chat-history.json / onboarding sentinel file generated correctly under `%APPDATA%/deskpet/`
 
-注意：gateway 的依赖必须声明在 `minicpm-sidecar/pyproject.toml` 里 —— `build-gateway.ps1` 每次先 `uv sync`，
-未声明但手动 pip 装的包会被清掉，PyInstaller 就打不进去（winotify 曾踩过这个坑）。
+Note: gateway dependencies must be declared in `minicpm-sidecar/pyproject.toml` — `build-gateway.ps1` runs `uv sync` first,
+so manually pip-installed but undeclared packages get wiped and PyInstaller misses them (winotify hit this pitfall before).
 
-### 当前打包限制 (MVP)
+### Current Packaging Limitations (MVP)
 
-- Windows x64 已支持（NSIS）；Linux 未支持
-- macOS：仅 **arm64**；Intel 暂未支持
-- 如果开发机钥匙串里有 Apple Developer ID 证书，electron-builder 会自动签名 .app（产物级别 `codesign --display` 能看到 Developer ID Authority）；否则保持未签名
-- 即便 .app 签了名，**dmg 本身没签名 + 未公证**：首次启动 Gatekeeper 仍会弹"无法验证开发者"
-  - 用户绕开方式：右键 → 打开 → 确认；或终端执行 `xattr -cr /Applications/Clawd\ on\ Desk.app`
-- Windows 产物未做代码签名证书签名（SmartScreen 首次运行会提示），NSIS 为 assisted 安装向导
-- 没接 `electron-updater` 自动更新
-- 模型下载源仅 Hugging Face（ModelScope 备用源待开发）
+- Windows x64 supported (NSIS); Linux not supported
+- macOS: **arm64** only; Intel not supported yet
+- If the dev machine keychain has an Apple Developer ID certificate, electron-builder auto-signs the .app (check with `codesign --display` for Developer ID Authority); otherwise it stays unsigned
+- Even if the .app is signed, the **dmg itself is unsigned + unnotarized**: Gatekeeper still shows "cannot verify developer" on first launch
+  - User workarounds: right-click → Open → confirm; or run `xattr -cr /Applications/Clawd\ on\ Desk.app` in the terminal
+- Windows build has no code-signing certificate (SmartScreen warns on first run); NSIS is an assisted install wizard
+- No `electron-updater` auto-update wired up
+- Model download source is Hugging Face only (ModelScope mirror TBD)
 
-### 国内网络打包注意事项
+### Packaging Notes for Networks in China
 
-GitHub Release 资源（electron 二进制、dmg-builder bundle）国内拉取容易超时。两个加速套路：
+GitHub Release assets (Electron binaries, dmg-builder bundle) often time out from China. Two speedup options:
 
-**1. npm 镜像** — 装依赖时走淘宝源：
+**1. npm mirror** — use the Taobao registry when installing dependencies:
 
 ```bash
 cd clawd-on-desk
@@ -169,15 +169,15 @@ npm install --no-audit --no-fund \
   --electron_mirror=https://registry.npmmirror.com/-/binary/electron/
 ```
 
-**2. 代理** — electron-builder 在 `dmg-builder@1.2.0/dmgbuild-bundle-arm64-*.tar.gz` 这个 GitHub Release 资源上没有官方镜像配置，必须给整个 build 过程开代理：
+**2. Proxy** — electron-builder has no official mirror config for the `dmg-builder@1.2.0/dmgbuild-bundle-arm64-*.tar.gz` GitHub Release asset, so the whole build must run behind a proxy:
 
 ```bash
-# .zshrc 里有 proxy 函数（http://127.0.0.1:10808）
+# .zshrc has a proxy helper (http://127.0.0.1:10808)
 proxy
 cd clawd-on-desk && npx electron-builder --mac --arm64 -c.mac.target=dmg
 ```
 
-或者直接 inline：
+Or inline:
 
 ```bash
 cd clawd-on-desk && \
@@ -185,7 +185,7 @@ cd clawd-on-desk && \
   npx electron-builder --mac --arm64 -c.mac.target=dmg
 ```
 
-如果代理也不稳，可以先手动把 dmg-builder bundle 下到 cache：
+If the proxy is unstable, pre-download the dmg-builder bundle into the cache manually:
 
 ```bash
 CACHE="$HOME/Library/Caches/electron-builder/dmg-builder@1.2.0"
@@ -194,32 +194,32 @@ https_proxy=http://127.0.0.1:10808 curl -L --retry 5 -o "$CACHE/dmgbuild-bundle-
   "https://github.com/electron-userland/electron-builder-binaries/releases/download/dmg-builder@1.2.0/dmgbuild-bundle-arm64-75c8a6c.tar.gz"
 ```
 
-下完后再跑 build。electron-builder 看到目标 archive 已在 cache 就跳过下载。
+Then re-run the build. electron-builder skips the download once the target archive is in the cache.
 
 ---
 
-## Onboarding 流程的开发要点
+## Onboarding Flow: Developer Notes
 
-Onboarding 是 5 步状态机，主进程 + 渲染端代码分布如下：
+Onboarding is a 5-step state machine; main-process + renderer code is laid out as follows:
 
-| 文件 | 责任 |
+| File | Responsibility |
 |------|------|
-| [`clawd-on-desk/src/minicpm-onboarding.js`](../clawd-on-desk/src/minicpm-onboarding.js) | 主进程：BrowserWindow 管理 + IPC handlers + sentinel 文件读写 |
-| [`clawd-on-desk/src/minicpm-onboarding.html`](../clawd-on-desk/src/minicpm-onboarding.html) | 5 个 panel 的静态结构 |
-| [`clawd-on-desk/src/minicpm-onboarding.css`](../clawd-on-desk/src/minicpm-onboarding.css) | 暗 / 亮主题样式 |
-| [`clawd-on-desk/src/minicpm-onboarding-renderer.js`](../clawd-on-desk/src/minicpm-onboarding-renderer.js) | 渲染端：步骤切换、进度条、SSE 消费 |
+| [`clawd-on-desk/src/minicpm-onboarding.js`](../clawd-on-desk/src/minicpm-onboarding.js) | Main process: BrowserWindow management + IPC handlers + sentinel file I/O |
+| [`clawd-on-desk/src/minicpm-onboarding.html`](../clawd-on-desk/src/minicpm-onboarding.html) | Static structure for the 5 panels |
+| [`clawd-on-desk/src/minicpm-onboarding.css`](../clawd-on-desk/src/minicpm-onboarding.css) | Dark / light theme styles |
+| [`clawd-on-desk/src/minicpm-onboarding-renderer.js`](../clawd-on-desk/src/minicpm-onboarding-renderer.js) | Renderer: step switching, progress bar, SSE consumption |
 | [`clawd-on-desk/src/preload-minicpm-onboarding.js`](../clawd-on-desk/src/preload-minicpm-onboarding.js) | contextBridge → `window.onboarding` |
 
-主进程接入位置：[`src/main.js` `app.whenReady()` 中部](../clawd-on-desk/src/main.js) — 通过 `_minicpmOnboarding.shouldShow()` 决定是先弹向导还是直接弹桌宠。
+Main-process entry point: middle of [`src/main.js` `app.whenReady()`](../clawd-on-desk/src/main.js) — `_minicpmOnboarding.shouldShow()` decides whether to show the wizard or the desktop pet directly.
 
-### 完成标志（sentinel）
+### Completion Flag (sentinel)
 
-`<userData>/minicpm-onboarding.json` 写入 `{complete: true, version: 1, completedAt: <iso>, device: <picked>}` 即视为已完成。删除该文件可强制重弹（也可通过 Settings → 🐾 MiniCPM → 高级 / 开发 触发）。
+Writing `{complete: true, version: 1, completedAt: <iso>, device: <picked>}` to `<userData>/minicpm-onboarding.json` marks it complete. Deleting that file forces it to reappear (also triggerable via Settings → 🐾 MiniCPM → Advanced / Develop).
 
-### 调试单步
+### Debugging Individual Steps
 
 ```js
-// devtools 在 onboarding 窗口里直接调用，无需走全流程
+// Call directly in the onboarding window's devtools, no need to run the full flow
 await window.onboarding.listDevices()
 await window.onboarding.checkDisk()
 await window.onboarding.warmup()
@@ -227,19 +227,19 @@ await window.onboarding.warmup()
 
 ---
 
-## 常用调试技巧
+## Common Debugging Tips
 
-### 看 sidecar 实时日志
+### Viewing Sidecar Live Logs
 
 ```bash
-# dev 模式：Electron 的 stdout 已转发 [sidecar] 前缀的行
+# dev mode: Electron stdout already forwards lines with the [sidecar] prefix
 ./go.sh start
 
-# packaged 模式：sidecar stderr 写入 Electron 主进程日志
+# packaged mode: sidecar stderr goes into the Electron main-process log
 tail -f "$HOME/Library/Application Support/Clawd on Desk/logs/"main.log
 ```
 
-### 直接 curl sidecar
+### Curling the Sidecar Directly
 
 ```bash
 curl -s http://127.0.0.1:18765/api/health | python3 -m json.tool
@@ -248,43 +248,65 @@ curl -s http://127.0.0.1:18765/api/onboarding | python3 -m json.tool
 curl -X POST http://127.0.0.1:18765/api/set-device -H 'content-type: application/json' -d '{"device":"cpu"}'
 ```
 
-### 端口冲突
+### Port Conflicts
 
 ```bash
 lsof -ti:18765 | xargs -r kill -9   # sidecar
 lsof -ti:23333 | xargs -r kill -9  # clawd HTTP server
 ```
 
-Windows（PowerShell）：
+Windows (PowerShell):
 
 ```powershell
-# 看谁占着 gateway / llama-server 端口
+# Check who owns the gateway / llama-server ports
 Get-NetTCPConnection -LocalPort 18765,18766 -State Listen |
   Select-Object LocalPort, OwningProcess,
     @{n='Process';e={(Get-Process -Id $_.OwningProcess).ProcessName}}
 
-# 一键清场（gateway 二进制是 PyInstaller bootloader，普通 Stop-Process 杀不干净，
-# 必须 taskkill /T 连整棵子进程树一起带走）
+# One-shot cleanup (the gateway binary is a PyInstaller bootloader; plain Stop-Process leaves children behind,
+# so taskkill /T must take the whole process tree)
 taskkill /F /IM minicpm-sidecar.exe /T
 taskkill /F /IM llama-server.exe /T
 ```
 
-dev 模式下 `python -m gateway` 启动时如果 18765 已被占用，会打印上面的 taskkill 提示并以退出码 **78** 退出，而不是抛 EADDRINUSE 栈回溯。
+In dev mode, if 18765 is already taken when `python -m gateway` starts, it prints the taskkill hint above and exits with code **78** instead of throwing an EADDRINUSE stack trace.
 
-### 工具调用模式（tool_mode）
+### Tool Call Mode (tool_mode)
 
-`POST /api/chat` 的 `tool_mode` 字段控制本地工具如何被触发：
+The `tool_mode` field of `POST /api/chat` controls how local tools are triggered:
 
-| 值 | 行为 |
+| Value | Behavior |
 |----|------|
-| `auto`（默认） | 先走关键词正则路由；未命中再让模型走一轮原生 function calling（最多执行 3 个工具后带着结果重新作答） |
-| `regex` | 仅正则路由 + 工具上下文注入 |
-| `native` | 仅原生 function calling |
-| `off` | 纯聊天，不碰任何工具 |
+| `auto` (default) | Keyword regex routing first; on miss, one round of native model function calling (up to 3 tools executed, then re-answer with results) |
+| `regex` | Regex routing + tool context injection only |
+| `native` | Native function calling only |
+| `off` | Plain chat, no tools touched |
 
-默认值可用环境变量 `MINICPM_TOOL_MODE` 覆盖。若模型 chat template 不支持 tools（如部分 persona LoRA），native 轮会自动降级为普通聊天。gateway 内置 llama-server 崩溃看门狗（指数退避、最多重启 3 次），状态通过 `GET /api/health` 的 `llama_restarts` / `degraded` 暴露；Electron 侧另有进程级自动重启（2s→5s→10s），状态经 `minicpm:sidecar-state` IPC 推给聊天气泡显示"重启中/已恢复/离线"。
+The default can be overridden with the `MINICPM_TOOL_MODE` env var. If the model chat template does not support tools (e.g. some persona LoRAs), the native round auto-falls back to plain chat. The gateway has a built-in llama-server crash watchdog (exponential backoff, up to 3 restarts), exposed via `llama_restarts` / `degraded` in `GET /api/health`; Electron additionally auto-restarts at the process level (2s→5s→10s), pushing state over `minicpm:sidecar-state` IPC so chat bubbles show "restarting/recovered/offline".
 
-### 完全重置用户数据（小心，会丢失模型和对话历史）
+### Adding/Modifying Micro-Tools (Dual-Engine Tool Calling)
+
+DeskPet uses a dual-engine tool-calling architecture. Follow these rules for any new tool:
+
+1. **Deterministic execution + regex routing (`gateway/tools.py`)**:
+   - Register regex match patterns and arg extractors in `_TOOL_PATTERNS`.
+   - Write the tool executor (add try/except protection, keep `/ponytail` minimal style, prefer stdlib or existing system commands).
+   - Add a no-extra-inference natural-language reply for deterministic cases in `canned_reply(tool_name, result)`.
+2. **Native function registration with OpenAI JSON Schema (`gateway/tool_registry.py`)**:
+   - Register a standard OpenAI function-call spec (`name`, `description`, `parameters`, `properties`, `required`) in `TOOL_SCHEMAS`.
+   - Add the matching dispatch branch in `execute_tool(name, arguments)`.
+   - This ensures that when users phrase requests with natural language, inversion, or colloquialisms that bypass regex, the local model via `llama-server` can still call the tool via structured `tool_calls` without hallucination.
+3. **Perception boost + context parsing (`gateway/screen_context.py`)**:
+   - For screen awareness or active-window extraction, extract clean web tab titles (`web_page` field) for mainstream browsers like Chrome/Edge/Firefox, for `canned_reply` or LLM reference.
+4. **Test coverage**:
+   - `minicpm-sidecar/tests/test_tool_routing.py`: regex matching + reply generation.
+   - `minicpm-sidecar/tests/test_tool_registry.py`: schema completeness + dispatch.
+   - `minicpm-sidecar/tests/test_screen_context.py`: screen/window perception parsing.
+5. **Re-freeze binary + package**:
+   - Run `minicpm-sidecar/scripts/build-gateway.ps1` to repackage the sidecar binary.
+   - Run `npm run build:win:x64` in `clawd-on-desk` to build the NSIS installer.
+
+### Fully Resetting User Data (Caution: Deletes Models and Chat History)
 
 ```bash
 rm -rf "$HOME/Library/Application Support/Clawd on Desk/"

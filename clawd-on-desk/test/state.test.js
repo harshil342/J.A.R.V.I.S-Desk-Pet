@@ -3413,7 +3413,7 @@ describe("qwen-code self-submit filter", () => {
 
   it("Stop after tool boundary → next UserPromptSubmit passes through even within window", () => {
     // Codex review caught this: end-of-turn must reset the self-submit window,
-    // otherwise a user typing "继续" within 2s of Stop would be eaten as a
+    // otherwise a user typing "continue" within 2s of Stop would be eaten as a
     // false self-submit. Stop bumps lastStopAt, which beats lastToolBoundaryAt.
     bootQwenAfterPostToolUse();
     mock.timers.tick(800); // simulate qwen Stop landing after the loop settles

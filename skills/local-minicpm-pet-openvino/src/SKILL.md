@@ -1,9 +1,9 @@
 ---
 name: local-minicpm-pet-openvino
 description: |
-  一键部署 MiniCPM 桌宠体验环境，后端采用 OpenVINO 推理引擎（Deploy MiniCPM Desk Pet with OpenVINO backend）.
-  使用本 Skill 可部署一个完整的桌宠体验环境，在 Intel AIPC 上本地运行，无需云端服务。
-  部署完成后，用户直接通过桌宠 UI 界面进行对话交互。
+  One-click deploy of the MiniCPM desk-pet experience with the OpenVINO inference backend (Deploy MiniCPM Desk Pet with OpenVINO backend).
+  This Skill deploys a full pet experience locally on Intel AIPC, no cloud needed.
+  After deploy, the user chats with the pet directly in its UI.
   Use this skill when the user wants to deploy/set up/run the MiniCPM desk pet with OpenVINO backend,
   or build a local AI pet experience environment on Intel hardware.
   Trigger on: 部署桌宠/体验环境/搭建环境/本地推理/OpenVINO后端/桌宠环境/deploy pet/setup environment/run desk pet/
@@ -14,118 +14,118 @@ description: |
 
 # Local-MiniCPM-Pet-OpenVINO Skill Guide
 
-> 使用本 Skill 可**一键部署**一个完整的 MiniCPM 桌宠体验环境。
-> 后端采用 OpenVINO 推理引擎，前端从源码 `npm start` 启动。
-> 部署完成后，用户直接与桌宠对话，无需再次调用本脚本。
+> This Skill **one-click deploys** a full MiniCPM desk-pet experience.
+> Backend: OpenVINO inference engine; frontend started from source via `npm start`.
+> After deploy, chat with the pet directly — no need to call this script again.
 
 ---
 
-## !! CRITICAL: 环境依赖 !!
+## !! CRITICAL: Environment dependencies !!
 
-以下依赖**缺一不可**，必须在执行前验证：
+All of the following are required — verify before running:
 
-| 依赖 | 最低版本 | 验证命令 | 用途 |
+| Dependency | Min version | Check | Purpose |
 | --- | --- | --- | --- |
-| Windows 10/11 | - | - | 操作系统 |
-| Intel AIPC 硬件 | LNL/ARL/PTL/WCL | `bin\platform.exe --is-aipc` | 本地推理加速 |
-| Python | 3.11 | `python --version` | OpenVINO 推理服务 |
-| Node.js | 18+ | `node --version` | 桌宠前端 |
-| npm | - | `npm --version` | 桌宠依赖安装 |
-| git | - | `git --version` | 获取桌宠源码 |
+| Windows 10/11 | - | - | OS |
+| Intel AIPC hardware | LNL/ARL/PTL/WCL | `bin\platform.exe --is-aipc` | local inference |
+| Python | 3.11 | `python --version` | OpenVINO inference service |
+| Node.js | 18+ | `node --version` | pet frontend |
+| npm | - | `npm --version` | pet dep install |
+| git | - | `git --version` | fetch pet source |
 
 ---
 
-## !! CRITICAL: 中国大陆网络环境 !!
+## !! CRITICAL: Mainland-China network !!
 
-**所有网络操作必须使用国内源**，否则极慢或不可用：
+**All network ops must use China mirrors**, otherwise very slow or unreachable:
 
-| 操作 | 国内源 | 说明 |
+| Operation | China mirror | Notes |
 | --- | --- | --- |
-| git clone | GitCode 镜像 | `gitcode.com/OpenBMB/MiniCPM-Desk-Pet.git` |
-| pip 安装 | 清华镜像 | `mirrors.tuna.tsinghua.edu.cn` |
-| npm 安装 | 淘宝镜像 | `registry.npmmirror.com` |
-| Electron 下载 | npmmirror | `npmmirror.com/mirrors/electron/` |
-| 模型下载 | ModelScope | 默认国内直连 |
+| git clone | GitCode mirror | `gitcode.com/OpenBMB/MiniCPM-Desk-Pet.git` |
+| pip install | Tsinghua mirror | `mirrors.tuna.tsinghua.edu.cn` |
+| npm install | Taobao mirror | `registry.npmmirror.com` |
+| Electron download | npmmirror | `npmmirror.com/mirrors/electron/` |
+| Model download | ModelScope | direct domestic link by default |
 | HuggingFace | hf-mirror | `hf-mirror.com` |
 
-**`--china` 参数已内置上述所有配置，无需手动设置。**
+**The `--china` flag bundles all of the above — no manual setup needed.**
 
 ---
 
-## !! CRITICAL: 沙箱外运行要求 !!
+## !! CRITICAL: Run outside sandbox !!
 
-以下目录**必须持久化**（沙箱外），否则每次重试将重新下载 ~2.4GB：
+These dirs **must persist** (outside sandbox), or every retry re-downloads ~2.4GB:
 
-| 目录 | 大小 | 内容 |
+| Dir | Size | Contents |
 | --- | --- | --- |
-| `%USERPROFILE%\.openvino\venv\` | ~500MB | Python 虚拟环境 |
-| `%USERPROFILE%\.openvino\models\` | ~1.5GB | AI 模型文件 |
-| `%LOCALAPPDATA%\electron\Cache\` | ~180MB | Electron 二进制缓存 |
-| 桌宠源码 `node_modules\` | ~200MB | npm 依赖 |
+| `%USERPROFILE%\.openvino\venv\` | ~500MB | Python venv |
+| `%USERPROFILE%\.openvino\models\` | ~1.5GB | AI model files |
+| `%LOCALAPPDATA%\electron\Cache\` | ~180MB | Electron binary cache |
+| pet source `node_modules\` | ~200MB | npm deps |
 
 ---
 
-## 严格执行流程（必须按顺序，不可跳过）
+## Strict runbook (in order, no skipping)
 
-### Step 0: 判断用户网络环境（Agent 必须在调用前完成）
+### Step 0: Detect user network (agent must do this before calling)
 
-**调用 `scripts\run.ps1` 之前，Agent 必须先判断用户的网络环境。**
+**Before calling `scripts\run.ps1`, the agent must detect the user's network env.**
 
-判断方法（任选其一）：
-- 用户明确说在中国大陆 / 国内
-- 用户系统语言为中文（zh-CN）
-- 用户时区为 UTC+8 且非新加坡/港澳台
-- 网络环境无法直接访问 GitHub / PyPI / npmjs.org
+Pick any signal:
+- User explicitly says mainland China / domestic
+- User OS locale is Chinese (zh-CN)
+- User timezone is UTC+8 and not Singapore/HK/TW
+- Direct access to GitHub / PyPI / npmjs.org fails
 
-**判断为中国大陆环境 → 加 `--china`；否则不加。**
+**Mainland China → add `--china`; otherwise omit.**
 
-### Step 1–8: 由 run.ps1 自动执行
+### Step 1–8: run automatically via run.ps1
 
-**Agent 必须使用以下方式调用脚本**（禁止直接双击 ps1 文件）：
+**The agent must invoke the script as follows** (no double-clicking the ps1):
 ```powershell
-# 中国大陆环境（一条命令完成全部部署）
+# Mainland China (one command does the full deploy)
 powershell -ExecutionPolicy Bypass -File "scripts\run.ps1" --china
 
-# 海外 / 可直连环境
+# Outside China / direct internet
 powershell -ExecutionPolicy Bypass -File "scripts\run.ps1"
 
-# 指定推理设备（可选：NPU、GPU、CPU，默认自动检测）
+# Pin inference device (optional: NPU/GPU/CPU, default auto-detect)
 powershell -ExecutionPolicy Bypass -File "scripts\run.ps1" --china --device NPU
 ```
 
-或使用 `run.cmd` 包装入口（用户可直接双击）：
+Or use the `run.cmd` wrapper (double-clickable):
 ```
 scripts\run.cmd --china
 ```
 
-脚本自动完成以下步骤：
-1. 硬件检测（Intel AIPC）
-2. 配置镜像源（`--china` 时锁定国内源）
-3. 创建 Python 虚拟环境 + 安装 OpenVINO 依赖
-4. 获取桌宠源码（git clone）
-5. 安装桌宠 npm 依赖
-6. 预写 Onboarding Sentinel（跳过引导界面）
-7. 启动 OpenVINO 推理服务（HTTP，端口 18765）
-8. 启动桌宠前端（npm start）
+The script completes these steps automatically:
+1. Hardware check (Intel AIPC)
+2. Mirror config (pin China mirrors with `--china`)
+3. Create Python venv + install OpenVINO deps
+4. Fetch pet source (git clone)
+5. Install pet npm deps
+6. Pre-write Onboarding Sentinel (skip the wizard)
+7. Start OpenVINO inference service (HTTP, port 18765)
+8. Start pet frontend (npm start)
 
-**部署完成后，用户直接通过桌宠界面进行对话。**
+**After deploy, chat with the pet directly in its UI.**
 
-### Step 9: 验证部署结果（Agent 必须执行）
+### Step 9: Verify the deploy (agent must do this)
 
-**部署脚本执行完毕后，Agent 必须验证部署是否成功，不能直接报告"已完成"。**
+**After the deploy script finishes, the agent must verify success — never just report "done".**
 
-验证方法：
+Check with:
 
 ```powershell
 scripts\run.ps1 --status
 ```
 
-判断标准（解析脚本输出）：
-- 输出包含 `推理服务: 运行中` **且** `桌宠前端: 运行中` → 部署成功，向用户报告
-- 输出包含 `推理服务: 未运行` → 部署失败，执行排障流程（见下方排障指南）
-- 输出包含 `桌宠前端: 未运行` → 前端未启动，再次执行 `scripts\run.ps1` 重试
+Pass criteria (parse script output):
+- Contains `推理服务: 运行中` **and** `桌宠前端: 运行中` → success, report to user
+- Contains `推理服务: 未运行` → failed, follow the troubleshooting guide below
+- Contains `桌宠前端: 未运行` → frontend not started, retry with `scripts\run.ps1`
 
-脚本在部署结束时也会输出结构化摘要，格式如下：
+The script also prints a structured summary at the end, e.g.:
 ```
 [DEPLOY_RESULT]
 server_status=ok|error|timeout
@@ -135,16 +135,16 @@ model_status=loaded|downloading|error
 [/DEPLOY_RESULT]
 ```
 
-Agent 应解析此摘要：
-- `server_status=ok` + `pet_frontend=running` → 部署成功
-- `server_status=error` → 执行 `scripts\run.ps1 --debug` 获取诊断信息
-- `model_status=downloading` → 模型仍在下载中，提示用户等待
+Agent should parse the summary:
+- `server_status=ok` + `pet_frontend=running` → success
+- `server_status=error` → run `scripts\run.ps1 --debug` for diagnostics
+- `model_status=downloading` → model still downloading, tell the user to wait
 
-如果 `--debug` 也无法定位问题，将 debug 输出展示给用户协助排查。
+If `--debug` can't pin it down, show the debug output to the user for help.
 
 ---
 
-## 部署后的架构
+## Deployed architecture
 
 ```
 ┌────────────────┐   HTTP :18765   ┌────────────────────┐   OpenVINO   ┌──────────┐
@@ -153,28 +153,28 @@ Agent 应解析此摘要：
 └────────────────┘                 └────────────────────┘             └──────────┘
 ```
 
-- `server.py` 提供 `/v1/chat/completions`（OpenAI 兼容）和 `/api/health`
-- 桌宠前端通过 HTTP 与推理服务通信
-- 模型首次运行时从 ModelScope 自动下载 (~1.5GB)
+- `server.py` serves `/v1/chat/completions` (OpenAI-compatible) and `/api/health`
+- The pet frontend talks to the inference service over HTTP
+- The model auto-downloads from ModelScope on first run (~1.5GB)
 
 ---
 
-## 参数说明
+## Flags
 
-| 参数 | 说明 |
+| Flag | Notes |
 | --- | --- |
-| `--china` | 锁定中国大陆镜像源，不做网络探测 |
-| `--device NPU\|GPU\|CPU` | 指定推理设备（默认自动检测，优先 GPU） |
-| `--status` | 查看当前运行状态（推理服务 + 桌宠前端） |
-| `--stop` | 停止所有服务（推理服务 + 桌宠前端，含强杀残留进程） |
-| `--debug` | 输出详细诊断信息（Python 环境、模型文件、端口、日志） |
+| `--china` | pin mainland-China mirrors, no network probing |
+| `--device NPU\|GPU\|CPU` | pin inference device (default auto-detect, prefers GPU) |
+| `--status` | show current status (inference + pet frontend) |
+| `--stop` | stop everything (inference + frontend, incl. leftover processes) |
+| `--debug` | verbose diagnostics (Python env, model files, ports, logs) |
 
-**注意事项：**
-- Agent 必须使用 `powershell -ExecutionPolicy Bypass -File` 方式调用（Windows 默认不允许直接执行 .ps1）
-- git clone 时自动设置 `GIT_LFS_SKIP_SMUDGE=1` 跳过 LFS 大文件（模型由 server.py 单独从 ModelScope 下载）
-- 处理器检测：非 Intel CPU 会直接阻断，非 Core Ultra 系列会警告但继续
+**Notes:**
+- The agent must call via `powershell -ExecutionPolicy Bypass -File` (Windows blocks bare .ps1 by default)
+- git clone auto-sets `GIT_LFS_SKIP_SMUDGE=1` to skip LFS blobs (models download separately via server.py)
+- CPU check: non-Intel CPUs are blocked; non-Core-Ultra warns but continues
 
-生命周期示例：
+Lifecycle example:
 ```powershell
 # 部署并启动
 scripts\run.ps1 --china
@@ -193,42 +193,42 @@ scripts\run.ps1 --china
 
 ## Exit Codes
 
-| Exit Code | 含义 |
+| Exit Code | Meaning |
 | --- | --- |
-| 0 | 部署成功，桌宠已启动 |
-| 1 | 一般错误（硬件不支持、环境缺失、网络失败） |
+| 0 | deployed, pet running |
+| 1 | generic error (unsupported HW, missing env, network failure) |
 
 ---
 
-## 排障指南（Agent 遇到错误时参考）
+## Troubleshooting (agent reference on error)
 
-### 推理服务未运行（server_status=error 或 timeout）
+### Inference down (server_status=error or timeout)
 
-1. 执行 `scripts\run.ps1 --debug` 查看诊断信息
-2. 检查「Python 环境」部分：确认 openvino-genai 已安装
-3. 检查「端口 18765 占用」：如果被其他进程占用，先 kill 再重试
-4. 检查「最近日志」：查找 Python traceback 或 ImportError
-5. 常见原因：
-   - Python 依赖安装不完整 → 删除 venv 重新执行部署
-   - 端口被占用 → `netstat -ano | findstr :18765` 找到 PID 并 kill
-   - OpenVINO 不支持当前硬件 → 确认是 Intel AIPC（LNL/ARL/PTL/WCL）
+1. Run `scripts\run.ps1 --debug` for diagnostics
+2. Check the Python-env section: is openvino-genai installed?
+3. Check port-18765 occupancy: kill the holder and retry if taken
+4. Check recent logs: look for a Python traceback or ImportError
+5. Common causes:
+   - Incomplete Python deps → delete venv and redeploy
+   - Port taken → `netstat -ano | findstr :18765`, kill the PID
+   - OpenVINO vs HW mismatch → confirm Intel AIPC (LNL/ARL/PTL/WCL)
 
-### 桌宠前端未运行（pet_frontend=not_running）
+### Frontend down (pet_frontend=not_running)
 
-1. 确认 Node.js 18+ 和 npm 已安装：`node --version`
-2. 确认 `MINICPM_BACKEND=openvino` 环境变量已设置
-3. 检查 npm install 是否成功完成（是否有 node_modules 目录）
-4. 再次执行 `scripts\run.ps1`（幂等，会自动重试启动前端）
-5. 如果前端卡在 onboarding 引导界面：说明 `MINICPM_BACKEND` 未正确传递，检查环境变量
+1. Confirm Node.js 18+ and npm: `node --version`
+2. Confirm the `MINICPM_BACKEND=openvino` env var is set
+3. Check npm install finished (is there a node_modules dir?)
+4. Re-run `scripts\run.ps1` (idempotent, retries the frontend)
+5. If the frontend sticks on the onboarding wizard: `MINICPM_BACKEND` wasn't passed through — check env vars
 
-### 模型下载超时（model_status=downloading）
+### Model download timeout (model_status=downloading)
 
-1. 这不是错误，模型约 1.5GB，首次下载需要时间
-2. 确认已使用 `--china` 参数（国内 ModelScope 直连更快）
-3. 用 `scripts\run.ps1 --status` 查看推理服务是否仍在下载
-4. 下载完成后推理服务会自动加载模型，无需额外操作
+1. Not an error — the model is ~1.5GB, first download takes a while
+2. Confirm `--china` was used (domestic ModelScope link is faster)
+3. Poll with `scripts\run.ps1 --status` to see if the service is still downloading
+4. The service auto-loads the model when done, no extra step needed
 
-### 通用排障步骤
+### Generic recovery
 
 ```powershell
 # 1. 查看完整诊断信息
@@ -244,14 +244,14 @@ scripts\run.ps1 --china
 scripts\run.ps1 --status
 ```
 
-日志位置：`%USERPROFILE%\.openvino\log\`
+Logs: `%USERPROFILE%\.openvino\log\`
 
 ---
 
-## 本 Skill 不做的事
+## What this Skill does NOT do
 
-- 不接受对话 prompt 参数（对话通过桌宠 UI 进行）
-- 不调用任何云端服务
-- 不支持非 Intel 平台
-- 不在沙箱内执行大文件下载
-- 不使用预构建 .exe 安装包（从源码运行）
+- No dialogue prompt params (chat happens in the pet UI)
+- No cloud calls
+- No non-Intel platforms
+- No big downloads inside a sandbox
+- No prebuilt .exe installer (runs from source)

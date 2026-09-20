@@ -4,9 +4,9 @@
 //
 // Page layout (top → bottom):
 //   • Page header: title + subtitle on the left, sidecar status pill on the right
-//   • 行为 / Behavior              — narration + default thinking switches
-//   • 模型 / Model                  — fixed model label + truncated path + buttons
-//   • 高级设置 / Advanced (collapsed by default) — restart Sidecar, open logs
+//   • Behavior              — narration + default thinking switches
+//   • Model                 — fixed model label + truncated path + buttons
+//   • Advanced (collapsed by default) — restart Sidecar, open logs
 //
 // Sidecar health is polled at most once a minute (5s during cold-start
 // grace), and now only re-renders the header pill. The rest of the page
