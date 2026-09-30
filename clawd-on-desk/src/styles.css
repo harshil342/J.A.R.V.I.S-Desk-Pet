@@ -34,6 +34,11 @@ html, body {
   position: relative;
   overflow: hidden;
   background: transparent;
+  /* Two independent channels on one transform so neither clobbers the other:
+     --flip-x is the left-edge mini mirror, --vocal-scale is the mouth-sync
+     pulse (renderer.js setMouthOpen). With neither set this is the identity. */
+  transform: scaleX(var(--flip-x, 1)) scale(var(--vocal-scale, 1));
+  filter: brightness(var(--vocal-bright, 1));
 }
 
 #pet-container.dragging {
@@ -50,8 +55,10 @@ html, body {
   background: transparent;
 }
 
+/* Mirror for the left-edge mini. Set as a custom property, not a transform, so
+   the mouth-sync scale composes with it instead of overwriting it. */
 #pet-container.mini-left {
-  transform: scaleX(-1);
+  --flip-x: -1;
 }
 
 /* ── Roam walk animation ──

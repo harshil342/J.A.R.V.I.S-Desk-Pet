@@ -119,6 +119,7 @@ const createTopmostRuntime = require("./topmost-runtime");
 const { WIN_TOPMOST_LEVEL } = createTopmostRuntime;
 const createThemeFadeSequencer = require("./theme-fade-sequencer");
 const createThemeRuntime = require("./theme-runtime");
+const { AudioEngine } = require("./audio-engine");
 const createAgentRuntimeMain = require("./agent-runtime-main");
 const createFloatingWindowRuntime = require("./floating-window-runtime");
 const createPetWindowRuntime = require("./pet-window-runtime");
@@ -980,7 +981,79 @@ function sendToHitWin(channel, ...args) {
   if (hitWin && !hitWin.isDestroyed()) hitWin.webContents.send(channel, ...args);
 }
 
+// ── Sound playback ──
+// One global 10s cooldown used to live further down this file, so the first
+// sound to fire silenced every other sound for ten seconds — a permission
+// request arriving while a "working" cue was live was swallowed.
+// src/audio-engine.js decides per event instead: priority, per-event cooldown,
+// concurrency cap, variants.
+//
+// Declared above syncSoundPreloads() because that runs during startup, and a
+// `const` read before its declaration is a ReferenceError, not a hoisted value.
+let lastSoundTime = 0;
+const SOUND_COOLDOWN_MS = 10000;
+
+const audioEngine = new AudioEngine();
+audioEngine.onLog = (message) => {
+  try { fs.appendFileSync(path.join(app.getPath("userData"), "session-debug.log"), `${message}\n`); } catch {}
+};
+
+/** Events currently audible, so the engine can suppress anything less urgent. */
+const activeAudioEvents = new Set();
+
+function resolveClipUrl(clipId) {
+  const ctx = themeRuntime.getActiveThemeContext ? themeRuntime.getActiveThemeContext() : null;
+  return ctx && typeof ctx.getClipUrl === "function" ? ctx.getClipUrl(clipId) : null;
+}
+
+function loadVoiceForActiveTheme() {
+  const ctx = themeRuntime.getActiveThemeContext ? themeRuntime.getActiveThemeContext() : null;
+  const themeDir = ctx && ctx.theme && ctx.theme._themeDir;
+  audioEngine.load(themeDir, path.join(__dirname, "..", "assets"));
+  syncSoundPreloads();
+}
+
+function playSound(name, options = {}) {
+  const resolved = audioEngine.resolve(name, {
+    muted: soundMuted,
+    dnd: doNotDisturb,
+    active: activeAudioEvents,
+    tier: options.tier === "line" ? "line" : "cue",
+  });
+  if (!resolved.play) return resolved;
+
+  const url = resolveClipUrl(resolved.clip);
+  if (!url) return { play: false, reason: `no file for clip ${resolved.clip}` };
+
+  activeAudioEvents.add(name);
+  lastSoundTime = Date.now();
+  // The renderer clears the event when the clip ends; this cap covers a renderer
+  // that never reports back, so a stuck event cannot silence the pet.
+  const holdMs = Math.max(400, (resolved.budgetMs || 400) + 250);
+  setTimeout(() => activeAudioEvents.delete(name), holdMs);
+
+  sendToRenderer("play-sound", {
+    url,
+    volume: resolved.volume,
+    event: resolved.event,
+    tier: resolved.tier,
+    // The renderer drives the mouth from the RMS envelope of whatever it is
+    // playing, and clears it when the clip ends.
+    driveMouth: true,
+  });
+  return resolved;
+}
+
+function resetSoundCooldown() {
+  lastSoundTime = 0;
+}
+
 function getThemeSoundPreloadUrls() {
+  // Prefer the audio engine's list: it knows every clip and variant the active
+  // theme declares. Fall back to the legacy per-name lookup for a theme with
+  // no voice manifest.
+  const fromEngine = audioEngine.preloadUrls(resolveClipUrl);
+  if (fromEngine.length) return fromEngine;
   const urls = [];
   for (const name of ["complete", "confirm"]) {
     const url = themeRuntime.getSoundUrl(name);
@@ -1009,7 +1082,10 @@ function syncHitStateAfterLoad() {
 }
 
 function syncRendererStateAfterLoad({ includeStartupRecovery = true } = {}) {
-  syncSoundPreloads();
+  // Loads the active theme's voice manifest, then preloads its clips. Called
+  // here rather than as a bare syncSoundPreloads() so a theme change re-reads
+  // voice.json instead of playing the previous theme's cues.
+  loadVoiceForActiveTheme();
   sendToRenderer("low-power-idle-mode-change", lowPowerIdleMode);
   if (_mini.getMiniMode()) {
     sendToRenderer("mini-mode-change", true, _mini.getMiniEdge());
@@ -1063,22 +1139,7 @@ function syncRendererStateAfterLoad({ includeStartupRecovery = true } = {}) {
 }
 
 // ── Sound playback ──
-let lastSoundTime = 0;
-const SOUND_COOLDOWN_MS = 10000;
-
-function playSound(name) {
-  if (soundMuted || doNotDisturb) return;
-  const now = Date.now();
-  if (now - lastSoundTime < SOUND_COOLDOWN_MS) return;
-  const url = themeRuntime.getSoundUrl(name);
-  if (!url) return;
-  lastSoundTime = now;
-  sendToRenderer("play-sound", { url, volume: soundVolume });
-}
-
-function resetSoundCooldown() {
-  lastSoundTime = 0;
-}
+// Moved above getThemeSoundPreloadUrls(); see the definition there.
 
 function stopTrayFlash() {
   if (trayFlashTimer) {

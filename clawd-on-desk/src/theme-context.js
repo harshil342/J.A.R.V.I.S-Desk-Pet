@@ -128,6 +128,29 @@ function createThemeContext(theme, options = {}) {
     return getSoundUrl("confirm") || getSoundUrl("complete") || null;
   }
 
+  /**
+   * Resolve a bare clip filename, with or without extension, against the
+   * theme's own sounds/ folder first and the app's assets/sounds/ second.
+   *
+   * getSoundUrl() above resolves a *key* into theme.sounds. The audio engine
+   * works in clip ids instead (voice.json maps an event to a filename), so it
+   * needs this. Same precedence, so a theme that ships its own clip wins.
+   */
+  function getClipUrl(clipId) {
+    if (!theme || typeof clipId !== "string" || !clipId) return null;
+    const names = /\.[a-z0-9]+$/i.test(clipId) ? [clipId] : [`${clipId}.wav`, `${clipId}.mp3`, clipId];
+    const dirs = theme._builtin
+      ? [assetsSoundsDir]
+      : [path.join(theme._themeDir, "sounds"), assetsSoundsDir];
+    for (const dir of dirs) {
+      for (const name of names) {
+        const abs = path.join(dir, name);
+        if (fs.existsSync(abs)) return buildFileUrl(abs);
+      }
+    }
+    return null;
+  }
+
   return {
     theme,
     resolveAssetPath,
@@ -137,6 +160,7 @@ function createThemeContext(theme, options = {}) {
     getHitRendererConfig,
     getSoundUrl,
     getPreviewSoundUrl,
+    getClipUrl,
   };
 }
 

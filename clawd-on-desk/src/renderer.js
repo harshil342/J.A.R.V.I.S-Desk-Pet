@@ -1591,11 +1591,115 @@ if (window.electronAPI && typeof window.electronAPI.onPreloadSounds === "functio
   });
 }
 
+// Mouth sync (plan.md D5): drive a vocal pose from the RMS envelope of whatever
+// the pet is playing. No shipped theme has a bespoke mouth element — the SVG
+// themes have a visor, the rest are GIFs — so the contract is:
+//
+//   1. If the active artwork exposes [data-mouth], that element is driven:
+//      scaleY on its own transform origin, so it opens and closes.
+//   2. Otherwise the pet pulses: a small scale and brightness lift on the
+//      container. For a visor-face character this reads as talking, and it costs
+//      nothing and needs no artwork change.
+//
+// A theme opts into the first path by adding data-mouth to one of its shapes.
+// Both paths are real; the second one works with today's themes.
+let _mouthCtx = null;
+let _mouthAnalyser = null;
+let _mouthRaf = 0;
+let _mouthData = null;
+let _mouthTarget = null;
+
+function mouthContext() {
+  if (_mouthCtx) return _mouthCtx;
+  const Ctor = window.AudioContext || window.webkitAudioContext;
+  if (!Ctor) return null;
+  try {
+    _mouthCtx = new Ctor();
+    _mouthAnalyser = _mouthCtx.createAnalyser();
+    _mouthAnalyser.fftSize = 512;
+    _mouthAnalyser.smoothingTimeConstant = 0.6;
+    _mouthData = new Uint8Array(_mouthAnalyser.frequencyBinCount);
+  } catch {
+    _mouthCtx = null;
+  }
+  return _mouthCtx;
+}
+
+function setMouthOpen(amount) {
+  const v = Math.max(0, Math.min(1, amount || 0));
+  if (!container) return;
+  if (!_mouthTarget) {
+    const owner = clawdEl && clawdEl.querySelector
+      ? clawdEl.querySelector("[data-mouth]")
+      : null;
+    _mouthTarget = owner || null;
+  }
+  if (_mouthTarget) {
+    // scaleY from a fixed origin so the shape opens rather than grows.
+    _mouthTarget.style.transformOrigin = "50% 80%";
+    _mouthTarget.style.transform = `scaleY(${(1 + v * 0.7).toFixed(3)})`;
+    return;
+  }
+  if (v <= 0.001) {
+    container.style.removeProperty("--vocal-scale");
+    container.style.removeProperty("--vocal-bright");
+    return;
+  }
+  container.style.setProperty("--vocal-scale", (1 + v * 0.035).toFixed(4));
+  container.style.setProperty("--vocal-bright", (1 + v * 0.18).toFixed(3));
+}
+
+function stopMouthDrive() {
+  if (_mouthRaf) cancelAnimationFrame(_mouthRaf);
+  _mouthRaf = 0;
+  setMouthOpen(0);
+}
+
+function startMouthDrive(audio) {
+  stopMouthDrive();
+  const ctx = mouthContext();
+  if (!ctx || !_mouthAnalyser || !audio) return;
+  // Browsers suspend the context until a gesture; playback already implies one.
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
+  let source;
+  try {
+    source = ctx.createMediaElementSource(audio);
+  } catch {
+    // Already connected to another element, or unsupported. Mouth drive is a
+    // garnish; never let it break playback.
+    return;
+  }
+  try {
+    source.connect(_mouthAnalyser);
+    _mouthAnalyser.connect(ctx.destination);
+  } catch {
+    return;
+  }
+  const tick = () => {
+    if (audio.paused || audio.ended) {
+      stopMouthDrive();
+      return;
+    }
+    _mouthAnalyser.getByteTimeDomainData(_mouthData);
+    let sum = 0;
+    for (let i = 0; i < _mouthData.length; i++) {
+      const v = (_mouthData[i] - 128) / 128;
+      sum += v * v;
+    }
+    const rms = Math.sqrt(sum / _mouthData.length);
+    // A floor keeps the mouth shut on near-silence so it does not twitch.
+    setMouthOpen(rms > 0.02 ? Math.min(1, rms * 3.2) : 0);
+    _mouthRaf = requestAnimationFrame(tick);
+  };
+  _mouthRaf = requestAnimationFrame(tick);
+}
+
 window.electronAPI.onPlaySound((payload) => {
   const url = typeof payload === "string" ? payload : payload && payload.url;
   const volume = typeof payload === "object" && payload && typeof payload.volume === "number"
     ? Math.max(0, Math.min(1, payload.volume))
     : 1;
+  const driveMouth = Boolean(payload && payload.driveMouth);
   if (!url) return;
   // Preview URLs carry a `_t=` cache-buster so every click is a fresh URL;
   // caching them would grow the map unboundedly (one entry per preview click)
@@ -1608,7 +1712,16 @@ window.electronAPI.onPlaySound((payload) => {
   warmAudioOutput(url).then(() => {
     audio.volume = volume;
     audio.currentTime = 0;
-    audio.play().catch((err) => reportSoundPlaybackError("play", err));
+    if (driveMouth) {
+      audio.addEventListener("ended", stopMouthDrive, { once: true });
+      audio.addEventListener("error", stopMouthDrive, { once: true });
+    }
+    audio.play().then(() => {
+      if (driveMouth) startMouthDrive(audio);
+    }).catch((err) => {
+      reportSoundPlaybackError("play", err);
+      stopMouthDrive();
+    });
   });
 });
 // Same-extension override replacement overwrites the file on disk without
