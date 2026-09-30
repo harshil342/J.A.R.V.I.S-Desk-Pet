@@ -10,11 +10,17 @@
   FileWrite $0 "$PROFILE"
   FileClose $0
 
-  ; Install ARM64 VC++ Runtime if missing (needed by native llama-server)
-  !if /FileExists "${BUILD_RESOURCES_DIR}\vc_redist.arm64.exe"
-    IfFileExists "$SYSDIR\vcruntime140.dll" vcrt_done 0
-      File /oname=$PLUGINSDIR\vc_redist.arm64.exe "${BUILD_RESOURCES_DIR}\vc_redist.arm64.exe"
-      ExecWait '"$PLUGINSDIR\vc_redist.arm64.exe" /install /quiet /norestart'
+  ; Install the x64 VC++ Runtime if missing (needed by the native llama-server).
+  ; x64 only per decision D3. This used to reference vc_redist.arm64.exe, which
+  ; was the only redist the build ever downloaded - so x64 users never got the
+  ; runtime they needed and were handed a useless arm64 one instead.
+  !if /FileExists "${BUILD_RESOURCES_DIR}\vc_redist.x64.exe"
+    ; Probe the real file, not $SYSDIR\vcruntime140.dll. That check is satisfied
+    ; by any vcruntime on the machine regardless of version or architecture, so
+    ; an old or foreign-architecture DLL silently skipped the install.
+    IfFileExists "$SYSDIR\msvcp140.dll" vcrt_done 0
+      File /oname=$PLUGINSDIR\vc_redist.x64.exe "${BUILD_RESOURCES_DIR}\vc_redist.x64.exe"
+      ExecWait '"$PLUGINSDIR\vc_redist.x64.exe" /install /quiet /norestart'
     vcrt_done:
   !endif
 !macroend

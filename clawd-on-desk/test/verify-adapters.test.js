@@ -64,7 +64,13 @@ test("verifyAdapters fails when a bundled adapter is missing", () => {
 test("package prebuild scripts run the adapter verification command", () => {
   const pkg = require("../package.json");
   assert.equal(pkg.scripts["verify:adapters"], VERIFY_COMMAND);
-  for (const name of ["prebuild", "prebuild:win:x64", "prebuild:mac", "prebuild:linux", "prebuild:all"]) {
+  // Derived from package.json rather than a hardcoded list. The hardcoded list
+  // outlived the scripts it named: dropping the mac/linux/arm64 targets for D3
+  // left these tests asserting on scripts that no longer existed.
+  const prebuild = Object.keys(pkg.scripts).filter((n) => n.startsWith("prebuild"));
+  assert.ok(prebuild.length > 0, "expected at least one prebuild script");
+  for (const name of prebuild) {
+    if (name === "prebuild:win:mvp") continue; // builds the gateway, not the app
     assert.ok(pkg.scripts[name].includes(VERIFY_COMMAND), `${name} should verify adapters before packaging`);
   }
 });

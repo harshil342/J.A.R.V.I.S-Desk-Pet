@@ -9,26 +9,12 @@
     "build:win:x64": "electron-builder --win nsis:x64",
     "build:win:mvp": "electron-builder --win nsis:x64",
     "prebuild:win:mvp": "powershell -NoProfile -ExecutionPolicy Bypass -File ../minicpm-sidecar/scripts/build-gateway.ps1",
-    "build:win:arm64": "electron-builder --win nsis:arm64",
-    "build:win:all": "electron-builder --win nsis:x64 nsis:arm64",
-    "build:mac": "electron-builder --mac",
-    "build:mac:mvp": "bash ../minicpm-sidecar/scripts/build-all.sh && electron-builder --mac --arm64 -c.mac.target=dmg",
-    "build:mac:repack": "electron-builder --mac --arm64 -c.mac.target=dmg",
-    "build:mac:notarize": "bash scripts/build-dmg-notarize.sh",
-    "build:mac:mvp:notarize": "bash ../minicpm-sidecar/scripts/build-all.sh && bash scripts/build-dmg-notarize.sh",
-    "build:linux": "electron-builder --linux",
-    "build:all": "electron-builder --win --mac --linux",
     "fetch:sidecars": "node scripts/fetch-sidecar-binaries.js",
     "verify:sidecars": "node scripts/verify-sidecar-binaries.js",
     "fetch:adapters": "node scripts/fetch-adapters.js",
     "verify:adapters": "node scripts/verify-adapters.js",
     "prebuild": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
     "prebuild:win:x64": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:win:arm64": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:win:all": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:mac": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:linux": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
-    "prebuild:all": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
     "test": "node test/run-tests.js",
     "sign:dev": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/make-dev-cert.ps1 -Trust",
     "sign:check": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-signing.ps1",
@@ -94,33 +80,6 @@
         ]
       }
     ],
-    "mac": {
-      "icon": "assets/icon.icns",
-      "artifactName": "Deskpet-${version}-${arch}.${ext}",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "category": "public.app-category.entertainment",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
-      "extendInfo": {
-        "LSUIElement": true
-      },
-      "extraResources": [
-        {
-          "from": "../minicpm-sidecar/bin/mac-arm64",
-          "to": "sidecar-bin"
-        }
-      ]
-    },
     "win": {
       "icon": "assets/icon.ico",
       "artifactName": "Deskpet-${version}-${arch}.${ext}",
@@ -128,8 +87,7 @@
         {
           "target": "nsis",
           "arch": [
-            "x64",
-            "arm64"
+            "x64"
           ]
         }
       ],
@@ -142,32 +100,6 @@
             "**/minicpm-sidecar.exe",
             "**/*.dll"
           ]
-        }
-      ]
-    },
-    "linux": {
-      "maintainer": "Deskpet Assistant",
-      "icon": "assets/icons",
-      "category": "Utility",
-      "artifactName": "Deskpet-${version}-${arch}.${ext}",
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "extraResources": [
-        {
-          "from": "../minicpm-sidecar/bin/linux-x64",
-          "to": "sidecar-bin"
         }
       ]
     },

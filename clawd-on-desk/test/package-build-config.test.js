@@ -71,105 +71,58 @@ describe("package build config", () => {
     );
   });
 
-  describe("Windows architecture targets", () => {
-    function getWindowsNsisTarget() {
+  // Decision D3: Windows x64 is the only supported target. These used to pin
+  // x64+arm64 across three platforms, which is how a build that shipped x64
+  // binaries inside an arm64 installer, and a README link to a macOS DMG the
+  // pipeline could never produce, survived this long.
+  describe("Windows is the only build target (D3)", () => {
+    it("builds exactly one Windows architecture, x64", () => {
       const targets = pkg.build.win && pkg.build.win.target;
-      return Array.isArray(targets) ? targets.find((target) => target && target.target === "nsis") : null;
-    }
-
-    it("builds native Windows installers for x64 and arm64", () => {
-      const target = getWindowsNsisTarget();
-      assert.ok(target, "build.win.target should include an nsis target");
+      assert.ok(Array.isArray(targets), "build.win.target should be an array");
+      const nsis = targets.find((t) => t && t.target === "nsis");
+      assert.ok(nsis, "build.win.target should include an nsis target");
+      // electron-builder has no per-arch extraResources, so a second arch
+      // would silently receive win-x64 native binaries.
       assert.deepStrictEqual(
-        target.arch.slice().sort(),
-        ["x64", "arm64"].slice().sort(),
-        "Windows NSIS builds should publish both x64 and ARM64 installers"
+        nsis.arch,
+        ["x64"],
+        "only x64 may be declared: extraResources cannot vary per arch, so a " +
+        "second arch would ship x64 llama-server.exe/minicpm-sidecar.exe"
       );
     });
 
-    it("uses architecture-specific Windows installer names", () => {
-      const artifactName = pkg.build.win && pkg.build.win.artifactName;
-      assert.strictEqual(
-        typeof artifactName,
-        "string",
-        "build.win.artifactName should be a string"
-      );
+    it("declares no macOS or Linux target", () => {
+      assert.strictEqual(pkg.build.mac, undefined, "macOS is not supported (D3)");
+      assert.strictEqual(pkg.build.linux, undefined, "Linux is not supported (D3)");
+    });
+
+    it("keeps ${arch} in the installer name", () => {
       assert.match(
-        artifactName,
+        pkg.build.win.artifactName,
         /\$\{arch\}/,
-        "Windows artifactName must include ${arch} so x64 and ARM64 installers cannot collide"
+        "artifactName must include ${arch} so the name stays explicit"
       );
     });
 
-    it("exposes explicit Windows architecture build scripts", () => {
+    it("does not emit a universal installer", () => {
+      assert.strictEqual(pkg.build.nsis && pkg.build.nsis.buildUniversalInstaller, false);
+    });
+  });
+
+  describe("build scripts match the declared target", () => {
+    it("has an x64 script and no arm64-only one", () => {
       assert.strictEqual(pkg.scripts["build:win:x64"], "electron-builder --win nsis:x64");
-      assert.strictEqual(pkg.scripts["build:win:arm64"], "electron-builder --win nsis:arm64");
-      assert.strictEqual(pkg.scripts["build:win:all"], "electron-builder --win nsis:x64 nsis:arm64");
-    });
-
-    it("does not emit a redundant universal Windows installer", () => {
-      assert.strictEqual(
-        pkg.build.nsis && pkg.build.nsis.buildUniversalInstaller,
-        false,
-        "Windows releases should publish explicit x64/ARM64 installers, not an extra universal NSIS installer"
-      );
-    });
-  });
-
-  describe("macOS architecture targets", () => {
-    function getMacDmgTarget() {
-      const targets = pkg.build.mac && pkg.build.mac.target;
-      return Array.isArray(targets) ? targets.find((target) => target && target.target === "dmg") : null;
-    }
-
-    it("builds native macOS DMGs for x64 and arm64", () => {
-      const target = getMacDmgTarget();
-      assert.ok(target, "build.mac.target should include a dmg target");
-      assert.deepStrictEqual(
-        target.arch.slice().sort(),
-        ["x64", "arm64"].slice().sort(),
-        "macOS builds should publish both x64 and ARM64 DMGs"
+      assert.ok(
+        !pkg.scripts["build:win:arm64"] && !/arm64/.test(pkg.scripts["build:win:all"] || ""),
+        "arm64 build scripts must go with the dropped target, or they will " +
+        "produce an installer with x64 native binaries"
       );
     });
 
-    it("uses architecture-specific macOS DMG names without spaces", () => {
-      const artifactName = pkg.build.mac && pkg.build.mac.artifactName;
-      assert.strictEqual(
-        typeof artifactName,
-        "string",
-        "build.mac.artifactName should be a string"
-      );
-      assert.match(
-        artifactName,
-        /\$\{arch\}/,
-        "macOS artifactName must include ${arch} so x64 and ARM64 DMGs cannot collide"
-      );
-      assert.doesNotMatch(
-        artifactName,
-        /\s/,
-        "macOS artifactName should not contain spaces so latest-mac.yml URLs match uploaded DMG assets"
-      );
-    });
-  });
-
-  describe("Linux artifact targets", () => {
-    it("uses Linux artifact names without spaces so latest-linux.yml URLs match uploaded assets", () => {
-      const artifactName = pkg.build.linux && pkg.build.linux.artifactName;
-      assert.strictEqual(
-        typeof artifactName,
-        "string",
-        "build.linux.artifactName should be a string"
-      );
-      assert.match(
-        artifactName,
-        /\$\{arch\}/,
-        "Linux artifactName should include ${arch} so architecture-specific assets stay explicit"
-      );
-      assert.doesNotMatch(
-        artifactName,
-        /\s/,
-        "Linux artifactName should not contain spaces so latest-linux.yml URLs match uploaded assets"
-      );
+    it("has a signed build entry point", () => {
+      assert.match(pkg.scripts["build:win:signed"] || "", /build-signed\.ps1/,
+        "signing is a functional requirement: electron-updater rejects an " +
+        "unsigned artifact, so there must be one command that builds signed");
     });
   });
 

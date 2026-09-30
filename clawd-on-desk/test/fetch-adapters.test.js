@@ -330,7 +330,12 @@ test("the nekoqa preset destination keeps the persona-hint token", () => {
 test("prebuild scripts fetch adapters before packaging", () => {
   const pkg = require("../package.json");
   assert.equal(pkg.scripts["fetch:adapters"], FETCH_COMMAND);
-  for (const name of ["prebuild", "prebuild:win:x64", "prebuild:mac", "prebuild:linux", "prebuild:all"]) {
+  // Derived from package.json, not a hardcoded list that outlives the scripts
+  // it names. See the matching test in verify-adapters.test.js.
+  const prebuild = Object.keys(pkg.scripts).filter((n) => n.startsWith("prebuild"));
+  assert.ok(prebuild.length > 0, "expected at least one prebuild script");
+  for (const name of prebuild) {
+    if (name === "prebuild:win:mvp") continue; // builds the gateway, not the app
     assert.ok(pkg.scripts[name].includes("scripts/fetch-adapters.js"), `${name} should fetch adapters`);
     assert.ok(pkg.scripts[name].includes("scripts/verify-adapters.js"), `${name} should verify adapters`);
   }
