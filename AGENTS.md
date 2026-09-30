@@ -53,6 +53,34 @@ Two API facts that are easy to get wrong and cost real time:
 
 Full working example with the assertions: `scripts/check-scrapling.py`.
 
+## Design and UI quality
+
+**The renderer is vanilla HTML/CSS/JS. Keep it that way.** No React, no
+Tailwind, no Framer Motion. Watermelon UI and Componentry are both excellent and
+both are React-first; adopting either would add ~100 KB gzipped to a pet that
+runs all day. Take their *design language* — motion curves, elevation, spacing
+rhythm — and write it in CSS using **compositor-only properties** (`transform`,
+`opacity`). Never `width`, `height`, `padding`, `margin`, `top`/`left` in a
+`transition`: those reflow every frame.
+
+Regenerate the design tooling (not committed — 14 MB of it is a Windows binary):
+
+```powershell
+npx impeccable install --providers=opencode --scope=project --no-hooks
+```
+
+Then run the **deterministic** detector before and after any UI change. It needs
+no LLM and no API key, so it works in CI:
+
+```powershell
+.\.opencode\skills\impeccable\scripts\bin\windows-x64\impeccable.exe detect clawd-on-desk/src
+```
+
+Baseline on `7411f43` was **37 findings**; see `docs/ui-audit.md` for the
+breakdown and what is deliberately left. It flags AI-slop tells (chromatic
+glows, 3px side-tab borders, bounce easing) as well as the layout-transition and
+oversized-text problems that cost frames and legibility.
+
 ## Release hygiene
 
 - The release hook lives at `scripts/release.mjs` (`npm run release:check`).

@@ -329,7 +329,7 @@ html, body {
   cursor: pointer;
   user-select: none;
   overflow: hidden;
-  transition: background 0.12s ease, padding 0.18s ease;
+  transition: background 0.12s ease;
 }
 .collapsible-group-header:hover {
   background: rgba(0, 0, 0, 0.025);
@@ -520,8 +520,10 @@ html, body {
   padding: 10px 16px 12px 40px;
   opacity: 1;
   transform: translateY(0);
-  transition: max-height 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.16s ease, transform 0.18s ease, padding 0.18s ease, border-color 0.18s ease;
-  will-change: max-height, opacity, transform;
+  transition: max-height 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.16s ease, transform 0.18s ease, border-color 0.18s ease;
+  /* No will-change here. It listed max-height, which is not a compositable
+     property, so the browser permanently held resources for an animation that
+     could never run on the compositor anyway. */
 }
 .collapsible-group.collapsed .collapsible-group-body {
   max-height: 0;
@@ -2422,10 +2424,28 @@ html, body {
   animation: doctor-skeleton-sheen 1.2s ease-in-out infinite;
 }
 @keyframes doctor-skeleton-sheen {
-  to {
-    transform: translateX(100%);
+    to {
+      transform: translateX(100%);
+    }
   }
-}
+
+  /* The sheen is an infinite loop, so it keeps the compositor awake for as long
+     as the diagnostics modal is open - for a panel that is usually just reading
+     a result. Two guards: honour the OS reduced-motion setting, and stop
+     entirely once loading has actually finished, so an idle modal costs nothing. */
+  @media (prefers-reduced-motion: reduce) {
+    .doctor-skeleton-title::after,
+    .doctor-skeleton-pill::after,
+    .doctor-skeleton-line::after {
+      animation: none !important;
+    }
+  }
+
+  .doctor:not(.doctor-loading) .doctor-skeleton-title::after,
+  .doctor:not(.doctor-loading) .doctor-skeleton-pill::after,
+  .doctor:not(.doctor-loading) .doctor-skeleton-line::after {
+    animation: none;
+  }
 .doctor-agent-list {
   margin: 0 0 0 31px;
   padding-top: 7px;
@@ -2480,7 +2500,7 @@ html, body {
   grid-template-rows: 0fr;
   opacity: 0;
   margin-top: 0;
-  transition: grid-template-rows 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.16s ease, margin-top 0.2s ease;
+  transition: grid-template-rows 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.16s ease;
 }
 .doctor-agent-collapsible.expanded .doctor-agent-body {
   grid-template-rows: 1fr;
@@ -2636,9 +2656,14 @@ html, body {
 .doctor-connection-progress span {
   display: block;
   height: 100%;
+  width: 100%;
   border-radius: inherit;
   background: var(--doctor-warning);
-  transition: width 0.24s ease;
+  /* scaleX, not width: a width animation relayouts every frame; a transform
+     runs on the compositor. JS sets scaleX(0..1) instead of width. */
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.24s ease;
 }
 .doctor-action-bar {
   display: flex;

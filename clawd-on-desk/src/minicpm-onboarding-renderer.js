@@ -195,7 +195,7 @@ async function runEnvCheck() {
 
 // ── Step 2: model panel ───────────────────────────────────────────────
 function setProgress(percent, detail) {
-  el("progress-fill").style.width = `${Math.max(0, Math.min(100, percent))}%`;
+  el("progress-fill").style.transform = `scaleX(${Math.max(0, Math.min(100, percent)) / 100})`;
   el("progress-percent").textContent = `${Math.round(percent)}%`;
   if (detail !== undefined) el("progress-detail").textContent = detail;
 }

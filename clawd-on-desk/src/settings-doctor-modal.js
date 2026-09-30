@@ -521,7 +521,7 @@
       ? t(core, "doctorConnectionInstruction")
       : connectionDetailText(core, test);
     const progress = state.connectionTesting
-      ? `<div class="doctor-connection-progress" aria-hidden="true"><span style="width: ${escape(core, String(connectionProgressPercent()))}%"></span></div>`
+      ? `<div class="doctor-connection-progress" aria-hidden="true"><span style="transform: scaleX(${escape(core, String(connectionProgressPercent() / 100))})"></span></div>`
       : "";
     return (
       `<div class="doctor-connection-panel ${cls}">` +

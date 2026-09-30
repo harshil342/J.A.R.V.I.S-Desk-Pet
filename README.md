@@ -232,7 +232,7 @@ iwr -useb https://raw.githubusercontent.com/harshil342/J.A.R.V.I.S-Desk-Pet/main
 Windows 10/11, 64-bit. This is the only platform currently built and verified.
 
 1. Grab the newest build from the rolling channel — the URL never changes:
-   [**`Deskpet-Setup.exe`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/windows-latest/Deskpet-0.12.0-x64.exe)
+   [**`Deskpet-Setup.exe`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/windows-latest/Deskpet-Setup.exe)
 2. Run the installer and launch **Deskpet**.
 3. The guided first-run onboarding wizard detects your GPU and RAM, then fetches the model it recommends.
 
@@ -373,7 +373,7 @@ J.A.R.V.I.S. pairs ultra-low-latency deterministic execution with native edge mo
 
 ## 🧪 Quality & Test Verification Matrix
 
-J.A.R.V.I.S. Desk Pet is verified with **4,708 automated tests** passing with 0
+J.A.R.V.I.S. Desk Pet is verified with **4,715 automated tests** passing with 0
 failures across both the Electron desktop shell and the Python FastAPI sidecar
 gateway. The numbers below are the real output of the two commands in the next
 section, not a target.
@@ -384,10 +384,10 @@ section, not a target.
 ========================================================================================
  Suite Layer                 | Passed   | Failed | Skipped | Test Suites / Files
  -----------------------------+----------+--------+---------+----------------------------
- Electron & UI Runtime       | 4,426    | 0      | 12      | 500 suites (1,248 test units)
+ Electron & UI Runtime       | 4,433    | 0      | 12      | 500 suites (1,248 test units)
  Python FastAPI Gateway      | 282      | 0      | 2       | 282 test items
  -----------------------------+----------+--------+---------+----------------------------
- TOTAL VERIFIED TESTS        | 4,708    | 0      | 14      | 100% passing pass rate
+ TOTAL VERIFIED TESTS        | 4,715    | 0      | 14      | 100% passing pass rate
 ========================================================================================
 ```
 
@@ -404,7 +404,7 @@ fully covered". The suite is a floor, not a certificate.
 # 1. Parse check over every source file (no config, no dependency)
 cd clawd-on-desk && npm run lint
 
-# 2. The complete Electron test suite (4,426 tests)
+# 2. The complete Electron test suite (4,433 tests)
 node test/run-tests.js
 
 # 3. Python FastAPI gateway suite (282 tests), from the repo root

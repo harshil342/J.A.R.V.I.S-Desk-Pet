@@ -505,9 +505,12 @@ body {
 }
 .progress-fill {
   height: 100%;
-  width: 0%;
+  width: 100%;
   background: linear-gradient(90deg, var(--ok-strong), var(--ok));
-  transition: width 0.25s ease-out;
+  /* scaleX, not width - see .doctor-connection-progress span. */
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.25s ease-out;
 }
 .progress-text {
   display: flex;

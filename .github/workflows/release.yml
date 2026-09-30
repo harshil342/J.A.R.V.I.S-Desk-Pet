@@ -87,35 +87,33 @@ jobs:
         working-directory: minicpm-sidecar
         run: |
           .\scripts\fetch-llama-release.ps1 -Backend cpu -Target win-x64
-          .\scripts\fetch-llama-release.ps1 -Backend vulkan -Target win-x64
-          .\scripts\fetch-llama-release.ps1 -Backend cpu -Target win-arm64
 
       - name: Build gateway
         working-directory: minicpm-sidecar
         run: |
           .\scripts\build-gateway.ps1 -Target win-x64
-          Copy-Item -Force bin\win-x64\minicpm-sidecar.exe bin\win-arm64\minicpm-sidecar.exe
 
       - name: Verify sidecar binaries
         working-directory: minicpm-sidecar
         run: |
           Get-ChildItem -Recurse bin\win-x64 | Select-Object FullName,Length
           .\bin\win-x64\llama-server.exe --version
-          .\bin\win-x64\backends\vulkan\llama-server.exe --version
           .\bin\win-x64\minicpm-sidecar.exe --help | Out-Null
-          Write-Host "==> Verify win-arm64 files exist" -ForegroundColor Cyan
-          Get-ChildItem -Recurse bin\win-arm64 | Select-Object FullName,Length
-          if (-not (Test-Path bin\win-arm64\llama-server.exe)) { throw "win-arm64 llama-server missing" }
-          if (-not (Test-Path bin\win-arm64\minicpm-sidecar.exe)) { throw "win-arm64 gateway missing" }
+          # Read the PE header. Test-Path cannot: this file used to be copied
+          # from win-x64 into a win-arm64 folder and "verified" by existing.
+          .\scripts\assert-pe-arch.ps1 -Path bin\win-x64\llama-server.exe -Expect x64
+          .\scripts\assert-pe-arch.ps1 -Path bin\win-x64\minicpm-sidecar.exe -Expect x64
 
-      - name: Download ARM64 VC++ Redistributable
+      - name: Download x64 VC++ Redistributable
         run: |
-          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.arm64.exe" `
-            -OutFile "clawd-on-desk\build\vc_redist.arm64.exe"
+          # D3 removed arm64; the ARM64 redist was still being downloaded here and
+          # installed for x64 users. It is keyed by arch on purpose.
+          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" `
+            -OutFile "clawd-on-desk\build\vc_redist.x64.exe"
 
-      - name: npm install
+      - name: npm ci
         working-directory: clawd-on-desk
-        run: npm install --no-audit --no-fund
+        run: npm ci
 
       - name: Fetch LoRA adapters
         working-directory: clawd-on-desk
@@ -127,7 +125,7 @@ jobs:
         env:
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK || secrets.CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD || secrets.CSC_KEY_PASSWORD }}
-        run: npx electron-builder --win --x64 --arm64 --publish never
+        run: npx electron-builder --win --x64 --publish never
 
       - uses: actions/upload-artifact@v4
         with:
@@ -188,9 +186,17 @@ jobs:
           fail_on_unmatched_files: true
           draft: ${{ steps.gate.outputs.signed == 'false' }}
 
-  # Rolling channel: windows-latest always names the newest signed build, so the
-  # install docs can point at one URL that never goes stale. Adopted from
-  # Coucou, which publishes its Windows installer the same way.
+  # Rolling channel: windows-latest always carries the newest signed installer
+  # under one stable name, so the install docs can point at a single URL that
+  # never goes stale. Adopted from Coucou, which publishes its Windows
+  # installer the same way.
+  #
+  # Two assets per release, deliberately:
+  #   v0.12.0  -> Deskpet-0.12.0-x64.exe   versioned, so a user can pin one
+  #   windows-latest -> Deskpet-Setup.exe  stable, so the README never breaks
+  # The stable name has to be a *copy*. Renaming the artifact itself to
+  # Deskpet-Setup.exe would lose version pinning, which is the only way to
+  # offer "go back to the last good build" after a bad release.
   #
   # Only moves when the release is public. Pointing the channel at a draft would
   # hand every user on that URL a build that may still be unsigned.
@@ -201,19 +207,46 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Skipped
+        if: needs.release.outputs.draft == 'true'
+        run: echo "::notice::Release is a draft, so windows-latest was left where it is."
+
+      # Step-level if, not `exit 0` in a prior step: steps are independent, so a
+      # non-failing early exit would still run the ones after it.
       - uses: actions/checkout@v4
+        if: needs.release.outputs.draft != 'true'
         with:
           fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        if: needs.release.outputs.draft != 'true'
+        with:
+          name: windows-installer
+          path: rolling
+
+      - name: Publish the stable installer name
+        if: needs.release.outputs.draft != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          src=$(ls rolling/Deskpet-*-x64.exe | head -n1)
+          test -n "$src" || { echo "::error::no versioned installer in rolling/"; exit 1; }
+          cp "$src" rolling/Deskpet-Setup.exe
+          echo "windows-latest -> $src, published as Deskpet-Setup.exe"
+          ls -la rolling/
+
+      - name: Upload Deskpet-Setup.exe to windows-latest
+        if: needs.release.outputs.draft != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-latest
+          files: rolling/Deskpet-Setup.exe
+
       - name: Point windows-latest at this release
-        # A step-level if, not `exit 0` in a prior step: steps are independent,
-        # so a non-zero-free early exit would still run this one.
         if: needs.release.outputs.draft != 'true'
         run: |
           git tag -f windows-latest "${{ github.ref_name }}"
           git push origin --force "refs/tags/windows-latest"
           echo "windows-latest -> ${{ github.ref_name }}"
-
-      - name: Skipped
-        if: needs.release.outputs.draft == 'true'
-        run: echo "::notice::Release is a draft, so windows-latest was left where it is."
+          echo "install URL: https://github.com/${{ github.repository }}/releases/download/windows-latest/Deskpet-Setup.exe"
 

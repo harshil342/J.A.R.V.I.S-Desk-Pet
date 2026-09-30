@@ -3893,7 +3893,37 @@ describe("settings renderer browser environment", () => {
     assert.ok(coreSource.includes("body.inert = isCollapsed"));
     assert.ok(!coreSource.includes("body.hidden = collapsed;"));
     assert.ok(/\.collapsible-group-body\s*\{[\s\S]*max-height:\s*var\(--collapsible-body-height,\s*0px\);/.test(css));
-    assert.ok(/\.collapsible-group-body\s*\{[\s\S]*transition:\s*max-height 0\.22s cubic-bezier\(0\.22,\s*1,\s*0\.36,\s*1\),\s*opacity 0\.16s ease,\s*transform 0\.18s ease,\s*padding 0\.18s ease,\s*border-color 0\.18s ease;/.test(css));
+    // Assert the intent - max-height is animated, so the body grows rather than
+    // jumping - not one verbatim transition string. The exact list changed when
+    // `padding` came off: padding is a layout property, so animating it forces a
+    // reflow every frame, and nobody can see the difference on a settings
+    // accordion. Assert the property that matters and reject the ones that thrash.
+    const collapsibleRule = (/\.collapsible-group-body\s*\{([\s\S]*?)\n\}/.exec(css) || [null, ""])[1];
+    const collapsibleTransition = (/transition:\s*([^;]+);/.exec(collapsibleRule) || [null, ""])[1];
+    assert.ok(
+      /max-height/.test(collapsibleTransition),
+      `the collapsible body must still animate its height, got: ${collapsibleTransition}`
+    );
+    // Split on commas and compare whole property names. A substring regex is
+    // wrong here: `\bheight\b` matches the "height" inside "max-height".
+    const transitioned = collapsibleTransition
+      .split(",")
+      .map((part) => part.trim().split(/\s+/)[0]);
+    const LAYOUT_PROPS = new Set([
+      "padding", "padding-top", "padding-bottom", "padding-left", "padding-right",
+      "margin", "margin-top", "margin-bottom", "margin-left", "margin-right",
+      "width", "height", "top", "left", "right", "bottom", "all",
+    ]);
+    const thrashing = transitioned.filter((prop) => LAYOUT_PROPS.has(prop));
+    assert.deepStrictEqual(
+      thrashing,
+      [],
+      `do not transition layout properties - each frame reflows the page: ${collapsibleTransition}`
+    );
+    assert.ok(
+      !/will-change:[^;]*max-height/.test(collapsibleRule),
+      "will-change on max-height permanently holds resources for a property that can never composite"
+    );
     assert.ok(/\.collapsible-group\.collapsed\s+\.collapsible-group-body\s*\{[\s\S]*opacity:\s*0;[\s\S]*transform:\s*translateY\(-4px\);/.test(css));
     assert.ok(/@media \(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*\.collapsible-group-body/.test(css));
   });

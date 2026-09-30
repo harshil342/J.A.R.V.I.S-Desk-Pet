@@ -1916,13 +1916,13 @@ function showUpdateProgress(ev) {
 
   if (ev.phase === "transfer" && ev.bytes_total > 0) {
     const pct = Math.min(100, (ev.bytes_done / ev.bytes_total) * 100);
-    updProgressEl.bar.style.width = pct.toFixed(1) + "%";
+    updProgressEl.bar.style.transform = `scaleX(${(pct / 100).toFixed(4)})`;
     const mb = (n) => (n / (1024 * 1024)).toFixed(1);
     updProgressEl.text.textContent = t("onboardingDownloading") + ` ${mb(ev.bytes_done)} / ${mb(ev.bytes_total)} MB`;
   } else if (ev.phase === "swap") {
     updProgressEl.text.textContent = t("onboardingDownloading");
   } else if (ev.phase === "complete") {
-    updProgressEl.bar.style.width = "100%";
+    updProgressEl.bar.style.transform = "scaleX(1)";
     updProgressEl.text.textContent = t("chatUpdateApplyDone");
   } else if (ev.phase === "reloaded") {
     updProgressEl.text.textContent = "✓ " + t("onboardingWarmupReady");

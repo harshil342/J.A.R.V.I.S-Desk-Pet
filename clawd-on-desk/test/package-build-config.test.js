@@ -268,6 +268,104 @@ describe("package build config", () => {
       );
     });
 
+    it("publishes a stable installer name to the rolling channel", () => {
+      // Moving the rolling tag is not enough. The versioned asset lives on the
+      // version tag, so windows-latest/Deskpet-<version>-x64.exe 404s forever.
+      // The channel only earns its name if it carries an asset of its own.
+      const workflow = releaseWorkflow();
+      const roll = workflow.indexOf("  roll:");
+      assert.ok(roll >= 0, "release.yml should define a roll job");
+      const step = workflow.slice(roll);
+      assert.ok(
+        /tag_name:\s*windows-latest/.test(step),
+        "the roll job should upload an asset to the windows-latest tag"
+      );
+      assert.ok(
+        /Deskpet-Setup\.exe/.test(step),
+        "the rolling channel should publish the stable Deskpet-Setup.exe name"
+      );
+      assert.ok(
+        /actions\/download-artifact/.test(step),
+        "the roll job needs the built installer, so it must download the artifact"
+      );
+      // Uploading before moving the tag would publish the asset onto the *old*
+      // release. Upload first, then move.
+      assert.ok(
+        step.indexOf("Deskpet-Setup.exe") < step.indexOf("git tag -f"),
+        "upload the stable asset before moving the rolling tag"
+      );
+    });
+
+    it("keeps the install docs pointing at the stable URL", () => {
+      // Ties the README to the release contract: the docs are the only place a
+      // user learns the URL, and a versioned one silently breaks next release.
+      const readme = fs.readFileSync(path.join(ROOT, "..", "README.md"), "utf8");
+      assert.ok(
+        /releases\/download\/windows-latest\/Deskpet-Setup\.exe/.test(readme),
+        "README should link the stable windows-latest installer"
+      );
+      const versioned = readme.match(/releases\/download\/windows-latest\/Deskpet-[\d.]/);
+      assert.strictEqual(
+        versioned,
+        null,
+        `README links a versioned name through the rolling channel, which breaks after the next release: ${versioned}`
+      );
+    });
+
+    it("builds only the declared architecture in the publishing workflow", () => {
+      // release.yml is the workflow that actually publishes, and it kept all
+      // three D3 regressions long after build-installer.yml was fixed: --arm64,
+      // the arm64 VC++ redist, and `npm install --no-audit`. None would fail
+      // loudly; all three would ship the wrong thing.
+      const workflow = releaseWorkflow();
+      const active = workflow
+        .split("\n")
+        .filter((line) => !/^\s*#/.test(line))
+        .join("\n");
+      assert.ok(
+        !/--arm64/.test(active),
+        "release.yml must not pass --arm64; package.json declares x64 only"
+      );
+      assert.ok(
+        !/vc_redist\.arm64/.test(active),
+        "release.yml must not download the arm64 redistributable for x64 users"
+      );
+      assert.ok(
+        /electron-builder --win --x64/.test(active),
+        "release.yml should build the x64 NSIS target it declares"
+      );
+      assert.ok(
+        !/npm install --no-audit/.test(active),
+        "release.yml should use `npm ci` so the lockfile is honoured"
+      );
+      assert.ok(
+        !/vulkan/i.test(active),
+        "D3 dropped the Vulkan backend; release.yml must not fetch or verify it"
+      );
+      assert.ok(
+        !/Copy-Item[^\n]*win-x64[^\n]*win-arm64/.test(active),
+        "do not relabel an x64 binary as arm64 - that is how the wrong arch shipped silently"
+      );
+    });
+
+    it("verifies sidecar architecture from the PE header, not from Test-Path", () => {
+      const workflow = releaseWorkflow();
+      assert.ok(
+        /assert-pe-arch\.ps1/.test(workflow),
+        "release.yml should assert the packaged binaries' architecture"
+      );
+      assert.ok(
+        !/Test-Path[^\n]*arm64/.test(workflow),
+        "Test-Path cannot tell an x64 binary from an arm64 one"
+      );
+      const script = path.join(ROOT, "..", "minicpm-sidecar", "scripts", "assert-pe-arch.ps1");
+      assert.ok(fs.existsSync(script), "assert-pe-arch.ps1 should exist");
+      assert.ok(
+        /0x8664/.test(fs.readFileSync(script, "utf8")),
+        "the assertion should compare real IMAGE_FILE_MACHINE values"
+      );
+    });
+
     it("resolves product metadata repository and publish configuration", () => {
       const productMetadata = require("../src/product-metadata");
       assert.strictEqual(productMetadata.githubOwner, "harshil342");
