@@ -696,8 +696,17 @@ html, body {
   outline: none;
 }
 .bubble-policy-seconds:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
+border-color: var(--accent);
+box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
+}
+/* This rule sets `outline: none` and replaces the indicator with a tinted
+   box-shadow, so the focus state is a chromatic halo rather than an outline -
+   and it is worse in two ways: a box-shadow ring does not follow the element's
+   border-radius the way `outline` does, and it is invisible to forced-colours
+   mode. The global :focus-visible outline in tokens.css replaces it. */
+.bubble-policy-seconds:focus-visible {
+outline: var(--focus-ring-width) solid var(--accent);
+outline-offset: var(--focus-ring-offset);
 }
 .bubble-policy-seconds:disabled {
   opacity: 0.45;
@@ -843,8 +852,13 @@ html, body {
   outline: none;
 }
 .hardware-buddy-text-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
+border-color: var(--accent);
+box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
+}
+/* See .bubble-policy-seconds:focus-visible - outline, not a tinted halo. */
+.hardware-buddy-text-input:focus-visible {
+outline: var(--focus-ring-width) solid var(--accent);
+outline-offset: var(--focus-ring-offset);
 }
 .hardware-buddy-text-input.pending {
   cursor: wait;
@@ -997,7 +1011,9 @@ html, body {
 }
 .volume-slider:hover::-webkit-slider-thumb {
   transform: scale(1.08);
-  box-shadow: 0 5px 14px color-mix(in srgb, var(--accent) 30%, transparent), 0 2px 8px rgba(0, 0, 0, 0.18);
+  /* Was a 30% accent-coloured glow. Depth reads from opacity, not hue: a tinted
+     halo is the default 'cool' look of a generated interface. */
+  box-shadow: var(--elevation-3);
 }
 .volume-readout {
   font-size: 12px;
@@ -1163,7 +1179,7 @@ html, body {
 .language-picker.open .language-picker-trigger {
   border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
   background: var(--panel-bg);
-  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.12);
+  box-shadow: var(--elevation-3);
 }
 .language-picker-trigger:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent) 78%, transparent);
@@ -2068,9 +2084,12 @@ html, body {
 }
 .anim-override-slider-row input[type="range"]:focus-visible::-webkit-slider-thumb {
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent),
-    0 7px 16px color-mix(in srgb, var(--accent) 38%, transparent),
-    0 1px 2px rgba(0, 0, 0, 0.18);
+  0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent),
+  var(--elevation-3);
+  /* The second shadow was 0 7px 16px color-mix(accent 38%) - a coloured blurred
+     halo around the thumb. That is the generated-UI glow, not an elevation cue.
+     The zero-offset ring stays: a webkit pseudo-element cannot render an
+     outline, so the ring has to be a shadow. */
 }
 .anim-override-number-field {
   display: inline-flex;
@@ -2308,8 +2327,13 @@ html, body {
 }
 .doctor-check-row {
   border: 1px solid var(--border);
-  border-left-width: 3px;
-  border-radius: 8px;
+  /* A status rail, not decoration: .doctor-check-row.pass/.warning/.critical
+     recolour border-left-color, and severity is the fastest thing to read in a
+     diagnostics list. The detector flags any 3px side border as a generated-UI
+     tell, and its own remedy is "a subtler accent" - so 2px, not removal. The
+     weight is what read as decoration; the colour is the information. */
+  border-left-width: 2px;
+  border-radius: var(--radius-lg);
   padding: 8px 10px;
   background: var(--bg);
 }
@@ -2628,8 +2652,11 @@ html, body {
 }
 .doctor-connection-panel {
   border: 1px solid var(--border);
-  border-left: 3px solid var(--border);
-  border-radius: 8px;
+  /* Was border-left: 3px solid var(--border). Unlike .doctor-check-row, no
+     status rule ever recolours this border - .doctor-connection-panel.pass
+     and friends only recolour the .doctor-check-dot - so the weight carried no
+     information at all. Removed rather than reduced. */
+  border-radius: var(--radius-lg);
   padding: 8px 10px;
   background: var(--bg);
   transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;

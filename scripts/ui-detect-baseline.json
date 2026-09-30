@@ -1,0 +1,9 @@
+{
+  "total": 9,
+  "counts": {
+    "clipped-overflow-container": 6,
+    "layout-transition": 1,
+    "marquee": 1,
+    "dark-glow": 1
+  }
+}

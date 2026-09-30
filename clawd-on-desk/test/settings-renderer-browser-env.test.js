@@ -2280,7 +2280,15 @@ describe("settings renderer browser environment", () => {
     assert.ok(/\.doctor-agent-toggle\s*\{[\s\S]*grid-template-columns:\s*auto auto auto minmax\(0,\s*1fr\) auto;/.test(css));
     assert.ok(/\.doctor-agent-body\s*\{[\s\S]*grid-template-rows:\s*0fr;[\s\S]*transition:[\s\S]*grid-template-rows 0\.24s cubic-bezier/.test(css));
     assert.ok(/\.doctor-agent-collapsible\.expanded \.doctor-agent-body\s*\{[\s\S]*grid-template-rows:\s*1fr;/.test(css));
-    assert.ok(/\.doctor-check-row\s*\{[\s\S]*border-left-width:\s*3px;/.test(css));
+    // The status rail stays - .pass/.warning/.critical recolour it and severity
+    // is the fastest thing to read in a diagnostics list - but at 2px. A 3px
+    // side border is the most recognisable tell of a generated interface, and
+    // the weight is what read as decoration. Assert the rail and the subtler
+    // weight rather than deleting a functional affordance.
+    assert.ok(/\.doctor-check-row\s*\{[\s\S]*border-left-width:\s*[12]px;/.test(css),
+      "the doctor check row keeps a status rail, at 1px or 2px");
+    assert.ok(!/\.doctor-check-row\s*\{[\s\S]*?border-left-width:\s*[3-9]px;/.test(css),
+      "no heavy side border on the doctor check row");
     assert.ok(/\.doctor-check-status\s*\{[\s\S]*border-radius:\s*999px;/.test(css));
     assert.ok(/\.doctor-close:hover\s*\{[\s\S]*background:\s*rgba\(var\(--accent-rgb\),\s*0\.1\);[\s\S]*transform:\s*scale\(1\.04\);/.test(css));
     assert.ok(/\.doctor-close:focus-visible\s*\{[\s\S]*outline:\s*2px solid var\(--accent\);/.test(css));

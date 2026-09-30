@@ -1,0 +1,158 @@
+/* ==========================================================================
+   tokens.css — the scales everything else consumes.
+
+   Why this file exists
+   --------------------
+   settings.css had 71 custom properties and every single one was a colour.
+   There were no spacing, radius, elevation, duration or easing scales, so each
+   component invented its own values: that is how 100 KB of CSS accreted and
+   how the UI ended up looking assembled rather than designed. These are the
+   missing scales.
+
+   Loaded FIRST in every page, before that page's own stylesheet, so a
+   component can always fall back to a token.
+
+   Rules for using these:
+   - Spacing, radius, shadow, duration and easing come from here. If you need a
+     value that is not on a scale, the scale is wrong; add it deliberately.
+   - Colour stays where it already is, in each page's own :root. This file does
+     not own colour, so a page can be re-themed without touching it.
+   - Never hardcode a duration or an easing curve in a component.
+   ========================================================================== */
+
+:root {
+  /* --- Spacing ------------------------------------------------------------
+     A 4px base with a half-step. Named by role, not by number, so intent
+     survives. Anything below --space-1 is for optical nudges only. */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 20px;
+  --space-7: 24px;
+  --space-8: 32px;
+  --space-9: 40px;
+  --space-10: 48px;
+  --space-11: 64px;
+
+  /* Semantic aliases. Prefer these over the raw numbers: a component should
+     not care whether its gutter is 16 or 20. */
+  --gap-tight: var(--space-2);
+  --gap-row: var(--space-3);
+  --gutter: var(--space-5);
+  --section: var(--space-7);
+
+  /* --- Radius -------------------------------------------------------------
+     Deliberately small. Large radii read as consumer-generic; 10px is the
+     ceiling and 6px is the default for anything interactive. */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: 999px;
+
+  /* --- Elevation ----------------------------------------------------------
+     Neutral only. A coloured shadow is the single most recognisable tell of a
+     generated interface, so these carry no hue at all: the depth reads from
+     opacity, never from colour. Real lighting on a real screen is warm or cool,
+     not saturated. */
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --elevation-2: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --elevation-3: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --elevation-4: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* Overlays (toast, dialog, popover) sit above page content, so they get a
+     stronger step and a scrim to separate them. */
+  --scrim: rgba(0, 0, 0, 0.32);
+
+  /* --- Duration -----------------------------------------------------------
+     Three steps, named for what they are for. Enough choice to express intent,
+     few enough that the interface feels consistent. Nothing is slower than
+     240ms: this is an app that is open all day, and long transitions read as
+     lag rather than polish. */
+  --dur-instant: 80ms;   /* press feedback, colour change under the cursor */
+  --dur-fast: 120ms;     /* hover, focus ring, switch throw */
+  --dur-base: 180ms;     /* reveal, expand, most state changes */
+  --dur-slow: 240ms;     /* panel or dialog enter/exit */
+
+  /* --- Easing -------------------------------------------------------------
+     No bounce, no back, no elastic. Overshoot is the second-most-common
+     generated-UI tell after coloured glows, and it reads as toy-like at the
+     densities we work at. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);        /* decelerate, the default */
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);     /* fast out, long settle */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);            /* accelerate away */
+
+  /* --- Typography ---------------------------------------------------------
+     The 11px floor is not decoration. Functional text below it fails on
+     high-DPI displays and degrades read and tap targets. */
+  --text-micro: 11px;    /* the floor for any functional text */
+  --text-small: 12px;    /* secondary labels, table cells, meta rows */
+  --text-body: 13px;     /* default UI text */
+  --text-lead: 15px;     /* emphasis in dense UI */
+  --text-title: 17px;    /* panel titles */
+  --text-display: 22px;  /* page titles */
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* --- Focus --------------------------------------------------------------
+     One focus treatment for the whole app. A visible ring is an accessibility
+     requirement on desktop, and having exactly one definition of it is what
+     makes it look deliberate. */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  /* --- Layers -------------------------------------------------------------
+     z-index as a named scale, so a popover cannot end up behind a toast. */
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-popover: 100;
+  --z-overlay: 200;
+  --z-toast: 300;
+}
+
+/* ------------------------------------------------------------------ dark --
+   Colour overrides only. Spacing, radius, elevation, duration and easing are
+   theme-independent, which is the point of separating them: a dark theme does
+   not get its own spacing, and a component cannot drift between themes because
+   it hardcoded one. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --elevation-2: 0 2px 4px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --elevation-3: 0 4px 12px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.35);
+    --elevation-4: 0 12px 32px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+    --scrim: rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* --------------------------------------------------------- reduced motion --
+   Honour the OS setting globally rather than per-component. Anything that
+   still needs to communicate state changes without movement does so via colour
+   or opacity, which are not motion. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0ms;
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+/* ------------------------------------------------------------ focus ring --
+   Applied once, so no component can forget it. :focus-visible rather than
+   :focus so a mouse click does not leave a ring behind on a desktop app. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-sm);
+}

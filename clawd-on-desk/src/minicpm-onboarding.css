@@ -95,7 +95,7 @@ body {
   background: var(--surface-2);
   border: 1px solid var(--border);
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--text-small);
 }
 .step.active {
   color: var(--text);
@@ -225,7 +225,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: var(--text-small);
   font-weight: 700;
   background: transparent;
 }
@@ -369,7 +369,9 @@ body {
 }
 .preset-option:focus-visible {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  /* The focus ring itself now comes from the global :focus-visible outline in
+     tokens.css. This was a second, box-shadow-based indicator for the same
+     thing - two focus indicators on one control is a bug, not a feature. */
 }
 .preset-option.selected {
   background: var(--accent-soft);
@@ -410,7 +412,7 @@ body {
   color: var(--text);
 }
 .preset-badge {
-  font-size: 10px;
+  font-size: var(--text-micro);
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
@@ -440,7 +442,7 @@ body {
   border-color: rgba(168, 85, 247, 0.4);
 }
 .preset-option-desc {
-  font-size: 11px;
+  font-size: var(--text-small);
   color: var(--text-dim);
   line-height: 1.35;
 }
@@ -457,7 +459,10 @@ body {
 .preset-option.auto-card.selected {
   background: rgba(56, 189, 248, 0.18);
   border-color: #38bdf8;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+  /* Was 0 0 10px rgba(56, 189, 248, 0.25) - a coloured halo. Selection is
+     already unambiguous from the border colour, the background tint and the
+     filled radio, so the glow added nothing but a chromatic blur. */
+  box-shadow: var(--elevation-3);
 }
 .preset-option.auto-card.selected .preset-option-radio {
   border-color: #38bdf8;
@@ -471,7 +476,7 @@ body {
   margin-top: 2px;
 }
 .meta-tag {
-  font-size: 10px;
+  font-size: var(--text-micro);
   font-weight: 500;
   padding: 1px 5px;
   border-radius: 4px;
@@ -597,7 +602,7 @@ body {
 .hotkeys li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 kbd {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 11px;
+  font-size: var(--text-small);
   padding: 3px 7px;
   border-radius: 5px;
   background: var(--surface-2);

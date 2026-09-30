@@ -51,6 +51,15 @@ jobs:
         working-directory: clawd-on-desk
         run: npm run lint
 
+      # Fails on a new UI anti-pattern; passes when the detector is absent,
+      # because the tool is deliberately not committed (14 MB binary). The
+      # ceiling only has to move down, which makes adding a finding a
+      # deliberate act rather than an accident.
+      - name: UI anti-pattern check
+        run: |
+          npx --yes impeccable@latest install --providers=opencode --scope=project --no-hooks
+          node scripts/ui-detect.mjs
+
       - name: Sidecar tests
         run: uv run --project minicpm-sidecar pytest minicpm-sidecar/tests -q -p no:cacheprovider
 
