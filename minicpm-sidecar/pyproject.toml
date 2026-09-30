@@ -16,6 +16,7 @@ dependencies = [
   "huggingface_hub>=0.25.0",
   "psutil>=6.0.0",
   "winotify>=1.1.0",
+  "piper-tts>=1.8.0",
 ]
 
 [project.optional-dependencies]

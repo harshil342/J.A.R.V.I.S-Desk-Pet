@@ -28,6 +28,9 @@
   "sleepSequence": {
     "mode": "full"
   },
+  "rendering": {
+    "svgChannel": "object"
+  },
   "states": {
     "idle": [
       "arc-idle.svg"
@@ -165,6 +168,11 @@
     "glyphFlips": {}
   },
   "objectScale": {
+    "widthRatio": 1,
+    "heightRatio": 1,
+    "offsetX": 0,
+    "offsetY": 0,
+    "objBottom": 0,
     "fileScales": {
       "arc-mini-idle.svg": 0.5,
       "arc-mini-enter.svg": 0.5,

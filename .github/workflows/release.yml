@@ -1,11 +1,15 @@
-name: Release MiniCPM Desk Pet
+name: Release DeskPet
 
-# Cross-platform release pipeline. Each build job:
+# Windows x64 is the only supported target (plan.md decision D3). The build job:
 #   1) downloads the official ggml-org/llama.cpp llama-server release
 #      into minicpm-sidecar/bin/<triple>/
 #   2) builds our thin FastAPI gateway for the same target
 #   3) runs electron-builder in clawd-on-desk/; extraResources picks up
 #      both binaries automatically.
+#
+# Nothing is published unless the test job is green. An unsigned Windows build
+# creates a DRAFT release, never a public one, because electron-updater rejects
+# an unsigned artifact at install time.
 
 on:
   push:
@@ -13,133 +17,22 @@ on:
       - "v*"
   workflow_dispatch:
 
+# A release is a one-shot event. Two runs of the same tag must not race.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 defaults:
   run:
     shell: bash
 
 jobs:
-  build-mac:
-    runs-on: macos-14
-    name: mac-arm64
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Fetch official llama.cpp release
-        working-directory: minicpm-sidecar
-        env:
-          TARGET_TRIPLE: mac-arm64
-        run: bash ./scripts/fetch-llama-release.sh
-
-      - name: Build gateway
-        working-directory: minicpm-sidecar
-        run: ./scripts/build-gateway.sh
-
-      - name: Verify sidecar binaries
-        working-directory: minicpm-sidecar/bin/mac-arm64
-        run: |
-          ls -la
-          chmod +x llama-server minicpm-sidecar
-          ./llama-server --version
-          ./minicpm-sidecar --help >/dev/null
-
-      - name: Check signing credentials
-        id: signing
-        env:
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-        run: |
-          if [ -n "${CSC_LINK:-}" ]; then
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "available=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Import Apple Developer ID certificate
-        if: ${{ steps.signing.outputs.available == 'true' }}
-        env:
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-        run: |
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
-
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          echo "$CSC_LINK" | base64 --decode > $RUNNER_TEMP/certificate.p12
-          security import $RUNNER_TEMP/certificate.p12 \
-            -P "$CSC_KEY_PASSWORD" \
-            -A -t cert -f pkcs12 \
-            -k "$KEYCHAIN_PATH"
-
-          security set-key-partition-list -S apple-tool:,apple: \
-            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
-
-      - name: npm install
-        working-directory: clawd-on-desk
-        run: npm install --no-audit --no-fund
-
-      - name: Fetch LoRA adapters
-        working-directory: clawd-on-desk
-        run: node scripts/fetch-adapters.js
-
-      - name: electron-builder (dmg, sign + notarize)
-        working-directory: clawd-on-desk
-        env:
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: |
-          if [ "${{ steps.signing.outputs.available }}" = "true" ]; then
-            npx electron-builder --mac --arm64 --publish never
-          else
-            npx electron-builder --mac --arm64 --publish never -c.mac.identity=null
-          fi
-
-      - name: Verify code signature
-        if: ${{ steps.signing.outputs.available == 'true' }}
-        run: |
-          DMG_FILE=$(find clawd-on-desk/dist -name '*.dmg' | head -1)
-          if [ -n "$DMG_FILE" ]; then
-            echo "Verifying: $DMG_FILE"
-            codesign --verify --deep --strict --verbose=2 "$DMG_FILE" || true
-            spctl --assess --type open --context context:primary-signature --verbose "$DMG_FILE" || true
-          fi
-
-      - name: Cleanup keychain
-        if: always()
-        run: |
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          if [ -f "$KEYCHAIN_PATH" ]; then
-            security delete-keychain "$KEYCHAIN_PATH" || true
-          fi
-          rm -f $RUNNER_TEMP/certificate.p12
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: mac-installer-mac-arm64
-          path: |
-            clawd-on-desk/dist/*.dmg
-            clawd-on-desk/dist/latest-mac.yml
-
-  build-linux:
+  test:
+    name: test
     runs-on: ubuntu-22.04
-    name: linux-x64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -148,52 +41,29 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Electron tests
+        working-directory: clawd-on-desk
         run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Fetch official llama.cpp release
-        working-directory: minicpm-sidecar
-        env:
-          TARGET_TRIPLE: linux-x64
-          LLAMA_BACKEND: cpu
-        run: bash ./scripts/fetch-llama-release.sh
-
-      - name: Build gateway
-        working-directory: minicpm-sidecar
-        run: ./scripts/build-gateway.sh
-
-      - name: Verify sidecar binaries
-        working-directory: minicpm-sidecar/bin/linux-x64
+          npm ci
+          node test/run-tests.js
+      - name: Sidecar tests
+        run: uv run --project minicpm-sidecar pytest minicpm-sidecar/tests -q -p no:cacheprovider
+      - name: Release hook self-test
+        run: node scripts/release.mjs --self-test
+      - name: Tag matches the shipped version
         run: |
-          ls -la
-          chmod +x llama-server minicpm-sidecar
-          ./llama-server --version
-          ./minicpm-sidecar --help >/dev/null
-
-      - name: npm install
-        working-directory: clawd-on-desk
-        run: npm install --no-audit --no-fund
-
-      - name: Fetch LoRA adapters
-        working-directory: clawd-on-desk
-        run: node scripts/fetch-adapters.js
-
-      - name: electron-builder (AppImage + deb)
-        working-directory: clawd-on-desk
-        run: npx electron-builder --linux --publish never
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: linux-installer
-          path: |
-            clawd-on-desk/dist/*.AppImage
-            clawd-on-desk/dist/*.deb
-            clawd-on-desk/dist/latest-linux.yml
+          app=$(node -p "require('./clawd-on-desk/package.json').version")
+          side=$(grep -oP '^version\s*=\s*"\K[^"]+' minicpm-sidecar/pyproject.toml)
+          tag="${GITHUB_REF_NAME#v}"
+          echo "app=$app sidecar=$side tag=$tag"
+          [ -n "$tag" ] || { echo "::notice::workflow_dispatch with no tag; version check skipped"; exit 0; }
+          [ "$app" = "$side" ] || { echo "::error::sidecar $side does not match app $app"; exit 1; }
+          [ "$app" = "$tag" ]  || { echo "::error::tag v$tag does not match package.json $app"; exit 1; }
 
   build-windows:
+    needs: test
     runs-on: windows-2022
     name: windows
     defaults:
@@ -267,9 +137,9 @@ jobs:
             clawd-on-desk/dist/*.exe.blockmap
             clawd-on-desk/dist/latest.yml
 
+
   release:
-    needs: [build-mac, build-linux, build-windows]
-    if: always() && !cancelled() && (needs.build-windows.result == 'success' || needs.build-linux.result == 'success' || needs.build-mac.result == 'success')
+    needs: [test, build-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -279,9 +149,38 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          node -e '
+            const fs = require("fs");
+            const v = process.env.GITHUB_REF_NAME.replace(/^v/, "");
+            const esc = v.replace(/\./g, "\\.");
+            const re = new RegExp("^## \\[?" + esc + "\\]?[^\\n]*\\n[\\s\\S]*?(?=\\n## |$)", "m");
+            const m = fs.readFileSync("CHANGELOG.md", "utf8").match(re);
+            if (!m) { console.error("no CHANGELOG.md section for " + v); process.exit(1); }
+            fs.writeFileSync("RELEASE_NOTES.md", m[0].trim() + "\n");
+          '
+
+      - name: Decide public vs draft
+        id: gate
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+        run: |
+          if [ -n "$WIN_CSC_LINK" ] || [ -n "$CSC_LINK" ]; then
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No signing certificate. Publishing a DRAFT. Unsigned Windows builds are rejected by electron-updater at install time, so a public one would strand every existing user."
+          fi
+
+      - name: Upload installer
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.11.0' }}
-          name: "J.A.R.V.I.S. Desk Pet v0.11.0 (Production Release)"
+          tag_name: ${{ github.ref_name }}
+          name: DeskPet ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
           files: artifacts/**/*
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true
+          draft: ${{ steps.gate.outputs.signed == 'false' }}

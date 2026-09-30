@@ -81,6 +81,9 @@ describe("minicpm-model-download", () => {
   it("provides model presets for MiniCPM5-1B and MiniCPM5-2B", () => {
     assert.ok(downloader.MODEL_PRESETS["minicpm5-1b"]);
     assert.ok(downloader.MODEL_PRESETS["minicpm5-2b"]);
+    assert.ok(downloader.MODEL_PRESETS["eco-sentinel"]);
+    assert.ok(downloader.MODEL_PRESETS["jarvis-studio"]);
+    assert.ok(downloader.MODEL_PRESETS["deep-cognition"]);
     assert.equal(downloader.MODEL_PRESETS["minicpm5-1b"].filename, "MiniCPM5-1B-Q8_0.gguf");
     assert.equal(downloader.MODEL_PRESETS["minicpm5-2b"].filename, "MiniCPM5-2B-Q4_K_M.gguf");
     assert.equal(downloader.MODEL_PRESETS["minicpm5-1b"].sizeBytes, 1_153_529_216);
@@ -90,6 +93,10 @@ describe("minicpm-model-download", () => {
   it("resolves model presets with fallback to default", () => {
     assert.equal(downloader.getModelPreset("minicpm5-1b").id, "minicpm5-1b");
     assert.equal(downloader.getModelPreset("minicpm5-2b").id, "minicpm5-2b");
+    assert.equal(downloader.getModelPreset("eco-sentinel").id, "eco-sentinel");
+    assert.equal(downloader.getModelPreset("jarvis-studio").id, "jarvis-studio");
+    assert.equal(downloader.getModelPreset("deep-cognition").id, "deep-cognition");
+    assert.equal(downloader.getModelPreset("auto-detect").id, "jarvis-studio");
     assert.equal(downloader.getModelPreset("unknown").id, "minicpm5-1b");
     assert.equal(downloader.getModelPreset(null).id, "minicpm5-1b");
   });

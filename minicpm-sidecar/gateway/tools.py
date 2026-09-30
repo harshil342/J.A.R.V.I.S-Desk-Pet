@@ -2801,6 +2801,14 @@ _RE_MY_ATTR_Q = re.compile(
     r"address|timezone|favourite|favorite)\b[?.!]*\s*$",
     re.IGNORECASE,
 )
+_RE_RESEARCH_PDF = re.compile(
+    r"\b(?:generate|create|research|compile|make|build)\s+(?:an?\s+)?(?:executive\s+|research\s+)?pdf\s+(?:briefing\s+|report\s+)?(?:on|about|for)\s+(.+)",
+    re.IGNORECASE,
+)
+_RE_SPEAK = re.compile(
+    r"^\s*(?:speak|say\s+aloud|say|vocalize|voice)\s+[\"']?(.+?)[\"']?\s*$",
+    re.IGNORECASE,
+)
 _RE_RECALL = re.compile(
     r"\b(?:"
     r"what\s+do\s+you\s+(?:remember|know)|"
@@ -3094,7 +3102,8 @@ _LAST_TOPIC: Optional[str] = None
 # person pronouns, greetings and imperatives are.
 _RE_TOPIC_BLOCKLIST = re.compile(
     r"\b(?:hi|hello|hey|good|morning|evening|night|thanks|thank|"
-    r"sorry|please|yes|no|ok(?:ay)?|jarvis|i|you|we|my|your|me|us|"
+    r"sorry|please|yes|no|ok(?:ay)?|jarvis|i|you|we|my|your|me|us|yourself|"
+    r"introduce|intro|status|diagnostic|diagnostics|system|systems|"
     r"this|that|it|they|he|she|them|his|her|their|"
     r"write|draft|create|read|delete|remove|clear|add|mark|done|"
     r"summar\w+|translate|rewrite|convert|calculat\w+|comput\w+|"
@@ -3622,6 +3631,14 @@ def route_tools(
             run(open_url, _SITE_URLS[s_name], label="open_site")
             return results
 
+    # 7e1b — autonomous research & PDF briefing generation
+    m_pdf = _RE_RESEARCH_PDF.search(text)
+    if m_pdf:
+        topic = _clean(m_pdf.group(1)).rstrip(".?!")
+        if topic:
+            run(research_and_generate_pdf, topic, label="research_and_generate_pdf")
+            return results
+
     # 7e — open a website (must run before launch_app grabs the domain)
     m = _RE_URL.search(text)
     if m:
@@ -3644,7 +3661,13 @@ def route_tools(
         run(screen_context.get_running_apps_summary, label="running_apps")
         return results
 
-    # 7g — vocalize / speak aloud — TTS removed from the project
+    # 7g — vocalize / speak aloud — genuine Paul Bettany soundboard
+    m_spk = _RE_SPEAK.search(text)
+    if m_spk:
+        phrase = _clean(m_spk.group(1)).rstrip(".?!")
+        if phrase:
+            run(speak, phrase, label="speak")
+            return results
 
     # 8 — launch app
     m = _RE_LAUNCH.search(text)
@@ -3673,7 +3696,7 @@ def route_tools(
     if m:
         subject = _clean(m.group(1))
         if subject and not re.match(
-            r"^(?:he|she|it|they|that|this|his|her|their|them|my|our|your)\b",
+            r"^(?:he|she|it|they|that|this|his|her|their|them|my|our|your|you|yourself|jarvis|deskpet)\b",
             subject, re.IGNORECASE,
         ):
             res = wikipedia_summary(subject)
@@ -3895,14 +3918,16 @@ def canned_reply(label: str, result: str) -> Optional[str]:
                 app = clean_res.replace("Application: ", "").strip()
                 return f"You are currently using {app}, sir."
         return f"You are currently in {clean_res}, sir."
+    from . import runtime_config
+    addr = runtime_config.get().get("assistant_address", "sir")
     if label == "running_apps":
-        return f"{result}, sir."
+        return f"{result}, {addr}."
     if label == "speak":
-        return "Spoken aloud, sir."
+        return f"Spoken aloud, {addr}."
     if label == "launch_app":
         if result and result.lower().startswith("could not find"):
             return result
-        return result.rstrip(".") + ", sir."
+        return result.rstrip(".") + f", {addr}."
     if label == "system_status":
         return result
     if label == "todo_list":
@@ -3912,23 +3937,47 @@ def canned_reply(label: str, result: str) -> Optional[str]:
     if label == "set_volume":
         m = re.search(r"(\d+)%", result)
         pct = m.group(1) if m else ""
-        return f"Setting the volume to {pct}%, sir." if pct else "Volume adjusted, sir."
+        return f"Setting the volume to {pct}%, {addr}." if pct else f"Volume adjusted, {addr}."
     if label in ("list_reminders", "clipboard_write", "find_file", "git_status", "wifi_info", "date_math"):
         return result
     if label == "clipboard_assist":
         if not result or result == "The clipboard is empty.":
-            return "Your clipboard is currently empty, sir."
+            return f"Your clipboard is currently empty, {addr}."
         if result.startswith("Clipboard content: "):
             val = result.replace("Clipboard content: ", "").strip()
-            return f"Your clipboard contains: '{val}', sir."
+            return f"Your clipboard contains: '{val}', {addr}."
         return result
     if label == "ai_webchat":
-        return f"{result}, sir."
+        return f"{result}, {addr}."
     if label == "site_search":
-        return "Opening that search in your browser, sir."
+        return f"Opening that search in your browser, {addr}."
     if label == "open_site":
-        return "Opening that website in your browser, sir."
+        return f"Opening that website in your browser, {addr}."
     if label == "open_url":
         host = result.replace("opened: ", "").strip()
-        return f"Opening {host} in your browser, sir."
+        return f"Opening {host} in your browser, {addr}."
+    if label == "research_and_generate_pdf":
+        return result
     return None
+
+
+def research_and_generate_pdf(topic: str, target_pages: str = "optimal") -> str:
+    """Autonomously research a topic online, compile an executive PDF briefing with ReportLab, and open it."""
+    from . import pdf_engine
+    return pdf_engine.research_and_generate_pdf(topic, target_pages)
+
+
+def speak(phrase: str) -> str:
+    """Play dense J.A.R.V.I.S. voice audio matching the requested phrase (0ms soundboard or dense neural synthesis)."""
+    from . import jarvis_soundboard
+    clip = jarvis_soundboard.find_best_clip(phrase)
+    if clip:
+        jarvis_soundboard.play_audio_file(clip["path"], async_play=True)
+        return f"Spoken aloud (soundboard): '{clip['text']}'"
+    ok = jarvis_soundboard.play_clip_for_phrase(phrase)
+    if ok:
+        return f"Spoken aloud (dense neural synthesis): '{phrase}'"
+    return "Voice synthesis unavailable, sir."
+
+
+

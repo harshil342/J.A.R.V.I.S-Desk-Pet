@@ -27,19 +27,67 @@ let currentStep = "env-check";
 let modelStatus = "idle";    // "idle" | "downloading" | "ready"
 let modelSource = null;      // "download" | "local"
 let modelInfo = null;        // { path, sizeBytes } once ready
-let selectedModelPreset = "minicpm5-1b"; // "minicpm5-1b" | "minicpm5-2b"
+let selectedModelPreset = "auto-detect"; // "auto-detect" | "eco-sentinel" | "jarvis-studio" | "deep-cognition"
+let hardwareInfo = null; // probed hardware details { recommendedRecipe, gpu, ramFormatted, rationale }
 let warmupStatus = "idle";   // "idle" | "running" | "ready" | "error"
 let warmupKicked = false;    // guard against double-firing warmup
 let envCheckRan = false;     // re-paint env-check details on lang change
 let downloadFailed = false;  // show an explicit retry affordance after failure
 
+function getEffectiveRecipe() {
+  if (selectedModelPreset === "auto-detect") {
+    return (hardwareInfo && hardwareInfo.recommendedRecipe) || "jarvis-studio";
+  }
+  return selectedModelPreset;
+}
+
 function selectModelPreset(presetId) {
-  selectedModelPreset = presetId || "minicpm5-1b";
+  selectedModelPreset = presetId || "auto-detect";
   $$(".preset-option").forEach((opt) => {
     const isMatch = opt.dataset.preset === selectedModelPreset;
     opt.classList.toggle("selected", isMatch);
     opt.setAttribute("aria-checked", isMatch ? "true" : "false");
   });
+}
+
+async function runHardwareProbe() {
+  if (!window.onboarding || typeof window.onboarding.hardwareProbe !== "function") return;
+  try {
+    const hw = await window.onboarding.hardwareProbe();
+    if (!hw) return;
+    hardwareInfo = hw;
+    paintHardwareInfo();
+  } catch (err) {
+    console.error("[onboarding] Hardware probe failed:", err);
+  }
+}
+
+function paintHardwareInfo() {
+  if (!hardwareInfo) return;
+  const hwPill = el("preset-auto-hw-pill");
+  const recPill = el("preset-auto-rec-pill");
+  const desc = el("preset-auto-desc");
+
+  if (hwPill) {
+    const gpuName = (hardwareInfo.gpu && hardwareInfo.gpu.model) || "CPU";
+    const vramStr = (hardwareInfo.gpu && hardwareInfo.gpu.vramFormatted) || "Shared";
+    const ramStr = hardwareInfo.ramFormatted ? ` · ${hardwareInfo.ramFormatted} RAM` : "";
+    hwPill.textContent = `${gpuName} (${vramStr})${ramStr}`;
+  }
+
+  if (recPill) {
+    const recipeLabels = {
+      "eco-sentinel": "Eco-Sentinel",
+      "jarvis-studio": "J.A.R.V.I.S. Studio",
+      "deep-cognition": "Deep Cognition",
+    };
+    const recName = recipeLabels[hardwareInfo.recommendedRecipe] || hardwareInfo.recommendedRecipe;
+    recPill.textContent = `Matched: ${recName}`;
+  }
+
+  if (desc && hardwareInfo.rationale) {
+    desc.textContent = hardwareInfo.rationale;
+  }
 }
 
 // Apply translations to all `data-i18n` elements. Called once on boot
@@ -310,7 +358,7 @@ async function startModelDownload() {
     }
   });
 
-  const r = await window.onboarding.startModelDownload(selectedModelPreset);
+  const r = await window.onboarding.startModelDownload(getEffectiveRecipe());
   if (unsub) unsub();
 
   if (r && r.ok) {
@@ -402,6 +450,7 @@ function applyLang(lang) {
   if (typeof lang !== "string" || !lang) return;
   currentLang = lang;
   applyStaticTranslations();
+  paintHardwareInfo();
   // Re-paint dynamic UI areas in the new language.
   if (envCheckRan) {
     void runEnvCheck();
@@ -433,9 +482,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   await bootstrapI18n();
   show("env-check");
   void runEnvCheck();
+  void runHardwareProbe();
 
   el("env-next").addEventListener("click", async () => {
     show("model");
+    paintHardwareInfo();
     await detectExistingModel();
   });
 
@@ -466,7 +517,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   el("ready-finish").addEventListener("click", async () => {
-    await window.onboarding.complete();
+    await window.onboarding.complete({ recipe: getEffectiveRecipe() });
   });
 
   $$("[data-back]").forEach((b) => {

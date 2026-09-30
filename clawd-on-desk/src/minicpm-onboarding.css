@@ -333,6 +333,16 @@ body {
   flex-direction: column;
   gap: 7px;
   margin: 2px 0 6px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.model-preset-selector::-webkit-scrollbar {
+  width: 4px;
+}
+.model-preset-selector::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
 }
 .model-preset-selector.hidden {
   display: none;
@@ -386,7 +396,7 @@ body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 .preset-option-header {
@@ -402,7 +412,7 @@ body {
 .preset-badge {
   font-size: 10px;
   font-weight: 600;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 4px;
   background: var(--ok-soft);
   color: var(--ok-text);
@@ -414,10 +424,66 @@ body {
   color: #93c5fd;
   border-color: rgba(55, 62, 216, 0.4);
 }
+.preset-badge.preset-badge-cyan {
+  background: rgba(56, 189, 248, 0.2);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+.preset-badge.preset-badge-green {
+  background: var(--ok-soft);
+  color: var(--ok-text);
+  border-color: var(--ok-border);
+}
+.preset-badge.preset-badge-purple {
+  background: rgba(168, 85, 247, 0.2);
+  color: #d8b4fe;
+  border-color: rgba(168, 85, 247, 0.4);
+}
 .preset-option-desc {
   font-size: 11px;
   color: var(--text-dim);
   line-height: 1.35;
+}
+
+/* ── Hero Auto-Card ──────────────────────────────────────────────── */
+.preset-option.auto-card {
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.06);
+}
+.preset-option.auto-card:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+.preset-option.auto-card.selected {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+.preset-option.auto-card.selected .preset-option-radio {
+  border-color: #38bdf8;
+  background: #38bdf8;
+}
+
+.preset-meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+.meta-tag {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  line-height: 1.25;
+}
+.auto-card .meta-tag {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.25);
+  color: #bae6fd;
 }
 
 /* ── Progress card (inside download model card) ───────────────────── */

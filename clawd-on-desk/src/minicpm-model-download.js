@@ -33,6 +33,39 @@ const MODEL_PRESETS = {
     revision: "master",
   },
 };
+
+// ponytail: map 4-tier companion recipes to underlying model presets and voice specs
+MODEL_PRESETS["eco-sentinel"] = {
+  ...MODEL_PRESETS["minicpm5-1b"],
+  id: "eco-sentinel",
+  name: "Eco-Sentinel",
+  tag: "Low VRAM (~0.9 GB)",
+  recipeId: "eco-sentinel",
+  vram: "~0.9 GB",
+  tts: "sanoTTS (5MB, 50ms CPU)",
+  stt: "Moonshine Tiny",
+};
+MODEL_PRESETS["jarvis-studio"] = {
+  ...MODEL_PRESETS["minicpm5-1b"],
+  id: "jarvis-studio",
+  name: "J.A.R.V.I.S. Studio",
+  tag: "Balanced (~1.5 GB)",
+  recipeId: "jarvis-studio",
+  vram: "~1.5 GB",
+  tts: "Kokoro-82M Butler",
+  stt: "Whisper-Base",
+};
+MODEL_PRESETS["deep-cognition"] = {
+  ...MODEL_PRESETS["minicpm5-2b"],
+  id: "deep-cognition",
+  name: "Deep Cognition",
+  tag: "High VRAM (~2.4 GB)",
+  recipeId: "deep-cognition",
+  vram: "~2.4 GB",
+  tts: "Kokoro-82M Studio",
+  stt: "Parakeet-TDT",
+};
+
 const DEFAULT_MODEL_PRESET = "minicpm5-1b";
 
 const MODEL_FILENAME = MODEL_PRESETS[DEFAULT_MODEL_PRESET].filename;
@@ -42,6 +75,9 @@ const MODELSCOPE_REVISION = MODEL_PRESETS[DEFAULT_MODEL_PRESET].revision;
 
 function getModelPreset(presetKey) {
   const key = String(presetKey || "").trim().toLowerCase();
+  if (key === "auto-detect") {
+    return MODEL_PRESETS["jarvis-studio"] || MODEL_PRESETS[DEFAULT_MODEL_PRESET];
+  }
   return MODEL_PRESETS[key] || MODEL_PRESETS[DEFAULT_MODEL_PRESET];
 }
 

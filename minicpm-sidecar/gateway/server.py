@@ -70,6 +70,12 @@ class SFXRequest(BaseModel):
     sound: str
 
 
+class SoundboardPlayRequest(BaseModel):
+    phrase: Optional[str] = None
+    clip_id: Optional[str] = None
+
+
+
 class MemoryAddRequest(BaseModel):
     text: str
     category: str = "general"
@@ -959,9 +965,13 @@ def build_app(
         if canned is not None:
             bridge.new_session()
             bridge.post("working")
+            tool_name = tools_ran[0] if tools_ran else None
+            if not req.silent and tool_name != "speak":
+                from . import jarvis_soundboard
+                jarvis_soundboard.play_output_soundboard(canned, tool_name=tool_name)
             if req.stream:
                 return StreamingResponse(
-                    _canned_stream(bridge, canned, tool_name=tools_ran[0] if tools_ran else None),
+                    _canned_stream(bridge, canned, tool_name=tool_name),
                     media_type="text/event-stream",
                 )
             bridge.post("attention")
@@ -1042,6 +1052,31 @@ def build_app(
     def audio_sfx(req: SFXRequest):
         bridge.post("attention" if req.sound == "alert" else "finish", event="SFX")
         return JSONResponse({"ok": True, "sound": req.sound})
+
+    @app.get("/api/soundboard/clips")
+    def list_soundboard_clips(query: Optional[str] = None, category: Optional[str] = None, limit: int = 50):
+        from .jarvis_soundboard import load_catalog
+        catalog = load_catalog()
+        if category:
+            catalog = [c for c in catalog if c.get("category") == category]
+        if query:
+            q = query.lower()
+            catalog = [c for c in catalog if q in c.get("text", "").lower()]
+        return JSONResponse({"ok": True, "total": len(catalog), "clips": catalog[:limit]})
+
+    @app.post("/api/soundboard/play")
+    def play_soundboard_clip(req: SoundboardPlayRequest):
+        from .jarvis_soundboard import get_clip_by_id, play_audio_file, play_clip_for_phrase
+        if req.clip_id:
+            clip = get_clip_by_id(req.clip_id)
+            if clip:
+                play_audio_file(clip["path"], async_play=True)
+                return JSONResponse({"ok": True, "played": clip["text"], "filename": clip["filename"]})
+            return JSONResponse({"ok": False, "error": "Clip not found"}, status_code=404)
+        if req.phrase:
+            matched = play_clip_for_phrase(req.phrase)
+            return JSONResponse({"ok": matched, "phrase": req.phrase})
+        return JSONResponse({"ok": False, "error": "phrase or clip_id required"}, status_code=400)
 
     @app.get("/api/memory")
     def get_memory(category: Optional[str] = None):
@@ -1164,6 +1199,7 @@ async def _stream_chat(
     think_filter = ThinkBlockFilter(expose=req.thinking, start_inside=False)
     tag_scrub = _TagScrubber()
 
+    content_deltas: list[str] = []
     try:
         async for kind, piece in agen:
             if kind == "reasoning":
@@ -1175,6 +1211,8 @@ async def _stream_chat(
             else:  # "content"
                 piece = tag_scrub.feed(_RE_TOOL_TAG.sub("", piece))
                 for ev in think_filter.feed(piece):
+                    if ev.get("event") == "delta":
+                        content_deltas.append(ev.get("content", ""))
                     yield _sse(ev)
             now = time.time()
             if now - last_pet_ping > 6.0:
@@ -1195,13 +1233,21 @@ async def _stream_chat(
         tail = tag_scrub.flush()
         if tail:
             for ev in think_filter.feed(tail):
+                if ev.get("event") == "delta":
+                    content_deltas.append(ev.get("content", ""))
                 yield _sse(ev)
         for ev in think_filter.flush():
+            if ev.get("event") == "delta":
+                content_deltas.append(ev.get("content", ""))
             yield _sse(ev)
 
     yield _sse({"event": "end"})
     if not req.silent:
         bridge.post("attention")
+        tool_name = tools_ran[0] if tools_ran else None
+        if tool_name != "speak":
+            from . import jarvis_soundboard
+            jarvis_soundboard.play_output_soundboard("".join(content_deltas), tool_name=tool_name)
 
 
 async def _blocking_chat(
@@ -1248,6 +1294,8 @@ async def _blocking_chat(
     finally:
         if not req.silent:
             bridge.post("attention")
+            from . import jarvis_soundboard
+            jarvis_soundboard.play_output_soundboard("".join(content_parts))
     return {
         "content": "".join(content_parts),
         "thinking": "".join(think_parts) if req.thinking else None,
@@ -1460,6 +1508,8 @@ async def native_tool_round(
         yield _sse({"event": "end"})
         if not req.silent:
             bridge.post("attention")
+            from . import jarvis_soundboard
+            jarvis_soundboard.play_output_soundboard(text)
         return
 
     # â”€â”€ Phase 2: execute + one grounded re-ask â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1523,6 +1573,7 @@ async def native_tool_round(
     tag_scrub = _TagScrubber()
     last_pet_ping = time.time()
     reasoning_parts: list[str] = []
+    final_content_parts: list[str] = []
     content_chars = 0
     try:
         async for kind, piece in server.stream_chat(messages=messages, **gen_kwargs):
@@ -1536,6 +1587,8 @@ async def native_tool_round(
                 content_chars += len(piece.strip())
                 piece = tag_scrub.feed(_RE_TOOL_TAG.sub("", piece))
                 for ev in think_filter.feed(piece):
+                    if ev.get("event") == "delta":
+                        final_content_parts.append(ev.get("content", ""))
                     yield _sse(ev)
             now = time.time()
             if now - last_pet_ping > 6.0 and not req.silent:
@@ -1563,6 +1616,7 @@ async def native_tool_round(
             clean = re.sub(r"</?\s*think\s*>", "", "".join(reasoning_parts), flags=re.IGNORECASE)
             clean = tag_scrub.feed(_RE_TOOL_TAG.sub("", clean)) + tag_scrub.flush()
             if clean.strip():
+                final_content_parts.append(clean.strip())
                 yield _sse({"event": "delta", "content": clean.strip()})
         elif content_chars == 0 and executed:
             # Model went silent after the tool ran (1B models do this,
@@ -1573,11 +1627,20 @@ async def native_tool_round(
         tail = tag_scrub.flush()
         if tail:
             for ev in think_filter.feed(tail):
+                if ev.get("event") == "delta":
+                    final_content_parts.append(ev.get("content", ""))
                 yield _sse(ev)
         for ev in think_filter.flush():
+            if ev.get("event") == "delta":
+                final_content_parts.append(ev.get("content", ""))
             yield _sse(ev)
     yield _sse({"event": "end"})
     if not req.silent:
         bridge.post("attention")
+        from . import jarvis_soundboard
+        tool_executed = executed[0][0] if executed else None
+        if tool_executed != "speak":
+            full_reply = "".join(final_content_parts).strip() or (clean.strip() if 'clean' in locals() and clean.strip() else (done or ""))
+            jarvis_soundboard.play_output_soundboard(full_reply, tool_name=tool_executed)
 
 

@@ -26,7 +26,9 @@ const { app } = require("electron");
 // override every mode for local debugging.
 
 function locateSidecarBinary(appRoot) {
+  if (process.env.MINICPM_DEV === "1" || process.env.MINICPM_PYTHON) return null;
   const override = process.env.MINICPM_SIDECAR_BIN;
+  if (override === "none" || override === "false") return null;
   if (override && fs.existsSync(override)) return path.resolve(override);
   const ext = process.platform === "win32" ? ".exe" : "";
   if (app && app.isPackaged) {

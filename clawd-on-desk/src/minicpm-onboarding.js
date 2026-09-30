@@ -29,6 +29,7 @@ const path = require("path");
 const os = require("os");
 const minicpmI18n = require("./minicpm-i18n");
 const { downloadMiniCpmModel } = require("./minicpm-model-download");
+const { probeHardware } = require("./hardware-probe");
 
 const isMac = process.platform === "darwin";
 const SENTINEL_FILE = "minicpm-onboarding.json";
@@ -151,8 +152,8 @@ module.exports = function initOnboarding(ctx) {
   // ── BrowserWindow lifecycle ────────────────────────────────────────────
   function createWindow() {
     win = new BrowserWindow({
-      width: 820,
-      height: 560,
+      width: 840,
+      height: 620,
       resizable: false,
       maximizable: false,
       fullscreenable: false,
@@ -330,6 +331,18 @@ module.exports = function initOnboarding(ctx) {
       };
     },
 
+    "onboarding:hardware-probe": async () => {
+      try {
+        return probeHardware();
+      } catch (err) {
+        return {
+          recommendedRecipe: "jarvis-studio",
+          reason: "Defaulting to J.A.R.V.I.S. Studio.",
+          error: String(err && err.message || err),
+        };
+      }
+    },
+
     "onboarding:list-devices": async () => {
       try {
         const r = await httpJson("GET", `${ctx.getSidecarUrl()}/api/devices`, null, 2000);
@@ -444,16 +457,17 @@ module.exports = function initOnboarding(ctx) {
       }
     },
 
-    "onboarding:complete": async () => {
+    "onboarding:complete": async (_evt, payload = {}) => {
       // device is intentionally pinned to "auto" since v0.8.1 — the
       // wizard no longer exposes accelerator selection. The Settings
       // tab can still override later via MINICPM_DEVICE.
-      writeSentinel({ device: "auto" });
-      try { ctx.onComplete && ctx.onComplete(); } catch (err) {
+      const recipe = (payload && payload.recipe) || "jarvis-studio";
+      writeSentinel({ device: "auto", recipe });
+      try { ctx.onComplete && ctx.onComplete(recipe); } catch (err) {
         log(`[onboarding] onComplete callback failed: ${err && err.message}`);
       }
       close();
-      return { ok: true };
+      return { ok: true, recipe };
     },
 
     "onboarding:reset": async () => {

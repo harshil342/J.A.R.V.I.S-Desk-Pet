@@ -3448,6 +3448,7 @@ function createWindow() {
     restoreMiniFromPrefs: (prefsSnapshot, pixelSize) => _mini.restoreFromPrefs(prefsSnapshot, pixelSize),
   });
 
+  console.log("[main] createWindow placement:", { size, initialWindowBounds, initialVirtualBounds });
   petWindowRuntime.createRenderWindow({
     BrowserWindow,
     size,
@@ -3460,9 +3461,11 @@ function createWindow() {
     isQuitting: () => isQuitting,
     applyDockVisibility,
   });
+  console.log("[main] renderWin created, bounds:", win ? win.getBounds() : "null");
 
   buildContextMenu();
   if (!isMac || showTray) createTray();
+  console.log("[main] tray created");
   ensureContextMenuOwner();
 
   // ── Create input window (hitWin) — small rect over hitbox, receives all pointer events ──
@@ -3870,9 +3873,12 @@ if (!gotTheLock) {
       console.warn("Clawd: migration controller init failed:", err && err.message);
     });
     const shouldShowMinicpmOnboarding = _minicpmOnboarding && _minicpmOnboarding.shouldShow();
+    console.log("[main] shouldShowMinicpmOnboarding:", shouldShowMinicpmOnboarding);
     if (shouldShowMinicpmOnboarding) {
+      console.log("[main] opening onboarding wizard window");
       _minicpmOnboarding.open();
     } else {
+      console.log("[main] calling createWindow()");
       createWindow();
     }
     systemWakeRecovery = createSystemWakeRecovery({
@@ -3926,6 +3932,9 @@ if (!gotTheLock) {
       setTimeout(() => {
         if (_minicpmChat && typeof _minicpmChat.warmup === "function") {
           _minicpmChat.warmup();
+        }
+        if (process.env.MINICPM_DEV === "1" || process.env.DESKPET_AUTO_OPEN_CHAT === "1") {
+          openMinicpmChat();
         }
       }, 500);
     }

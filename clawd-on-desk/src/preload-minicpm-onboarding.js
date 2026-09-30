@@ -9,12 +9,13 @@ contextBridge.exposeInMainWorld("onboarding", {
   checkDisk: () => ipcRenderer.invoke("onboarding:check-disk"),
   diskInfo: () => ipcRenderer.invoke("onboarding:disk-info"),
   platformInfo: () => ipcRenderer.invoke("onboarding:platform-info"),
+  hardwareProbe: () => ipcRenderer.invoke("onboarding:hardware-probe"),
 
   selectDevice: (device) => ipcRenderer.invoke("onboarding:select-device", { device }),
   pickLocalModel: () => ipcRenderer.invoke("onboarding:pick-local-model"),
   startModelDownload: (opts) => ipcRenderer.invoke("onboarding:start-model-download", typeof opts === "string" ? { modelPreset: opts } : (opts || {})),
   warmup: () => ipcRenderer.invoke("onboarding:warmup"),
-  complete: () => ipcRenderer.invoke("onboarding:complete"),
+  complete: (opts) => ipcRenderer.invoke("onboarding:complete", typeof opts === "string" ? { recipe: opts } : (opts || {})),
   // Used when the user switches between online download and local file
   // after one source already loaded — restarts the sidecar so warmup
   // picks up the new model file.

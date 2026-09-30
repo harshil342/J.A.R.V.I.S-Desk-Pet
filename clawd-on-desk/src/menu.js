@@ -124,6 +124,21 @@ module.exports = function initMenu(ctx) {
     }
     ctx.tray = new Tray(icon);
     ctx.tray.setToolTip("Deskpet Assistant");
+    if (typeof ctx.tray.on === "function") {
+      ctx.tray.on("click", () => {
+        if (typeof ctx.openMinicpmChat === "function") {
+          ctx.openMinicpmChat();
+        }
+        if (ctx.petHidden && typeof ctx.togglePetVisibility === "function") {
+          ctx.togglePetVisibility();
+        }
+      });
+      ctx.tray.on("double-click", () => {
+        if (typeof ctx.openMinicpmChat === "function") {
+          ctx.openMinicpmChat();
+        }
+      });
+    }
     buildTrayMenu();
   }
 

@@ -210,8 +210,14 @@ function loadTheme(themeId, opts = {}) {
     theme._assetsDir = assetsDir;
     theme._assetsFileUrl = pathToFileURL(assetsDir).href;
   } else {
-    theme._assetsDir = assetsSvgDir;
-    theme._assetsFileUrl = null; // built-in uses relative path
+    const themeAssetsDir = themeDir ? path.join(themeDir, "assets") : null;
+    if (themeAssetsDir && fs.existsSync(themeAssetsDir)) {
+      theme._assetsDir = themeAssetsDir;
+      theme._assetsFileUrl = pathToFileURL(themeAssetsDir).href;
+    } else {
+      theme._assetsDir = assetsSvgDir;
+      theme._assetsFileUrl = null; // built-in uses relative path
+    }
   }
 
   theme._soundOverrideFiles = _resolveSoundOverrideFiles(themeId, userOverrides);
@@ -400,7 +406,10 @@ function validateThemeShape(themeId, opts = {}) {
   effective._builtin = isBuiltin;
   effective._themeDir = themeDir;
   effective._variantId = resolvedId;
-  effective._assetsDir = isBuiltin ? assetsSvgDir : _externalAssetsSourceDir(themeDir);
+  const effectiveThemeAssetsDir = themeDir ? path.join(themeDir, "assets") : null;
+  effective._assetsDir = (isBuiltin && !(effectiveThemeAssetsDir && fs.existsSync(effectiveThemeAssetsDir)))
+    ? assetsSvgDir
+    : (effectiveThemeAssetsDir || _externalAssetsSourceDir(themeDir));
 
   const effectiveErrors = validateTheme(patched);
   const resourceErrors = _validateRequiredAssets(effective);

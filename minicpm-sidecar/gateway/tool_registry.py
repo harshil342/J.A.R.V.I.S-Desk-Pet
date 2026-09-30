@@ -774,6 +774,42 @@ class ToolRegistry:
             handler=tools.open_ai_webchat,
         )
 
+        self.register_native(
+            name="research_and_generate_pdf",
+            description="Autonomously research a topic online, synthesize an executive briefing, compile a formatted PDF using ReportLab, and open it on the desktop.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "Topic or domain to research and compile into an executive PDF briefing.",
+                    },
+                    "target_pages": {
+                        "type": "string",
+                        "description": "Target page length, e.g. 'optimal', '1', '2', '3'.",
+                    },
+                },
+                "required": ["topic"],
+            },
+            handler=tools.research_and_generate_pdf,
+        )
+
+        self.register_native(
+            name="speak",
+            description="Play genuine Paul Bettany Jarvis studio voice audio matching the phrase or intent.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "phrase": {
+                        "type": "string",
+                        "description": "Phrase or dialogue line to speak in Jarvis's authentic voice.",
+                    },
+                },
+                "required": ["phrase"],
+            },
+            handler=tools.speak,
+        )
+
     def register_native(
         self,
         name: str,

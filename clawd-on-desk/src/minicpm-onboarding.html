@@ -48,24 +48,70 @@
           <div class="model-card-body">
             <p class="model-card-desc" data-i18n="onboardingDownloadCardDesc"></p>
             <div class="model-preset-selector" id="model-preset-selector" role="radiogroup">
-              <div class="preset-option selected" data-preset="minicpm5-1b" tabindex="0" role="radio" aria-checked="true">
+              <!-- Option 4: Intelligent Auto-Match (Featured Hero Card) -->
+              <div class="preset-option auto-card selected" data-preset="auto-detect" tabindex="0" role="radio" aria-checked="true">
                 <div class="preset-option-radio"></div>
                 <div class="preset-option-content">
                   <div class="preset-option-header">
-                    <span class="preset-option-name" data-i18n="onboardingPreset1BName"></span>
-                    <span class="preset-badge" data-i18n="onboardingPresetRecommended"></span>
+                    <span class="preset-option-name" data-i18n="onboardingRecipeAutoName">✨ Intelligent Auto-Match</span>
+                    <span class="preset-badge preset-badge-cyan" id="preset-auto-badge" data-i18n="onboardingRecipeAutoTag">Auto-Detected</span>
                   </div>
-                  <div class="preset-option-desc" data-i18n="onboardingPreset1BDesc"></div>
+                  <div class="preset-option-desc" id="preset-auto-desc" data-i18n="onboardingRecipeAutoDesc">Analyzing your hardware specs to recommend the optimal companion profile…</div>
+                  <div class="preset-meta-tags" id="preset-auto-meta">
+                    <span class="meta-tag" id="preset-auto-hw-pill">Detecting Hardware…</span>
+                    <span class="meta-tag" id="preset-auto-rec-pill">Auto-Profiling</span>
+                  </div>
                 </div>
               </div>
-              <div class="preset-option" data-preset="minicpm5-2b" tabindex="0" role="radio" aria-checked="false">
+
+              <!-- Option 1: Eco-Sentinel (Low VRAM) -->
+              <div class="preset-option" data-preset="eco-sentinel" tabindex="0" role="radio" aria-checked="false">
                 <div class="preset-option-radio"></div>
                 <div class="preset-option-content">
                   <div class="preset-option-header">
-                    <span class="preset-option-name" data-i18n="onboardingPreset2BName"></span>
-                    <span class="preset-badge preset-badge-blue" data-i18n="onboardingPresetEnhanced"></span>
+                    <span class="preset-option-name" data-i18n="onboardingRecipeEcoName">🟢 Eco-Sentinel (Low VRAM)</span>
+                    <span class="preset-badge preset-badge-green" data-i18n="onboardingRecipeEcoTag">Low VRAM (~0.9 GB)</span>
                   </div>
-                  <div class="preset-option-desc" data-i18n="onboardingPreset2BDesc"></div>
+                  <div class="preset-option-desc" data-i18n="onboardingRecipeEcoDesc">Lightweight MiniCPM 1B + sanoTTS (5MB, 50ms CPU voice). Zero GPU strain, ideal for laptops & battery mode.</div>
+                  <div class="preset-meta-tags">
+                    <span class="meta-tag">LLM: 1B Q4 (~780MB)</span>
+                    <span class="meta-tag">Voice: sanoTTS (5MB)</span>
+                    <span class="meta-tag">VRAM: ~0.9 GB</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Option 2: J.A.R.V.I.S. Studio (Balanced) -->
+              <div class="preset-option" data-preset="jarvis-studio" tabindex="0" role="radio" aria-checked="false">
+                <div class="preset-option-radio"></div>
+                <div class="preset-option-content">
+                  <div class="preset-option-header">
+                    <span class="preset-option-name" data-i18n="onboardingRecipeStudioName">🔵 J.A.R.V.I.S. Studio (Balanced)</span>
+                    <span class="preset-badge preset-badge-blue" data-i18n="onboardingRecipeStudioTag">Balanced (~1.5 GB)</span>
+                  </div>
+                  <div class="preset-option-desc" data-i18n="onboardingRecipeStudioDesc">High-precision MiniCPM 1B Q8_0 + Kokoro-82M British Butler voice. Recommended for dedicated GPUs.</div>
+                  <div class="preset-meta-tags">
+                    <span class="meta-tag">LLM: 1B Q8_0 (~1.15GB)</span>
+                    <span class="meta-tag">Voice: Kokoro Butler (80MB)</span>
+                    <span class="meta-tag">VRAM: ~1.5 GB</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Option 3: Deep Cognition (High Precision) -->
+              <div class="preset-option" data-preset="deep-cognition" tabindex="0" role="radio" aria-checked="false">
+                <div class="preset-option-radio"></div>
+                <div class="preset-option-content">
+                  <div class="preset-option-header">
+                    <span class="preset-option-name" data-i18n="onboardingRecipeDeepName">🟣 Deep Cognition (High Precision)</span>
+                    <span class="preset-badge preset-badge-purple" data-i18n="onboardingRecipeDeepTag">High VRAM (~2.4 GB)</span>
+                  </div>
+                  <div class="preset-option-desc" data-i18n="onboardingRecipeDeepDesc">Enhanced MiniCPM 2B for complex coding, logic & deep reasoning. Recommended for 6GB+ VRAM.</div>
+                  <div class="preset-meta-tags">
+                    <span class="meta-tag">LLM: 2B Q4 (~1.56GB)</span>
+                    <span class="meta-tag">Voice: Kokoro Studio</span>
+                    <span class="meta-tag">VRAM: ~2.4 GB</span>
+                  </div>
                 </div>
               </div>
             </div>
