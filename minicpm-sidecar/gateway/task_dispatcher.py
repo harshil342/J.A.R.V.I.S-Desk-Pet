@@ -55,7 +55,7 @@ def _load_store_unlocked() -> list:
     if path is None or not path.exists():
         return []
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
     except Exception as exc:
         log.warning("could not read task store %s: %s", path.name, exc)
         return []

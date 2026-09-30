@@ -346,7 +346,7 @@ class MCPManager:
         if not self.config_path.exists():
             return []
         try:
-            raw = self.config_path.read_text(encoding="utf-8")
+            raw = self.config_path.read_text(encoding="utf-8-sig")
             data = json.loads(raw)
             servers_data = data.get("mcpServers", data) if isinstance(data, dict) else []
             if isinstance(servers_data, dict):

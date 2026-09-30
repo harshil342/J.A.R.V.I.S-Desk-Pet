@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// MiniCPM Desk Pet — Auto-Start Script
+// Deskpet — Auto-Start Script
 // Registered as a SessionStart hook BEFORE clawd-hook.js.
 // Checks if the Electron app is running; if not, launches it detached.
 // Uses shared server discovery helpers and should exit quickly in normal cases.
@@ -67,11 +67,17 @@ function launchApp() {
 
   try {
     if (isPackaged) {
+      // electron-builder names the installed executable after build.productName.
+      // Reading it beats hardcoding: the literals here used to say
+      // "MiniCPM Desk Pet.exe" and "clawd-on-desk" while the shipped binary has
+      // been Deskpet.exe since the rename, so hook-driven auto-launch silently
+      // failed on packaged Windows and Linux.
+      const productName = require("../package.json").build.productName;
       if (isWin) {
         // __dirname: <install>/resources/app.asar.unpacked/hooks
-        // exe:       <install>/MiniCPM Desk Pet.exe
+        // exe:       <install>/<productName>.exe
         const installDir = path.resolve(__dirname, "..", "..", "..");
-        const exe = path.join(installDir, "MiniCPM Desk Pet.exe");
+        const exe = path.join(installDir, `${productName}.exe`);
         spawn(exe, [], { detached: true, stdio: "ignore" }).unref();
       } else if (isMac) {
         // __dirname: <name>.app/Contents/Resources/app.asar.unpacked/hooks
@@ -84,7 +90,7 @@ function launchApp() {
       } else {
         // Linux packaged app:
         // AppImage: process.env.APPIMAGE holds the .AppImage file path.
-        // deb/dir:  executable is <install>/clawd-on-desk, same depth as Windows.
+        // deb/dir:  executable is <install>/<productName>, same depth as Windows.
         //   __dirname: <install>/resources/app.asar.unpacked/hooks
         //   install:   3 levels up
         const appImage = process.env.APPIMAGE;
@@ -92,7 +98,7 @@ function launchApp() {
           spawn(appImage, [], { detached: true, stdio: "ignore" }).unref();
         } else {
           const installDir = path.resolve(__dirname, "..", "..", "..");
-          const exe = path.join(installDir, "clawd-on-desk");
+          const exe = path.join(installDir, productName);
           spawn(exe, [], { detached: true, stdio: "ignore" }).unref();
         }
       }

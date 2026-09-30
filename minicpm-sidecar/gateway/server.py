@@ -44,12 +44,12 @@ _RE_TOOL_TAG = re.compile(
     r"create_document|get_document_location|document_location|open_document|convert_currency|get_weather|get_time|system_status|"
     r"clipboard_assist|launch_app|web_search|calculate|unit_convert|fetch_page|"
     r"wikipedia|remember|recall|open_url|media_control|screenshot|lock|"
-    r"active_window|inspect_screen|read_screen_text|running_apps|speak|"
+    r"active_window|inspect_screen|read_screen_text|running_apps|"
     r"schedule_task|safety_refusal)\]:?"
 )
 
 
-# â”€â”€ Request / response shapes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Request / response shapes ────────────────────────────────────────────────
 
 
 class ToolCallRequest(BaseModel):
@@ -68,12 +68,6 @@ class MCPServerAddRequest(BaseModel):
 
 class SFXRequest(BaseModel):
     sound: str
-
-
-class SoundboardPlayRequest(BaseModel):
-    phrase: Optional[str] = None
-    clip_id: Optional[str] = None
-
 
 
 class MemoryAddRequest(BaseModel):
@@ -132,11 +126,11 @@ class ChatRequest(BaseModel):
     # active.
     disable_adapter: bool = False
     # Tool-invocation strategy for this request:
-    #   "auto"   â€” regex router first; if nothing matched, fall back to a
+    #   "auto"   — regex router first; if nothing matched, fall back to a
     #              single native function-calling round via llama-server.
-    #   "regex"  â€” keyword router only (legacy behaviour).
-    #   "native" â€” skip the regex router, native function calling only.
-    #   "off"    â€” no tools at all (pure chat).
+    #   "regex"  — keyword router only (legacy behaviour).
+    #   "native" — skip the regex router, native function calling only.
+    #   "off"    — no tools at all (pure chat).
     # Default comes from MINICPM_TOOL_MODE (itself defaulting to "auto").
     tool_mode: Optional[str] = None
 
@@ -167,12 +161,12 @@ def _effective_max_new_tokens(req: ChatRequest) -> int:
     return base
 
 
-# â”€â”€ Daily proactive events (briefing + recap) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Daily proactive events (briefing + recap) ────────────────────────────────
 
 
 def _config_hour(key: str, default: int) -> int:
     """Live per-iteration read of an hour field from runtime config,
-    clamped to 0â€“23 with a fallback default (mirrors runtime_config)."""
+    clamped to 0–23 with a fallback default (mirrors runtime_config)."""
     try:
         return max(0, min(23, int(runtime_config.get().get(key, default))))
     except (TypeError, ValueError):
@@ -202,7 +196,7 @@ def _next_scheduled_event(
     return min(candidates, key=lambda pair: pair[0])
 
 
-# â”€â”€ Model discovery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Model discovery ─────────────────────────────────────────────────────────
 
 
 def discover_models(roots: List[Path]) -> List[dict]:
@@ -242,10 +236,10 @@ def _default_model_roots() -> List[Path]:
     ]
 
 
-# â”€â”€ LoRA adapter discovery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── LoRA adapter discovery ──────────────────────────────────────────────────
 
 
-# Filename-keyword â†’ persona slug. The slug is the stable identifier the
+# Filename-keyword → persona slug. The slug is the stable identifier the
 # Electron renderer keys off ("default" / "neko" / "muice" / ...) when
 # deciding things like whether to flip `thinking` off (persona LoRAs don't
 # carry <think> training, so reasoning collides with their style).
@@ -350,7 +344,7 @@ def read_adapter_manifest(adapter_root: Optional[Path]) -> dict:
     """Return the parsed `.manifest.json` from `adapter_root`, or an
     empty manifest if the file is absent / malformed.
 
-    The gateway is a pure reader here â€” Electron owns the data and
+    The gateway is a pure reader here — Electron owns the data and
     re-writes the mirror on every CRUD operation. Reading on every
     `/api/adapters` request keeps us a snapshot fresh without an
     explicit refresh endpoint."""
@@ -387,14 +381,14 @@ def _manifest_by_resolved_path(manifest: dict) -> dict[Path, dict]:
     return out
 
 
-# â”€â”€ App factory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── App factory ──────────────────────────────────────────────────────────────
 
 
 def build_app(
     *,
     initial_model: Optional[Path],
     update_source: str = DEFAULT_UPDATE_SOURCE,
-    ctx_size: int = 4096,
+    ctx_size: int = 8192,
     n_gpu_layers: int = -1,
     threads: Optional[int] = None,
 ) -> FastAPI:
@@ -412,7 +406,7 @@ def build_app(
     # Boot-time LoRA load is now *opt-in*: only the LoRA the Electron
     # host has persisted as the active one (env MINICPM_ACTIVE_ADAPTER)
     # gets passed to llama-server via --lora. Default behaviour is pure
-    # Base â€” no third-party LoRA is preloaded just because it happens
+    # Base — no third-party LoRA is preloaded just because it happens
     # to live on disk. Switching to a different LoRA later triggers
     # `LlamaServer.reload_adapters([new])`, costing one llama-server
     # restart but keeping the steady-state memory minimal.
@@ -448,7 +442,7 @@ def build_app(
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         nonlocal startup_error
-        # Don't fail boot when the model isn't on disk yet â€” onboarding
+        # Don't fail boot when the model isn't on disk yet — onboarding
         # downloads it via /api/update-apply and only then calls
         # /api/load-model. The pet still wants /api/health to answer 200
         # in the meantime so the bubble doesn't show a permanent error.
@@ -498,7 +492,7 @@ def build_app(
         # the next occurrence of each from live runtime config, sleeps
         # to the sooner, fires that one, repeats. Hours are re-read
         # EVERY iteration so a live /api/config change takes effect at
-        # the next wake. Reuses the reminder bridge path â€” the pet
+        # the next wake. Reuses the reminder bridge path — the pet
         # animates and the narrator speaks the line in a bubble.
         async def _daily_events_loop():
             composers = {
@@ -543,7 +537,7 @@ def build_app(
         allow_headers=["*"],
     )
 
-    # Model roots used by /api/models â€” honour the env override the
+    # Model roots used by /api/models — honour the env override the
     # Electron host sets to <userData>/models/ in packaged mode.
     env_root = os.environ.get("MINICPM_MODEL_DIR")
     extra_roots: List[Path] = []
@@ -569,7 +563,7 @@ def build_app(
 
     updater = ModelUpdater(_get_active_model_path(), source=update_source)
 
-    # â”€â”€â”€ Health / introspection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ─── Health / introspection ────────────────────────────────────────
 
     @app.get("/api/health")
     async def health():
@@ -649,7 +643,7 @@ def build_app(
             "stage_hint": "ready" if present else "model-download",
         }
 
-    # â”€â”€â”€ Model / adapter listing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ─── Model / adapter listing ───────────────────────────────────────
 
     @app.get("/api/models")
     def list_models():
@@ -683,8 +677,8 @@ def build_app(
         return {"ok": True, "model_dir": str(target), "model_name": target.name}
 
     def _scan_adapters() -> List[dict]:
-        # Re-resolve the root each call so Settings â†’ "open adapter dir"
-        # â†’ drop new .gguf â†’ "refresh" picks up files added at runtime
+        # Re-resolve the root each call so Settings → "open adapter dir"
+        # → drop new .gguf → "refresh" picks up files added at runtime
         # without restarting the sidecar. Also re-read the manifest
         # mirror on every call so rename / upload mutations show up in
         # the next /api/adapters response without any explicit refresh
@@ -732,7 +726,7 @@ def build_app(
     @app.post("/api/load-adapter")
     async def load_adapter(payload: dict):
         raw = payload.get("path")
-        # path = null  â†’  deactivate any LoRA (back to base model)
+        # path = null  →  deactivate any LoRA (back to base model)
         if raw is None or (isinstance(raw, str) and not raw.strip()):
             # If llama-server was booted with `--lora <something>`, a
             # per-request `lora: []` is enough to force base output on
@@ -766,7 +760,7 @@ def build_app(
         # If the requested adapter isn't currently `--lora`-loaded,
         # restart llama-server so that ONLY this adapter is loaded.
         # We deliberately don't keep a growing list of preloaded LoRAs
-        # in memory â€” that was the old behaviour, and it meant any
+        # in memory — that was the old behaviour, and it meant any
         # third-party `.gguf` on disk silently rode along whether the
         # user wanted it or not. The user pays one sidecar restart
         # (~3-4s) per LoRA switch, which matches the cost of switching
@@ -799,7 +793,7 @@ def build_app(
             status_code=501,
         )
 
-    # â”€â”€â”€ Updater â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ─── Updater ───────────────────────────────────────────────────────
 
     @app.get("/api/update-check")
     async def update_check():
@@ -854,7 +848,7 @@ def build_app(
 
         return StreamingResponse(stream(), media_type="text/event-stream")
 
-    # â”€â”€â”€ Chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ─── Chat ──────────────────────────────────────────────────────────
 
     @app.post("/api/warmup")
     async def warmup():
@@ -870,9 +864,9 @@ def build_app(
     def _lora_arr_for(req: ChatRequest) -> Optional[List[dict]]:
         """Compute the per-request `lora` array.
 
-        - disable_adapter=true  â†’ []   (force base for this request)
-        - active adapter set    â†’ [{id, scale: 1.0}]
-        - no adapter active     â†’ []   (force base)
+        - disable_adapter=true  → []   (force base for this request)
+        - active adapter set    → [{id, scale: 1.0}]
+        - no adapter active     → []   (force base)
 
         Sending an empty list is intentionally explicit: llama.cpp
         treats adapters omitted from a per-request `lora` list as scale
@@ -888,7 +882,7 @@ def build_app(
         if idx is None:
             # State got out of sync (e.g. sidecar restarted without
             # re-registering this path). Fail open to base rather than
-            # 500 â€” the user will notice the persona is gone and can
+            # 500 — the user will notice the persona is gone and can
             # re-select from Settings.
             log.warning("active adapter %s missing from llama-server index", current)
             return []
@@ -901,9 +895,9 @@ def build_app(
         if not server.alive:
             degraded = server.degraded_reason
             detail = (
-                f"llama-server not running â€” {degraded}"
+                f"llama-server not running — {degraded}"
                 if degraded
-                else "llama-server not running â€” open Onboarding to download the model"
+                else "llama-server not running — open Onboarding to download the model"
             )
             return JSONResponse({"error": detail}, status_code=503)
         lora_arr = _lora_arr_for(req)
@@ -930,7 +924,7 @@ def build_app(
                     log.info("tool routing matched %d tool(s) for: %r", len(hits), last_user[:80])
                     tools_ran = [label for label, _ in hits]
                     # Deterministic path: a single mechanical tool gets a fixed
-                    # Jarvis line with NO inference â€” the 1B model cannot be
+                    # Jarvis line with NO inference — the 1B model cannot be
                     # trusted to relay results without narrating actions it
                     # never took ("I used the web search tool...").
                     #
@@ -943,12 +937,12 @@ def build_app(
                         canned = hits[0][1]
                     elif len(hits) == 1:
                         # Deterministic relays (todo/reminder/rate/weather/
-                        # wikipedia) win at ANY conversation position â€” the
+                        # wikipedia) win at ANY conversation position — the
                         # 1B sometimes "honestly" refuses to repeat data it
                         # was just handed.
                         canned = tools.canned_reply(hits[0][0], hits[0][1])
                     if not canned:
-                        # Inject the raw results (no [label] tags â€” the small
+                        # Inject the raw results (no [label] tags — the small
                         # model copies whatever brackets it sees).
                         clean = "\n".join(out for _, out in hits)
                         tool_context = (
@@ -966,9 +960,6 @@ def build_app(
             bridge.new_session()
             bridge.post("working")
             tool_name = tools_ran[0] if tools_ran else None
-            if not req.silent and tool_name != "speak":
-                from . import jarvis_soundboard
-                jarvis_soundboard.play_output_soundboard(canned, tool_name=tool_name)
             if req.stream:
                 return StreamingResponse(
                     _canned_stream(bridge, canned, tool_name=tool_name),
@@ -1053,31 +1044,6 @@ def build_app(
         bridge.post("attention" if req.sound == "alert" else "finish", event="SFX")
         return JSONResponse({"ok": True, "sound": req.sound})
 
-    @app.get("/api/soundboard/clips")
-    def list_soundboard_clips(query: Optional[str] = None, category: Optional[str] = None, limit: int = 50):
-        from .jarvis_soundboard import load_catalog
-        catalog = load_catalog()
-        if category:
-            catalog = [c for c in catalog if c.get("category") == category]
-        if query:
-            q = query.lower()
-            catalog = [c for c in catalog if q in c.get("text", "").lower()]
-        return JSONResponse({"ok": True, "total": len(catalog), "clips": catalog[:limit]})
-
-    @app.post("/api/soundboard/play")
-    def play_soundboard_clip(req: SoundboardPlayRequest):
-        from .jarvis_soundboard import get_clip_by_id, play_audio_file, play_clip_for_phrase
-        if req.clip_id:
-            clip = get_clip_by_id(req.clip_id)
-            if clip:
-                play_audio_file(clip["path"], async_play=True)
-                return JSONResponse({"ok": True, "played": clip["text"], "filename": clip["filename"]})
-            return JSONResponse({"ok": False, "error": "Clip not found"}, status_code=404)
-        if req.phrase:
-            matched = play_clip_for_phrase(req.phrase)
-            return JSONResponse({"ok": matched, "phrase": req.phrase})
-        return JSONResponse({"ok": False, "error": "phrase or clip_id required"}, status_code=400)
-
     @app.get("/api/memory")
     def get_memory(category: Optional[str] = None):
         items = default_memory_store.list_all(category=category)
@@ -1144,7 +1110,7 @@ def build_app(
     return app
 
 
-# â”€â”€ Chat plumbing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Chat plumbing ───────────────────────────────────────────────────────────
 
 
 async def _stream_chat(
@@ -1161,7 +1127,7 @@ async def _stream_chat(
         bridge.post("thinking")
 
     # Announce which tools already ran for this turn BEFORE any model
-    # output, so the bubble can show a "ðŸ”§ â€¦" activity chip while the
+    # output, so the bubble can show a "ðŸ”§ …" activity chip while the
     # reply is being composed. Old renderers ignore unknown events.
     if tools_ran:
         for name in tools_ran:
@@ -1245,9 +1211,6 @@ async def _stream_chat(
     if not req.silent:
         bridge.post("attention")
         tool_name = tools_ran[0] if tools_ran else None
-        if tool_name != "speak":
-            from . import jarvis_soundboard
-            jarvis_soundboard.play_output_soundboard("".join(content_deltas), tool_name=tool_name)
 
 
 async def _blocking_chat(
@@ -1294,8 +1257,6 @@ async def _blocking_chat(
     finally:
         if not req.silent:
             bridge.post("attention")
-            from . import jarvis_soundboard
-            jarvis_soundboard.play_output_soundboard("".join(content_parts))
     return {
         "content": "".join(content_parts),
         "thinking": "".join(think_parts) if req.thinking else None,
@@ -1303,7 +1264,7 @@ async def _blocking_chat(
 
 
 def _chat_temperature(req: ChatRequest, tool_context: Optional[str]) -> float:
-    """Tool-augmented replies are relay tasks â€” dampen sampling so the
+    """Tool-augmented replies are relay tasks — dampen sampling so the
     1B model reports the live facts instead of freewheeling."""
     temp = max(0.0, float(req.temperature))
     if tool_context:
@@ -1325,7 +1286,7 @@ def _build_messages(req: ChatRequest, *, tool_context: Optional[str] = None) -> 
         rcfg = runtime_config.get()
         prompt = jarvis_system_prompt(rcfg.get("assistant_address") or "sir")
         if not rcfg.get("auto_memory", True):
-            # auto_memory off â†’ drop the Rules bullet instructing the model
+            # auto_memory off → drop the Rules bullet instructing the model
             # to quietly save durable facts with remember_fact.
             prompt = "\n".join(
                 ln for ln in prompt.splitlines() if "remember_fact" not in ln
@@ -1384,16 +1345,17 @@ async def _canned_stream(
     bridge.post("attention")
 
 
-# â”€â”€ Native function-calling round (llama-server tools API) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Native function-calling round (llama-server tools API) ──────────────────
 
 
 def _native_tool_error_reply(name: str) -> str:
-    return f"Apologies, sir â€” the {name} tool failed to run just now."
+    addr = runtime_config.get().get("assistant_address") or "sir"
+    return f"Apologies, {addr} — the {name} tool failed to run just now."
 
 
 _MEMORY_ONLY_TOOLS = {"remember_fact", "recall_fact"}
 # Compact cue list mirroring what the keyword router covers. A miss here
-# means "no obvious tool need" â€” the native round runs with only the
+# means "no obvious tool need" — the native round runs with only the
 # memory tools armed.
 _RE_TOOL_CUE = re.compile(
     r"\b(?:weather|temperature|forecast|rain|time|date|timer|remind|reminder|"
@@ -1420,7 +1382,7 @@ async def native_tool_round(
     final answer. Falls back to a plain generation when the backend or
     the GGUF template doesn't support tool calling.
 
-    Single retry by design â€” a 1B model looping tool calls burns latency
+    Single retry by design — a 1B model looping tool calls burns latency
     without converging; one grounded follow-up is where the quality is.
     """
     log = get_logger()
@@ -1462,7 +1424,7 @@ async def native_tool_round(
         lora=lora,
     )
 
-    # â”€â”€ Phase 1: stream with tools armed; collect content + tool deltas â”€â”€
+    # ── Phase 1: stream with tools armed; collect content + tool deltas ──
     fragments: list = []
     preamble_parts: list[str] = []
     think_parts: list[str] = []
@@ -1478,7 +1440,7 @@ async def native_tool_round(
                 preamble_parts.append(piece)
     except Exception as exc:
         # Backend rejected the request shape (template without tool
-        # support, older llama.cpp, ...) â€” degrade to plain chat instead
+        # support, older llama.cpp, ...) — degrade to plain chat instead
         # of failing the turn.
         log.warning("native tool round unavailable (%s); falling back to plain chat", exc)
         if not req.silent:
@@ -1491,7 +1453,7 @@ async def native_tool_round(
     calls = [c for c in calls if c.get("name")]  # drop empty-name ghosts
 
     if not calls:
-        # Model answered without tools â€” replay what it streamed as a
+        # Model answered without tools — replay what it streamed as a
         # normal SSE conversation so the UI contract stays identical.
         if not req.silent:
             bridge.post("working")
@@ -1508,11 +1470,9 @@ async def native_tool_round(
         yield _sse({"event": "end"})
         if not req.silent:
             bridge.post("attention")
-            from . import jarvis_soundboard
-            jarvis_soundboard.play_output_soundboard(text)
         return
 
-    # â”€â”€ Phase 2: execute + one grounded re-ask â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Phase 2: execute + one grounded re-ask ───────────────────────────
     if not req.silent:
         bridge.post("working")
     for call in calls:
@@ -1540,7 +1500,8 @@ async def native_tool_round(
                 # Defense in depth: the schema filter keeps these away from
                 # the model; refuse loudly if one slips through anyway.
                 result_text = (
-                    f"'{call['name']}' is restricted, sir â€” ask me in plain "
+                    f"'{call['name']}' is restricted, "
+                    f"{runtime_config.get().get('assistant_address') or 'sir'} — ask me in plain "
                     "words and I shall route it properly."
                 )
             else:
@@ -1622,7 +1583,8 @@ async def native_tool_round(
             # Model went silent after the tool ran (1B models do this,
             # especially after remember_fact). Never leave a blank bubble.
             done = tools.canned_reply(executed[0][0], executed[0][1])
-            yield _sse({"event": "delta", "content": (done or "Done, sir.")})
+            fallback = f"Done, {runtime_config.get().get('assistant_address') or 'sir'}."
+            yield _sse({"event": "delta", "content": (done or fallback)})
     finally:
         tail = tag_scrub.flush()
         if tail:
@@ -1637,10 +1599,5 @@ async def native_tool_round(
     yield _sse({"event": "end"})
     if not req.silent:
         bridge.post("attention")
-        from . import jarvis_soundboard
-        tool_executed = executed[0][0] if executed else None
-        if tool_executed != "speak":
-            full_reply = "".join(final_content_parts).strip() or (clean.strip() if 'clean' in locals() and clean.strip() else (done or ""))
-            jarvis_soundboard.play_output_soundboard(full_reply, tool_name=tool_executed)
 
 

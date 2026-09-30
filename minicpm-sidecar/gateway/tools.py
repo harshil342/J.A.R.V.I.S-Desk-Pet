@@ -1084,7 +1084,7 @@ def _load_reminders_unlocked() -> list:
     if not f.exists():
         return []
     try:
-        data = json.loads(f.read_text(encoding="utf-8"))
+        data = json.loads(f.read_text(encoding="utf-8-sig"))
     except Exception as exc:
         log.warning("could not read %s: %s", f.name, exc)
         return []
@@ -1249,7 +1249,7 @@ def todo_list() -> str:
     f = _todo_file()
     if not f.exists():
         return "Your to-do list is empty (no todo.md yet)."
-    lines = [ln.rstrip() for ln in f.read_text(encoding="utf-8").splitlines()
+    lines = [ln.rstrip() for ln in f.read_text(encoding="utf-8-sig").splitlines()
              if ln.startswith("- [")]
     if not lines:
         return "Your to-do list has no items."
@@ -1297,7 +1297,7 @@ def compose_evening_recap() -> str:
     try:
         f = _todo_file()
         if f.exists():
-            lines = [ln.rstrip() for ln in f.read_text(encoding="utf-8").splitlines()]
+            lines = [ln.rstrip() for ln in f.read_text(encoding="utf-8-sig").splitlines()]
     except Exception:
         lines = []
     done = [ln for ln in lines if ln.startswith("- [x]")]
@@ -1326,7 +1326,7 @@ def todo_clear() -> str:
     f = _todo_file()
     lines = []
     if f.exists():
-        lines = [ln for ln in f.read_text(encoding="utf-8").splitlines()
+        lines = [ln for ln in f.read_text(encoding="utf-8-sig").splitlines()
                  if ln.startswith("- [")]
     if not lines:
         return "Your to-do list is already empty — nothing to clear."
@@ -1342,7 +1342,7 @@ def todo_done(item: str) -> str:
     f = _todo_file()
     if not f.exists():
         return "Your to-do list is empty — nothing to mark as done."
-    lines = f.read_text(encoding="utf-8").splitlines()
+    lines = f.read_text(encoding="utf-8-sig").splitlines()
 
     item_norm = _norm_item(item)
     if item_norm in _ANAPHORIC_TASKS or item_norm == "it":
@@ -1373,7 +1373,7 @@ def todo_remove(item: str) -> str:
     f = _todo_file()
     if not f.exists():
         return "Your to-do list is empty — nothing to remove."
-    lines = f.read_text(encoding="utf-8").splitlines()
+    lines = f.read_text(encoding="utf-8-sig").splitlines()
 
     item_norm = _norm_item(item)
     if item_norm in _ANAPHORIC_TASKS or item_norm == "it":
@@ -2028,7 +2028,7 @@ def recall_fact(query: str = "", key: str = "", topic: str = "", term: str = "",
     f = _notes_file()
     if not f.exists():
         return f"I have no memory matching '{query}'." if query else "I have nothing saved in my memory yet, sir."
-    lines = [ln for ln in f.read_text(encoding="utf-8").splitlines()
+    lines = [ln for ln in f.read_text(encoding="utf-8-sig").splitlines()
              if ln.startswith("- ")]
     if not lines:
         return f"I have no memory matching '{query}'." if query else "I have nothing saved in my memory yet, sir."
@@ -2801,14 +2801,6 @@ _RE_MY_ATTR_Q = re.compile(
     r"address|timezone|favourite|favorite)\b[?.!]*\s*$",
     re.IGNORECASE,
 )
-_RE_RESEARCH_PDF = re.compile(
-    r"\b(?:generate|create|research|compile|make|build)\s+(?:an?\s+)?(?:executive\s+|research\s+)?pdf\s+(?:briefing\s+|report\s+)?(?:on|about|for)\s+(.+)",
-    re.IGNORECASE,
-)
-_RE_SPEAK = re.compile(
-    r"^\s*(?:speak|say\s+aloud|say|vocalize|voice)\s+[\"']?(.+?)[\"']?\s*$",
-    re.IGNORECASE,
-)
 _RE_RECALL = re.compile(
     r"\b(?:"
     r"what\s+do\s+you\s+(?:remember|know)|"
@@ -3173,7 +3165,7 @@ def _check_local_memory(text: str) -> Optional[str]:
     if not f.exists():
         return None
     try:
-        content = f.read_text(encoding="utf-8")
+        content = f.read_text(encoding="utf-8-sig")
     except Exception:
         return None
     lines = [ln for ln in content.splitlines() if ln.startswith("- ")]
@@ -3631,15 +3623,7 @@ def route_tools(
             run(open_url, _SITE_URLS[s_name], label="open_site")
             return results
 
-    # 7e1b — autonomous research & PDF briefing generation
-    m_pdf = _RE_RESEARCH_PDF.search(text)
-    if m_pdf:
-        topic = _clean(m_pdf.group(1)).rstrip(".?!")
-        if topic:
-            run(research_and_generate_pdf, topic, label="research_and_generate_pdf")
-            return results
-
-    # 7e — open a website (must run before launch_app grabs the domain)
+    # 7e - open a website (must run before launch_app grabs the domain)
     m = _RE_URL.search(text)
     if m:
         run(open_url, m.group(1) or m.group(2), label="open_url")
@@ -3660,14 +3644,6 @@ def route_tools(
         from . import screen_context
         run(screen_context.get_running_apps_summary, label="running_apps")
         return results
-
-    # 7g — vocalize / speak aloud — genuine Paul Bettany soundboard
-    m_spk = _RE_SPEAK.search(text)
-    if m_spk:
-        phrase = _clean(m_spk.group(1)).rstrip(".?!")
-        if phrase:
-            run(speak, phrase, label="speak")
-            return results
 
     # 8 — launch app
     m = _RE_LAUNCH.search(text)
@@ -3922,8 +3898,6 @@ def canned_reply(label: str, result: str) -> Optional[str]:
     addr = runtime_config.get().get("assistant_address", "sir")
     if label == "running_apps":
         return f"{result}, {addr}."
-    if label == "speak":
-        return f"Spoken aloud, {addr}."
     if label == "launch_app":
         if result and result.lower().startswith("could not find"):
             return result
@@ -3956,28 +3930,7 @@ def canned_reply(label: str, result: str) -> Optional[str]:
     if label == "open_url":
         host = result.replace("opened: ", "").strip()
         return f"Opening {host} in your browser, {addr}."
-    if label == "research_and_generate_pdf":
-        return result
     return None
-
-
-def research_and_generate_pdf(topic: str, target_pages: str = "optimal") -> str:
-    """Autonomously research a topic online, compile an executive PDF briefing with ReportLab, and open it."""
-    from . import pdf_engine
-    return pdf_engine.research_and_generate_pdf(topic, target_pages)
-
-
-def speak(phrase: str) -> str:
-    """Play dense J.A.R.V.I.S. voice audio matching the requested phrase (0ms soundboard or dense neural synthesis)."""
-    from . import jarvis_soundboard
-    clip = jarvis_soundboard.find_best_clip(phrase)
-    if clip:
-        jarvis_soundboard.play_audio_file(clip["path"], async_play=True)
-        return f"Spoken aloud (soundboard): '{clip['text']}'"
-    ok = jarvis_soundboard.play_clip_for_phrase(phrase)
-    if ok:
-        return f"Spoken aloud (dense neural synthesis): '{phrase}'"
-    return "Voice synthesis unavailable, sir."
 
 
 

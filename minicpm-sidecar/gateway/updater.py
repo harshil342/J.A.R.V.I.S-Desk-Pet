@@ -95,7 +95,7 @@ class MockBackend(_Backend):
         rf = self.root / "revision.json"
         if not rf.exists():
             raise FileNotFoundError(f"mock remote missing revision.json: {rf}")
-        return Revision.from_dict(json.loads(rf.read_text("utf-8")))
+        return Revision.from_dict(json.loads(rf.read_text("utf-8-sig")))
 
     def stream_files(self, target_dir: Path, on_progress) -> None:
         rev = self.fetch_revision()
@@ -308,7 +308,7 @@ class ModelUpdater:
                 return Revision(revision=f"local-{digest}", files=[self.local_model_path.name])
             return None
         try:
-            return Revision.from_dict(json.loads(rf.read_text("utf-8")))
+            return Revision.from_dict(json.loads(rf.read_text("utf-8-sig")))
         except Exception:
             return None
 

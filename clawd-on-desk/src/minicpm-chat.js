@@ -2529,7 +2529,7 @@ module.exports = function initMinicpmChat(ctx) {
           try { gguf_size = fs.statSync(gguf_path).size; } catch {}
         }
         const llama = tree.find((p) => /llama-server/i.test(p.cmd));
-        const ctx_size = Number(process.env.MINICPM_CTX) || 4096;
+        const ctx_size = Number(process.env.MINICPM_CTX) || 8192;
         const mmap_kb = gguf_size ? Math.round(gguf_size / 1024) : null;
         const private_kb = mmap_kb != null
           ? Math.max(0, total_rss_kb - mmap_kb)

@@ -68,11 +68,19 @@ function paintHardwareInfo() {
   const recPill = el("preset-auto-rec-pill");
   const desc = el("preset-auto-desc");
 
+  // Field names here must match hardware-probe.js's return. It used to read
+  // gpu.model / gpu.vramFormatted / ramFormatted / rationale, none of which the
+  // probe ever produced, so three of the four pills rendered "CPU (Shared)" on
+  // every machine. hardware-probe.test.js pins the producer side; this is the
+  // consumer side of the same contract.
+  const gpu = hardwareInfo.primaryGpu;
+  const gib = (bytes) => (typeof bytes === "number" && bytes > 0 ? `${(bytes / 1073741824).toFixed(1)} GB` : null);
+
   if (hwPill) {
-    const gpuName = (hardwareInfo.gpu && hardwareInfo.gpu.model) || "CPU";
-    const vramStr = (hardwareInfo.gpu && hardwareInfo.gpu.vramFormatted) || "Shared";
-    const ramStr = hardwareInfo.ramFormatted ? ` · ${hardwareInfo.ramFormatted} RAM` : "";
-    hwPill.textContent = `${gpuName} (${vramStr})${ramStr}`;
+    const gpuName = (gpu && gpu.name) || "CPU";
+    const vram = gib(gpu && gpu.vramBytes) || "Shared";
+    const ram = hardwareInfo.totalRamGB ? ` · ${hardwareInfo.totalRamGB} GB RAM` : "";
+    hwPill.textContent = `${gpuName} (${vram})${ram}`;
   }
 
   if (recPill) {
@@ -85,8 +93,8 @@ function paintHardwareInfo() {
     recPill.textContent = `Matched: ${recName}`;
   }
 
-  if (desc && hardwareInfo.rationale) {
-    desc.textContent = hardwareInfo.rationale;
+  if (desc && hardwareInfo.reason) {
+    desc.textContent = hardwareInfo.reason;
   }
 }
 

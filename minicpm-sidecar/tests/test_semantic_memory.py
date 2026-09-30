@@ -7,6 +7,7 @@ scheduling, and REST endpoints.
 from __future__ import annotations
 
 import asyncio
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -54,6 +55,31 @@ def test_semantic_memory_store_crud(tmp_path):
     ok = store.delete(item.id)
     assert ok is True
     assert len(store.list_all()) == 0
+
+
+def test_semantic_memory_loads_a_utf8_bom(tmp_path):
+    # A BOM from any external editor used to raise on json.loads, and the whole
+    # store was discarded at WARNING level with no user-visible sign. It was the
+    # most repeated defect in the runtime log: 16 of 19 recorded startups.
+    store_file = tmp_path / "mem.json"
+    payload = json.dumps(
+        [
+            {
+                "id": "abc12345",
+                "text": "sir asked a general question about Mars",
+                "category": "general",
+                "created_at": "2026-09-21T20:28:32.523612",
+                "tags": [],
+            }
+        ],
+        indent=2,
+    )
+    store_file.write_bytes(b"\xef\xbb\xbf" + payload.encode("utf-8"))
+
+    store = SemanticMemoryStore(storage_path=store_file)
+    items = store.list_all()
+    assert len(items) == 1
+    assert "Mars" in items[0].text
 
 
 def test_semantic_memory_fuzzy_matching(tmp_path):

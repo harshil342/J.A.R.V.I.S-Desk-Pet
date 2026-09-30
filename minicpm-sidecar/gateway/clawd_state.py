@@ -33,7 +33,7 @@ def _candidate_ports() -> list[int]:
     """Try the runtime port first (whatever is alive right now), then the rest."""
     ports: list[int] = []
     try:
-        data = json.loads(RUNTIME_FILE.read_text("utf-8"))
+        data = json.loads(RUNTIME_FILE.read_text("utf-8-sig"))
         port = int(data.get("port") or 0)
         if port in CLAWD_PORTS:
             ports.append(port)

@@ -257,7 +257,7 @@ class LlamaServer:
         self,
         *,
         model_path: Optional[Path],
-        ctx_size: int = 4096,
+        ctx_size: int = 8192,
         n_gpu_layers: int = -1,
         threads: Optional[int] = None,
         extra_args: Optional[list[str]] = None,

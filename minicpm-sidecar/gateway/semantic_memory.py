@@ -131,7 +131,7 @@ class SemanticMemoryStore:
             return
 
         try:
-            raw = self._path.read_text(encoding="utf-8")
+            raw = self._path.read_text(encoding="utf-8-sig")
             data = json.loads(raw)
             if isinstance(data, list):
                 for item_dict in data:
@@ -163,7 +163,7 @@ class SemanticMemoryStore:
 
     def _migrate_legacy_txt(self, legacy_file: Path) -> None:
         try:
-            lines = legacy_file.read_text(encoding="utf-8").splitlines()
+            lines = legacy_file.read_text(encoding="utf-8-sig").splitlines()
             for line in lines:
                 clean = line.strip()
                 if clean:

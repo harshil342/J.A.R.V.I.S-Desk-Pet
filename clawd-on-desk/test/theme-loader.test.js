@@ -433,6 +433,9 @@ describe("theme-loader preview sound selection", () => {
           name: "Fallback Theme",
           sounds: {
             confirm: null,
+            // Declared, not inherited: no theme ships audio any more, so the
+            // fallback chain is only exercised when a theme names both clips.
+            complete: "complete.mp3",
           },
         }),
       },

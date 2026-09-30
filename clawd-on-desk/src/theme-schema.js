@@ -2,10 +2,11 @@
 
 // Defaults used when theme.json omits optional fields.
 
-const DEFAULT_SOUNDS = {
-  complete: "complete.mp3",
-  confirm: "confirm.mp3",
-};
+// No shipped audio. A theme supplies its own clips via `sounds`, and the pet
+// is silent when it does not. Lookup is already tolerant of a missing file
+// (theme-loader.getSoundUrl returns null, renderer play() catches), so an empty
+// default degrades to silence rather than an error.
+const DEFAULT_SOUNDS = {};
 
 const DEFAULT_TIMINGS = {
   minDisplay: {
