@@ -234,6 +234,11 @@ def test_cleanup_kills_matching_stale_process(tmp_path: Path) -> None:
 # ── _process_name_matches ───────────────────────────────────────────────
 
 
+@pytest.mark.skipif(
+    sys.platform != "win32",
+    reason="the interpreter's comm is 'python.exe' on Windows; POSIX CI images "
+           "run the suite under a different name, so this only means anything here",
+)
 def test_process_name_matches_self() -> None:
     # Our own interpreter's `comm` always contains "python" on POSIX
     # and "python.exe" / "python3.exe" on Windows.

@@ -5,6 +5,7 @@ Live API behaviour (open.er-api.com) is exercised manually via
 scripts/smoke-chat.ps1 — we do not hit the network from unit tests.
 """
 
+import os
 import platform
 from pathlib import Path
 
@@ -225,6 +226,10 @@ def test_personal_fact_negative_cases_stay_unrouted():
     assert tools.route_tools("my team is winning") == []
 
 
+@pytest.mark.skipif(
+    os.name != "nt",
+    reason="monkeypatches tools.os.startfile, which only exists on Windows",
+)
 def test_launch_app_falls_back_to_web_services(monkeypatch):
     import webbrowser as wb
 
@@ -834,6 +839,11 @@ def test_lock_sys_variation():
     assert hits2 and hits2[0][0] == "lock"
 
 
+@pytest.mark.skipif(
+    os.name != "nt",
+    reason="media_control sends Win32 media keys; on other platforms the tool "
+           "correctly reports it is not wired up, so there is no result to assert",
+)
 def test_media_control_variations():
     hits = tools.route_tools("turn the down")
     assert hits and hits[0][0] == "media_control"
