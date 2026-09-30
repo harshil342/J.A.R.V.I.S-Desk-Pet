@@ -88,6 +88,7 @@ const SECTIONS = [
   [/^fix(!|\(|:)/, "Fixed"],
   [/^perf(!|\(|:)/, "Performance"],
   [/^refactor(!|\(|:)/, "Changed"],
+  [/^ui(!|\(|:)/, "Changed"],
   [/^(revert|security|test|docs)(!|\(|:)/, "Changed"],
 ];
 // Internal-only types never appear in a user-facing changelog.

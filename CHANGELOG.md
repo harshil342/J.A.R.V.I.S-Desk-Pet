@@ -13,6 +13,9 @@ Work in progress. See `plan.md` for the production-hardening plan and
 
 ### Added
 
+- port the matcher and tri-state policy; add local-sign finalize (permissions)
+- reproducible self-signed cert, verified signing, signed build (signing)
+- new engine, generated cue set, mouth sync (plan.md D5/D6) (audio)
 - jarvis sidecar capabilities, live assistant config, windows-first cleanup, english-only repo
 - add MiniCPM5-1B and 2B model selection and remove model row in about settings (onboarding)
 - enrich document drafting, add open_document tool, and elevate settings UI
@@ -22,9 +25,19 @@ Work in progress. See `plan.md` for the production-hardening plan and
 
 ### Fixed
 
+- ship check-syntax.js and test that npm scripts are shippable (ci)
+- guard three Windows-only tests so the new gate can pass (ci)
 - close the nine live defects in plan.md section 3, delete voice + pdf work
 - normalize companion names, fix menu jump, math div-by-zero, doc path and recall
 - polish bubble UI, compound math, and local memory routing (chat)
+
+### Performance
+
+- compositor-only motion, and an objective UI baseline (ui)
+
+### Changed
+
+- token layer, 19 legibility fixes, and a CI gate on UI findings
 
 
 ## [0.11.0] - 2026-08-28
