@@ -3,6 +3,7 @@ const { describe, it } = require("node:test");
 const fs = require("node:fs");
 const path = require("node:path");
 const { minimatch } = require("minimatch");
+const { execFileSync } = require("node:child_process");
 
 const pkg = require("../package.json");
 const ROOT = path.join(__dirname, "..");
@@ -297,3 +298,85 @@ function assertWorkflowOrder(workflow, fetchCommand, verifyCommand, buildCommand
   assert.ok(fetchIndex < verifyIndex, `${fetchCommand} should run before ${verifyCommand}`);
   assert.ok(verifyIndex < buildIndex, `${verifyCommand} should run before ${buildCommand}`);
 }
+
+// Every relative path an npm script points at. `npm run lint` in CI failed with
+// "Cannot find module .../scripts/check-syntax.js" because scripts/* is
+// gitignored with an allowlist and the new file had no `!` line. It existed on
+// disk, passed locally, and vanished on the runner. This makes that class of
+// bug a test failure instead of a surprise in CI.
+const SCRIPT_PATH_RE =
+  /(?<=^|[\s"'=])(?:\.\.\/|\.\/)?[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*\.[A-Za-z0-9]+/g;
+
+function referencedScriptPaths() {
+  const found = new Map();
+  for (const [name, command] of Object.entries(pkg.scripts || {})) {
+    if (typeof command !== "string") continue;
+    for (const match of command.matchAll(SCRIPT_PATH_RE)) {
+      const rel = match[0].replace(/^\.\//, "");
+      if (rel.startsWith("-") || rel.includes("://")) continue;
+      found.set(rel, name);
+    }
+  }
+  return found;
+}
+
+function git(args, opts = {}) {
+  return execFileSync("git", args, {
+    cwd: ROOT,
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "pipe"],
+    ...opts,
+  });
+}
+
+describe("npm script targets", () => {
+  const targets = referencedScriptPaths();
+
+  it("found the script paths to check", () => {
+    // Guards the guard: if the regex ever stops matching, both tests below go
+    // vacuously green and this failure mode comes straight back.
+    assert.ok(targets.size >= 30, `expected to parse many script paths, got ${targets.size}`);
+    assert.ok(targets.has("scripts/check-syntax.js"));
+    assert.ok(targets.has("../scripts/release.mjs"));
+  });
+
+  it("only references files that exist on disk", () => {
+    const missing = [];
+    for (const [rel, scriptName] of targets) {
+      if (!fs.existsSync(path.resolve(ROOT, rel))) missing.push(`${scriptName} -> ${rel}`);
+    }
+    assert.deepStrictEqual(missing, [], `npm scripts point at missing files: ${missing.join(", ")}`);
+  });
+
+  it("only references files that git will actually ship", () => {
+    let tracked;
+    let toplevel;
+    try {
+      toplevel = git(["rev-parse", "--show-toplevel"]).trim();
+      // Run from the root: git ls-files with no pathspec only lists files under
+      // the current directory, which would silently skip the ../ scripts too.
+      tracked = new Set(
+        git(["ls-files", "-z", "--full-name"], { cwd: toplevel }).split("\0").filter(Boolean)
+      );
+      toplevel = git(["rev-parse", "--show-toplevel"]).trim();
+    } catch {
+      return; // Not a git work tree (e.g. a source tarball). Nothing to assert.
+    }
+    // Not ignored is not enough: an untracked file passes check-ignore and still
+    // vanishes on the runner. Both halves matter.
+    const unshipped = [];
+    for (const [rel, scriptName] of targets) {
+      // Git always speaks forward slashes, relative to the work tree root.
+      const key = path
+        .relative(toplevel, path.resolve(ROOT, rel))
+        .split(path.sep)
+        .join("/");
+      if (!tracked.has(key)) unshipped.push(`${scriptName} -> ${rel} (${key})`);
+    }
+    assert.deepStrictEqual(
+      unshipped,
+      [],
+      `these exist locally but are not committed, so they break in CI. git add them: ${unshipped.join(", ")}`
+    );
+  });
+});
