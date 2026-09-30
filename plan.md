@@ -55,12 +55,41 @@ These were settled with the owner on 2026-10-01. Everything below is built on th
 | **D5/D6** `AudioEngine`, 9 generated cues, mouth sync, 28 tests | done | `9f3fdeb` |
 | B7 frozen-exe import assertion | **todo** | Phase 1 |
 | B3 `reportlab` | moot — `pdf_engine.py` deleted; returns in Phase 3 done properly | — |
-| D3 platform trim (drop arm64/mac/linux) | **todo** | Phase 1 |
-| Phase 1 (installer size, README truth pass, rolling channel, signing) | **todo** | Phase 1 |
+| **D3** platform trim: Windows x64 only, 14 dead build scripts removed | done | `810048e` |
+| **D3** CI: Linux job + arm64 + Vulkan fetches removed, `npm ci` | done | `810048e` |
+| **D3** x64 VC++ redist (was arm64-only) + corrected existence probe | done | `810048e` |
+| Self-signed signing cert, verified signing, `build:win:signed` | done | `6c45afa` |
+| Windows-only test guards (found by the new CI gate) | done | `ff51c3f`+ |
+| Installer size measurement after D3 | **todo** | CI running |
+| README / `development.md` truth pass | **todo** | Phase 1 |
+| Rolling release channel (`windows-latest`) | **todo** | Phase 1 |
 | Phase 2 (rules engine, hook ACK, memory tiers, CORS auth) | **todo** | Phase 2 |
 | Phases 3–6 | roadmap | after 0.12.0 |
 
-**Verified green:** 4425 Electron tests, 282 Python tests, 0 failures.
+**Verified green:** 4424 Electron tests, 282 Python tests, 0 failures.
+**CI:** first run after the gate failed on 3 Windows-only tests with no platform
+guard; after guarding them the full pipeline passed in 6m7s.
+
+### Signing
+
+`npm run sign:dev` creates the certificate, `npm run sign:check` proves it can
+sign a real unsigned PE, `npm run build:win:signed` builds wired up. No new
+dependency. Verified: sha256RSA, RSA-3072, EKU Code Signing, 10-year validity,
+signs → verifies `CN=Deskpet` → chain valid.
+
+Two traps worth remembering, both hit while building it:
+- `New-SelfSignedCertificate` returns `NTE_PERM` in restricted and
+  non-interactive contexts. The .NET `CertificateRequest` path does not.
+- Authenticode allows **one** signature per file, so signing an already-signed
+  binary is a silent no-op. The first version of the probe signed a copy of
+  `notepad.exe` and cheerfully reported "verified" as `CN=Microsoft Windows`.
+  `verify-signing.ps1` now asserts the subject is ours.
+
+### The `.gitignore` footgun
+
+`clawd-on-desk/scripts/*` is ignored with an allowlist. Three new signing
+scripts were silently dropped until that was noticed. If you add a script there,
+add the `!` line in the same commit or it will not ship.
 
 ### Notes for whoever picks this up
 
