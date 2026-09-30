@@ -415,6 +415,22 @@ Paid for in public by VoiceOS, and by Taby's honest roadmap.
 | WhatsApp | Unofficial connection, needs a separate number. |
 | Sleeping-computer wake on macOS/Linux | Requires root/admin. Windows-only (D3). |
 | Migrating the sidecar to TypeScript | D1. Rewrites working software for no user-visible gain. |
+| Clawd GIF/SVG artwork from Clawstick | Not MIT — separate `ASSETS-LICENSE.md` terms, same as upstream. Code yes, artwork no. |
+| Clawstick firmware from Anthropic's reference | Derived from an MIT reference with its own `NOTICE.md` and `LICENSE.upstream`. |
+
+### Clawstick, for the record
+
+Because it is easy to confuse with Taby's hardware, and because it was nearly
+deleted on a wrong assumption:
+
+| | Clawstick (ours) | Taby Physical |
+|---|---|---|
+| Repo | `rullerzhou-afk/clawstick` | `TRIIIS-LABS/firmware-taby` |
+| Author | same as `clawd-on-desk`, our upstream | TRIIIS, unrelated |
+| Hardware | Nordic UART BLE device, any vendor | Waveshare ESP32-S3-Touch-AMOLED |
+| License | MIT runtime; artwork separately restricted | Apache-2.0 firmware |
+| Role | BLE bridge for agent state + button replies | E-ink/AMOLED face for the Taby app |
+| Needs hardware to be useful | yes, but has a fake transport for testing | yes |
 
 ---
 
@@ -437,5 +453,28 @@ Stated honestly, because a plan that claims 10/10 isn't a plan.
 | O1 | Does 0.12.0 ship with a minimal sound set, or silent? | Ships **with** a minimal generated set — a silent pet is a regression |
 | O2 | Written threat model before the rules engine? | **Yes** |
 | O3 | Was `v0.11.0` released publicly, and to whom? | Assume yes; the tag moves forward, `v0.11.0` is never rewritten |
-| O4 | `clawstick` / Hardware Buddy — revive or delete? | **Delete.** It cannot function without a repo that doesn't exist, and a permanent "Install Clawstick" prompt is worse than absence |
+| O4 | ~~`clawstick` / Hardware Buddy — revive or delete?~~ **RESOLVED: revive.** | See below. |
 | O5 | `gh auth login` + `WIN_CSC_LINK`? | Unsigned artifacts become **draft** releases, never public |
+| O1b | 0.12.0 ships **with** cues | **CONFIRMED** — 9 generated clips are in `assets/sounds/` |
+
+### O4 resolved — Clawstick is alive and it is ours
+
+`rullerzhou-afk/clawstick`, public, MIT for runtime code, last pushed **2026-09-05**.
+Same author as `clawd-on-desk`, which is this repo's upstream. It is a **BLE desk
+device bridge**: a small hardware puck that mirrors agent state and returns
+button presses as permission replies. It is **not** related to Taby (whose
+hardware is a Waveshare ESP32-S3 AMOLED from TRIIIS-LABS, a different company).
+
+So this is a first-party sibling dependency that was simply never cloned, not a
+dead feature. The existing integration is already correct — it degrades to an
+"Install Clawstick" hint and never throws. Two ways to switch it on:
+
+1. `git clone https://github.com/rullerzhou-afk/clawstick H:\apps\clawstick`
+   (the adapter already looks at `path.resolve(__dirname, "..", "..", "clawstick")`)
+2. or set `CLAWD_HARDWARE_BUDDY_ROOT`
+
+**And it is testable without hardware.** Clawstick ships a fake transport for
+local smoke tests (`claudebuddy.fake.config.json`), so the whole Hardware Buddy
+path — state mirroring, permission replies, Quick Commands — can be exercised
+today on a machine with no BLE device. That moves it from "impossible" to
+"verifiable", which is the only reason it was on the delete list.
