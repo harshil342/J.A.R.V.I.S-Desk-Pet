@@ -32,7 +32,49 @@ These were settled with the owner on 2026-10-01. Everything below is built on th
 
 ---
 
-## 1. Reference projects — what we take, and the license position
+## 0.1 Progress log
+
+| Item | Status | Commit |
+|---|---|---|
+| Plan written, D1–D8 locked | done | — |
+| Skill audit (UI/UX already complete; no release skill installed) | done | — |
+| `scripts/release.mjs` + `release.yml` test gate/concurrency/sign-or-draft | done | `078a6b1` |
+| `CHANGELOG.md` created | done | `078a6b1` |
+| **D7** snapshot to `wip/deleting-voice` | done | `0218b12` |
+| WIP baseline on `main` | done | `078a6b1` |
+| **B1** UTF-8 BOM across 15 read sites + regression test | done | `ff51c3f` |
+| **B2** ctx 4096 → 8192 in 5 places, pinned by a test | done | `ff51c3f` |
+| **B4** `piper-tts` removed (onnxruntime + 3 numpy pins gone from the lock) | done | `ff51c3f` |
+| **B5** hardware-probe schema mismatch | done | `ff51c3f` |
+| **B6** 25 mojibake lines reversed, `scripts/fix-mojibake.py` re-runnable | done | `ff51c3f` |
+| **B8** auto-start derives exe from `build.productName` | done | `ff51c3f` |
+| **B9** bumped to `0.12.0`, changelog generated | done | `2817f11` |
+| Trust fixes: `route_tools` ok-flag, `remember_fact`/`recall_fact`, 3 × `"sir"` | done | `ff51c3f` |
+| Cross-file invariant tests (`MINICPM_CTX`, `productName`, no stale audio) | done | `ff51c3f` |
+| **D2** voice + pdf work deleted, `DEFAULT_SOUNDS` emptied | done | `ff51c3f` |
+| **D5/D6** `AudioEngine`, 9 generated cues, mouth sync, 28 tests | done | `9f3fdeb` |
+| B7 frozen-exe import assertion | **todo** | Phase 1 |
+| B3 `reportlab` | moot — `pdf_engine.py` deleted; returns in Phase 3 done properly | — |
+| D3 platform trim (drop arm64/mac/linux) | **todo** | Phase 1 |
+| Phase 1 (installer size, README truth pass, rolling channel, signing) | **todo** | Phase 1 |
+| Phase 2 (rules engine, hook ACK, memory tiers, CORS auth) | **todo** | Phase 2 |
+| Phases 3–6 | roadmap | after 0.12.0 |
+
+**Verified green:** 4425 Electron tests, 282 Python tests, 0 failures.
+
+### Notes for whoever picks this up
+
+- `pickClip` had a real bug the new test caught: it short-circuited on
+  `pool[0] === previous` and returned the same clip forever. Fixed.
+- The invariant test initially used `.split("\n")` + a `//` strip, which silently
+  fails on CRLF files because `.` does not match `\r` in JS. Split on `/\r?\n/`.
+- The variant test was flaky on unseeded `Math.random()`. Seeded it.
+- `audioEngine` must be declared **above** `syncSoundPreloads()` in `main.js`;
+  that runs during startup, and a `const` read before its declaration throws.
+- `graphify-out/` is stale as of this work. Run `graphify update .` before Phase 3.
+
+---
+
 
 Four projects researched in depth. We take **code and patterns only**.
 
