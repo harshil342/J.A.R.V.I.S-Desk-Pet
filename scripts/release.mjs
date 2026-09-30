@@ -35,6 +35,8 @@ const NOTES_TMP = join(ROOT, ".release-notes.tmp");
 // The only place a version is authored. Everything else is derived.
 const VERSION_FILE = "clawd-on-desk/package.json";
 const ROLLING_TAG = "windows-latest";
+const CHANGELOG_HEADER =
+  "# Changelog\n\nAll notable changes to Deskpet. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).\n\nThe app and the sidecar ship as one product and carry the same version.\n";
 
 const DRY = process.argv.includes("--dry-run");
 const args = process.argv.slice(2).filter((a) => a !== "--dry-run");
@@ -95,6 +97,14 @@ function sectionFor(subject) {
   for (const [re, name] of SECTIONS) if (re.test(subject)) return name;
   return null;
 }
+// "feat(onboarding): add X" -> "add X (onboarding)". The type prefix is noise
+// in a user-facing changelog; the scope is not.
+function humanize(subject) {
+  const m = subject.match(/^(\w+)(?:\(([^)]*)\))?(!)?:\s*(.+)$/);
+  if (!m) return subject;
+  const scope = m[2] ? ` (${m[2]})` : "";
+  return `${m[1] === "fix" ? "Fixed" : ""}${m[4].replace(/\.$/, "")}${scope}`.replace(/^Fixed/, "");
+}
 function isBreaking(subject, body) {
   return subject.includes("!") || /^BREAKING[ -]CHANGE:/m.test(body);
 }
@@ -124,7 +134,8 @@ function renderSection(version, commits) {
   for (const c of commits) {
     if (!c.section || INTERNAL.test(c.subject)) continue;
     const list = by.get(c.section) ?? [];
-    list.push(c.breaking ? `**breaking** ${c.subject.replace(/^[\w]+(\([^)]*\))?!?:\s*/, "")}` : c.subject);
+    const text = humanize(c.subject);
+    list.push(c.breaking ? `**breaking** ${text}` : text);
     by.set(c.section, list);
   }
   if (!by.size) return null;
@@ -208,17 +219,33 @@ function bump(kind) {
   return to;
 }
 
+// Insert newest-first, but below an existing [Unreleased] block: that section is
+// a staging area for work with no version yet and always reads first.
+//
+// Block boundaries are found with indexOf("\n## ") rather than a regex. A
+// lookahead with the /m flag stops at the first line end, which orphaned the
+// Unreleased body below the section it belongs to.
+function insertSection(existing, section) {
+  if (!existing.includes("## ")) return CHANGELOG_HEADER + "\n" + section + "\n";
+  const start = existing.indexOf("## [Unreleased]");
+  if (start === -1) {
+    const first = existing.indexOf("## ");
+    return existing.slice(0, first) + section + "\n" + existing.slice(first);
+  }
+  const bodyStart = existing.indexOf("\n", start) + 1;
+  const next = existing.indexOf("\n## ", bodyStart);
+  const at = next === -1 ? existing.length : next;
+  return `${existing.slice(0, at)}\n${section}\n${existing.slice(at)}`;
+}
+
 function changelog() {
   const v = readVersion();
   if (changelogVersion(v)) die(`CHANGELOG.md already has a section for ${v}`);
   const section = renderSection(v, commitsSince(lastTag()));
   if (!section) die("no releasable commits since the last tag (only chore/ci/docs/test)");
   if (!DRY) {
-    const header = "# Changelog\n\nAll notable changes to DeskPet. Format follows Keep a Changelog.\n\n";
-    const existing = existsSync(CHANGELOG) ? readFileSync(CHANGELOG, "utf8") : header;
-    const at = existing.indexOf("## ");
-    const next = at === -1 ? header + "\n" + section : existing.slice(0, at) + section + "\n" + existing.slice(at);
-    writeFileSync(CHANGELOG, next, "utf8");
+    const existing = existsSync(CHANGELOG) ? readFileSync(CHANGELOG, "utf8") : CHANGELOG_HEADER + "\n";
+    writeFileSync(CHANGELOG, insertSection(existing, section), "utf8");
   }
   console.log(`  ${DRY ? "[dry] " : ""}wrote CHANGELOG.md for ${v}`);
 }
@@ -287,11 +314,24 @@ function selfTest() {
   t("BREAKING CHANGE body is breaking", c("feat: x", "BREAKING CHANGE: y").breaking, true);
   t("plain feat is not breaking", c("feat: x").breaking, false);
 
+  t("humanize drops the type prefix", humanize("feat(onboarding): add X"), "add X (onboarding)");
+  t("humanize keeps a plain subject", humanize("fix(core): div by zero"), "div by zero (core)");
+  t("humanize handles no scope", humanize("chore: bump version"), "bump version");
+
   t("chore filtered out of changelog", renderSection("1.0.0", [c("chore: bump"), c("ci: gate")]), null);
   const rendered = renderSection("1.0.0", [c("feat: a"), c("fix(core): b")]);
   t("Added before Fixed", rendered.indexOf("### Added") < rendered.indexOf("### Fixed"), true);
   t("has date", /## \[1\.0\.0\] - \d{4}-\d{2}-\d{2}/.test(rendered), true);
-  t("dedupes identical subjects", (rendered.match(/- feat: a/g) || []).length, 1);
+  t("dedupes identical subjects", (rendered.match(/^- a$/gm) || []).length, 1);
+
+  // A new section must land below [Unreleased], never above it, and must not
+  // orphan the Unreleased body.
+  const doc = `${CHANGELOG_HEADER}\n## [Unreleased]\n\nwork in progress\n\n## [0.11.0] - 2026-08-28\n\n- old\n`;
+  const inserted = insertSection(doc, "## [0.12.0] - 2026-09-30\n\n### Fixed\n\n- x\n");
+  t("Unreleased stays first", inserted.indexOf("## [Unreleased]") < inserted.indexOf("## [0.12.0]"), true);
+  t("Unreleased body stays under its heading", inserted.indexOf("work in progress") < inserted.indexOf("## [0.12.0]"), true);
+  t("older section still last", inserted.indexOf("## [0.11.0]") > inserted.indexOf("## [0.12.0]"), true);
+  t("no Unreleased means newest goes on top", insertSection(`${CHANGELOG_HEADER}\n## [0.11.0] - x\n\n- old\n`, "## [0.12.0] - y\n\n- new\n").indexOf("## [0.12.0]") < insertSection(`${CHANGELOG_HEADER}\n## [0.11.0] - x\n\n- old\n`, "## [0.12.0] - y\n\n- new\n").indexOf("## [0.11.0]"), true);
 
   console.log(`  self-test: ${pass} passed${process.exitCode ? ", some failed" : ""}`);
 }
