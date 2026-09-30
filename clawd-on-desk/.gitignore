@@ -113,9 +113,19 @@ scripts/*
 !scripts/fetch-sidecar-binaries.js
 !scripts/fetch-adapters.js
 !scripts/verify-adapters.js
+!scripts/make-dev-cert.ps1
+!scripts/verify-signing.ps1
+!scripts/build-signed.ps1
 
 # oh-my-cursor state
 .omc/
 
 # Cursor local config (MCP, rules from omc setup)
 .cursor/
+
+# Signing material - never commit. scripts/make-dev-cert.ps1 regenerates it.
+*.pfx
+*.p12
+*.cer
+*.key
+

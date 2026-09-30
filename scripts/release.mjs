@@ -169,8 +169,14 @@ function changelogSection(version) {
 function isDirty() {
   return git("status", "--porcelain").length > 0;
 }
-function signed() {
-  return Boolean(process.env.WIN_CSC_LINK || process.env.CSC_LINK);
+// A signed build is a functional requirement, not a trust badge: electron-updater
+// verifies the Authenticode signature of the downloaded .exe and rejects an
+// unsigned one at install time. So an unsigned release must never go public.
+function signingSource() {
+  if (process.env.WIN_CSC_LINK || process.env.CSC_LINK) return "CSC_LINK";
+  const dev = join(ROOT, "clawd-on-desk", "build", "deskpet-selfsigned.pfx");
+  if (existsSync(dev) && process.env.DESKPET_CERT_PASSWORD !== undefined) return "dev-cert";
+  return null;
 }
 
 // ── subcommands ──────────────────────────────────────────────────────────────
@@ -183,7 +189,7 @@ function check() {
   console.log(`  last tag       ${lastTag() ?? "(none)"}`);
   console.log(`  tree           ${isDirty() ? "DIRTY" : "clean"}`);
   console.log(`  gh cli         ${has("gh") ? "present" : "MISSING"}`);
-  console.log(`  signing cert   ${signed() ? "configured" : "ABSENT — release will be a draft"}`);
+  console.log(`  signing cert   ${signingSource() ? "configured" : "ABSENT - release will be a draft"}`);
   if (sv !== v) problems.push(`sidecar is ${sv}, app is ${v} — they ship as one product and must match`);
   if (isDirty()) problems.push("tree is dirty — commit or stash before releasing");
   if (!has("gh")) problems.push("gh CLI not found, cannot create the release page");
@@ -271,8 +277,8 @@ function push() {
   run(["git", "push", "origin", name]);
   const notes = changelogSection(v);
   if (!DRY) writeFileSync(NOTES_TMP, notes, "utf8");
-  const draft = signed() ? [] : ["--draft"];
-  if (!signed()) console.log("  ! no signing cert — creating a DRAFT release, not a public one");
+  const draft = signingSource() ? [] : ["--draft"];
+  if (!signingSource()) console.log("  ! no signing cert - creating a DRAFT release, not a public one");
   run(["gh", "release", "create", name, "--title", `DeskPet ${name}`, "--notes-file", NOTES_TMP, "--verify-tag", ...draft]);
   console.log(`  released ${name}`);
 }
