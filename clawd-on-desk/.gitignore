@@ -117,6 +117,7 @@ scripts/*
 !scripts/make-dev-cert.ps1
 !scripts/verify-signing.ps1
 !scripts/build-signed.ps1
+!scripts/sign-artifact.ps1
 
 # oh-my-cursor state
 .omc/

@@ -2,7 +2,12 @@
 
 /* ── Theme variables ── */
 :root {
-  --ease-spring: var(--ease-spring);
+  /* Was `--ease-spring: var(--ease-spring);` - a custom property referring to
+     itself. Per CSS that computes to the guaranteed-invalid value, which makes
+     every declaration using it invalid at computed-value time, so the bubble's
+     timing function was not applied at all. The bubble is interface chrome, not
+     the character, so it uses the shared scale: fast out, long settle, no
+     overshoot. */
   --card-bg: #ffffff;
   --card-border: rgba(0, 0, 0, 0.08);
   --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -83,7 +88,7 @@ body { padding: 6px; }
   color: var(--text-primary);
   opacity: 0;
   transform: translateX(60px);
-  transition: opacity 0.35s var(--ease-spring), transform 0.4s var(--ease-spring);
+  transition: opacity var(--dur-slow) var(--ease-entrance), transform var(--dur-slow) var(--ease-entrance);
   overflow: hidden;
 }
 
@@ -121,7 +126,7 @@ body { padding: 6px; }
   max-width: 100%;
   min-width: 0;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -180,7 +185,7 @@ body { padding: 6px; }
   padding: 12px;
   background: var(--cmd-bg);
   border: 1px solid var(--cmd-border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   font-family: "SF Mono", "ui-monospace", "Cascadia Code", "Fira Code", monospace;
   font-size: 12px;
   color: var(--cmd-color);
@@ -235,7 +240,7 @@ body { padding: 6px; }
   padding: 12px;
   background: var(--cmd-bg);
   border: 1px solid var(--cmd-border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--cmd-shadow);
 }
 
@@ -248,7 +253,7 @@ body { padding: 6px; }
   background: var(--sug-bg);
   color: var(--text-primary);
   border: 1px solid var(--sug-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
@@ -309,7 +314,7 @@ body { padding: 6px; }
   align-items: flex-start;
   gap: 8px;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--cmd-border);
   background: rgba(255, 255, 255, 0.28);
   cursor: pointer;
@@ -358,7 +363,7 @@ body { padding: 6px; }
   color: var(--text-primary);
   background: var(--cmd-bg);
   border: 1px solid var(--cmd-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   resize: vertical;
   min-height: 48px;
   max-height: 120px;
@@ -378,13 +383,13 @@ body { padding: 6px; }
 .btn {
   flex: 1;
   padding: 7px 0;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 0.2s var(--ease-spring);
+  transition: background-color var(--dur-base) var(--ease-entrance), border-color var(--dur-base) var(--ease-entrance), color var(--dur-base) var(--ease-entrance), transform var(--dur-base) var(--ease-entrance);
   outline: none;
 }
 .btn:active:not(:disabled) { transform: scale(0.96); }
@@ -423,12 +428,12 @@ body { padding: 6px; }
   background: var(--sug-bg);
   color: var(--sug-color);
   border: 1px solid var(--sug-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s var(--ease-spring);
+  transition: background-color var(--dur-base) var(--ease-entrance), border-color var(--dur-base) var(--ease-entrance), color var(--dur-base) var(--ease-entrance), transform var(--dur-base) var(--ease-entrance);
   outline: none;
   text-align: left;
   white-space: nowrap;
@@ -442,7 +447,7 @@ body { padding: 6px; }
   right: 14px;
   opacity: 0;
   transform: translateX(-4px);
-  transition: all 0.2s ease;
+  transition: opacity var(--dur-base) var(--ease-entrance), transform var(--dur-base) var(--ease-entrance);
   color: var(--sug-arrow);
 }
 .btn-suggestion:hover:not(:disabled) {
@@ -476,7 +481,7 @@ body { padding: 6px; }
   color: var(--text-primary);
   background: var(--cmd-bg);
   border: 1px solid var(--cmd-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   resize: vertical;
   min-height: 48px;
   max-height: 120px;

@@ -292,7 +292,88 @@ function roll() {
   console.log(`  moving rolling tag ${ROLLING_TAG} -> ${name} (force, by design)`);
   run(["git", "tag", "-f", ROLLING_TAG, name]);
   run(["git", "push", "origin", "--force", `refs/tags/${ROLLING_TAG}`]);
-  console.log(`  installer URL: releases/download/${ROLLING_TAG}/Deskpet-${process.arch}.exe`);
+  console.log(`  installer URL: releases/download/${ROLLING_TAG}/Deskpet-Setup.exe`);
+}
+
+// ── finalize: sign locally, then publish ─────────────────────────────────────
+//
+// Why this is a separate step rather than part of `push`:
+//
+// electron-builder's verifyUpdateCodeSignature defaults to true, so an
+// *unsigned installed app* makes autoUpdater.checkForUpdates() throw. Signing
+// in CI would need the private key in GitHub Actions secrets, which puts a
+// signing key on a third-party service. So: CI builds, this signs, and the
+// release stays a DRAFT until a human has signed it. The key never leaves the
+// machine it was generated on.
+//
+// The rolling channel also gets its own asset, because a rolling tag with no
+// asset is a 404 - moving the tag alone was the bug that made the first version
+// of this channel useless.
+const WORK = join(ROOT, ".release-work");
+
+function finalize() {
+  const v = readVersion();
+  const name = `v${v}`;
+  if (!has("gh")) die("gh CLI not found");
+  if (!has("git")) die("git not found");
+
+  // 1. Refuse to publish anything that is not currently a draft. Re-running
+  //    after a successful finalize must not silently re-sign and re-upload.
+  //    A missing release is a normal state (nothing is tagged yet), so it gets a
+  //    plain message rather than gh's stack trace.
+  let draft = "";
+  try {
+    draft = run(["gh", "release", "view", name, "--json", "isDraft", "--jq", ".isDraft"]);
+  } catch {
+    die(`no GitHub release named ${name} yet. Run "push" first - it creates the draft.`);
+  }
+  if (!/true/.test(draft)) {
+    die(`${name} is not a draft. A published release is immutable here by design; ` +
+        "if you need to redo it, delete the release and push the tag again.");
+  }
+
+  if (DRY) {
+    console.log("  (dry run) would: download the CI artifact, sign it, upload it,");
+    console.log("  (dry run)        publish the release, then move windows-latest.");
+    return;
+  }
+
+  // 2. Fetch the built installer from the CI run that made this release.
+  if (existsSync(WORK)) rmSync(WORK, { recursive: true, force: true });
+  mkdirSync(WORK, { recursive: true });
+  console.log("  downloading the CI build for " + name);
+  const runId = run(["gh", "run", "list", "--workflow", "release.yml", "--limit", "20",
+    "--json", "headBranch,conclusion,databaseId", "--jq",
+    `.[] | select(.headBranch == "${name}") | .databaseId`]).split(/\r?\n/).filter(Boolean)[0];
+  if (!runId) die(`no release.yml run found for ${name}. Has CI finished?`);
+  run(["gh", "run", "download", runId, "--name", "windows-installer", "--dir", WORK]);
+
+  // 3. Sign every installer, locally, with the self-signed certificate.
+  const installer = existsSync(WORK)
+    ? execFileSync("cmd", ["/c", "dir", "/b", join(WORK, "*.exe")], { encoding: "utf8" })
+        .split(/\r?\n/).map((s) => s.trim()).filter(Boolean)[0]
+    : undefined;
+  if (!installer) die(`no .exe in the downloaded artifact. Looked in ${WORK}`);
+  const exe = join(WORK, installer);
+  console.log(`  signing ${installer} with the local certificate`);
+  run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+    join(ROOT, "clawd-on-desk", "scripts", "sign-artifact.ps1"), "-Path", exe]);
+
+  // 4. Re-upload, replacing the unsigned asset of the same name.
+  run(["gh", "release", "upload", name, exe, "--clobber"]);
+
+  // 5. Publish. Only now is a signed build publicly reachable.
+  run(["gh", "release", "edit", name, "--draft=false"]);
+  console.log(`  published ${name}`);
+
+  // 6. Move the rolling channel and give it a stable asset of its own.
+  const stable = join(WORK, "Deskpet-Setup.exe");
+  execFileSync("cmd", ["/c", "copy", "/y", exe, stable], { stdio: "ignore" });
+  run(["git", "tag", "-f", ROLLING_TAG, name]);
+  run(["git", "push", "origin", "--force", `refs/tags/${ROLLING_TAG}`]);
+  run(["gh", "release", "upload", ROLLING_TAG, stable, "--clobber"]);
+  console.log(`  ${ROLLING_TAG} -> ${name} as Deskpet-Setup.exe`);
+  console.log(`  install URL: releases/download/${ROLLING_TAG}/Deskpet-Setup.exe`);
 }
 
 // ── self-test: the logic that decides what ships ─────────────────────────────
@@ -343,10 +424,11 @@ function selfTest() {
 }
 
 const cmd = args[0];
-const table = { check, bump, changelog, tag, push, roll };
+const table = { check, bump, changelog, tag, push, roll, finalize };
 if (cmd === "--self-test") { selfTest(); process.exit(process.exitCode ?? 0); }
 if (!table[cmd]) {
-  console.log(`usage: node scripts/release.mjs <check|bump|changelog|tag|push|roll|--self-test> [--dry-run]`);
+  console.log(`usage: node scripts/release.mjs <check|bump|changelog|tag|push|finalize|roll|--self-test> [--dry-run]`);
+  console.log(`\n  finalize  sign the CI build locally, publish the draft, move ${ROLLING_TAG}`);
   process.exit(1);
 }
 table[cmd](args[1]);
