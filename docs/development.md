@@ -17,12 +17,13 @@
 ## Quick Start (dev mode)
 
 ```bash
-git clone git@github.com:OpenBMB/MiniCPM-Desk-Pet.git
+git clone https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet.git
 cd MiniCPM-Desk-Pet
 
 # Drop the model in here (~2 GB; unlike production users, dev mode still uses <repo>/models/)
 mkdir -p models
-ln -s /absolute/path/to/your/minicpm5-0.9b models/minicpm5-0.9b
+# Models are downloaded by the onboarding wizard, not symlinked. There is no 0.9b
+# model; the current presets are MiniCPM5-1B and MiniCPM5-2B.
 # or cp -r
 
 ./go.sh                  # auto-install dependencies + launch
@@ -38,7 +39,8 @@ To bypass the wizard on a given launch (e.g. when debugging the settings tab):
 
 ```bash
 # Onboarding sentinel lives under userData
-rm "$HOME/Library/Application Support/Clawd on Desk/minicpm-onboarding.json"
+Remove-Item "$env:APPDATA\deskpet\minicpm-onboarding.json"   # Windows
+rm "$HOME/Library/Application Support/Deskpet/minicpm-onboarding.json"   # macOS
 
 # or the reverse: force it to show again
 MINICPM_FORCE_ONBOARDING=1 ./go.sh start
@@ -92,7 +94,7 @@ cd clawd-on-desk
 npx electron-builder --mac --arm64 -c.mac.target=dmg
 ```
 
-Build output: `clawd-on-desk/dist/*.dmg`.
+Build output: `clawd-on-desk/dist/Deskpet-<version>-x64.exe`.
 
 ### Repack dmg Only (Without Re-running PyInstaller)
 
@@ -134,7 +136,9 @@ The llama.cpp binaries are downloaded into the same staging directory via `minic
 
 ### Windows Packaging Verification Checklist
 
-Minimal E2E verified in 2026-08 (corresponds to plan Phase 2 #7):
+Minimal E2E last verified 2026-08, against v0.11.0. Since then the version is
+0.12.0 and the target list changed to Windows x64 only, so re-run this before
+trusting it. The full checklist is in `plan.md` Phase 1.
 
 1. Launch after install: gateway process path must be `...\Programs\Deskpet\resources\sidecar-bin\minicpm-sidecar.exe`
 2. Chat routing: `who is X` → wikipedia tool hit
@@ -147,14 +151,33 @@ so manually pip-installed but undeclared packages get wiped and PyInstaller miss
 
 ### Current Packaging Limitations (MVP)
 
-- Windows x64 supported (NSIS); Linux not supported
-- macOS: **arm64** only; Intel not supported yet
-- If the dev machine keychain has an Apple Developer ID certificate, electron-builder auto-signs the .app (check with `codesign --display` for Developer ID Authority); otherwise it stays unsigned
-- Even if the .app is signed, the **dmg itself is unsigned + unnotarized**: Gatekeeper still shows "cannot verify developer" on first launch
-  - User workarounds: right-click → Open → confirm; or run `xattr -cr /Applications/Clawd\ on\ Desk.app` in the terminal
-- Windows build has no code-signing certificate (SmartScreen warns on first run); NSIS is an assisted install wizard
-- No `electron-updater` auto-update wired up
-- Model download source is Hugging Face only (ModelScope mirror TBD)
+Rewritten 2026-09-30. Several items below used to say the opposite of the truth.
+
+- **Windows x64 (NSIS) is the only supported target** (decision D3). macOS and
+  Linux are no longer built at all. This is deliberate: `win.extraResources`
+  could not vary per architecture, so the arm64 installer that was being
+  published contained **x64** native binaries, and the flagship sidecar tools —
+  OCR, screenshot, media keys, volume, `launch_app`, `wifi_info` — are
+  Windows-only by construction. Shipping a shell around a non-functional core is
+  worse than shipping nothing.
+- **The build is signed, and signing is a functional requirement, not a
+  cosmetic one.** electron-updater verifies the Authenticode signature of the
+  downloaded `.exe`, so an unsigned release installs once and then silently
+  stops receiving updates. `npm run sign:dev` creates a self-signed certificate,
+  `npm run sign:check` proves it can sign, and `npm run build:win:signed`
+  builds with it. A self-signed certificate cannot buy SmartScreen reputation,
+  so users still click *More info → Run anyway*; a commercial certificate is
+  what removes that.
+- Auto-update **is** wired up: `src/updater.js`, backed by `electron-updater`,
+  with a 12-hour background scheduler. The release workflow publishes a DRAFT
+  when no certificate is configured, because a public unsigned release would
+  strand every existing user.
+- The **rolling channel** `windows-latest` always names the newest build, so
+  install docs can use one URL that never goes stale.
+- Model download supports **Hugging Face and ModelScope**, chosen by a
+  country lookup, with `MINICPM_MODEL_PROVIDER` able to pin a fixed host.
+- macOS notarization and signing code still exists in `scripts/notarize.js` but
+  is not exercised, because there is no macOS build. Treat it as unverified.
 
 ### Packaging Notes for Networks in China
 
@@ -236,7 +259,9 @@ await window.onboarding.warmup()
 ./go.sh start
 
 # packaged mode: sidecar stderr goes into the Electron main-process log
-tail -f "$HOME/Library/Application Support/Clawd on Desk/logs/"main.log
+# Windows (the only platform we build)
+Get-Content "$env:APPDATA\deskpet\session-debug.log" -Wait -Tail 20
+Get-Content "$env:APPDATA\deskpet\logs\sidecar.log" -Wait -Tail 20
 ```
 
 ### Curling the Sidecar Directly
@@ -309,5 +334,5 @@ DeskPet uses a dual-engine tool-calling architecture. Follow these rules for any
 ### Fully Resetting User Data (Caution: Deletes Models and Chat History)
 
 ```bash
-rm -rf "$HOME/Library/Application Support/Clawd on Desk/"
+Remove-Item -Recurse -Force "$env:APPDATA\deskpet"   # Windows
 ```

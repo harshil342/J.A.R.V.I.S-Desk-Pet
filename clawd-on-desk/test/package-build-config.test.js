@@ -192,28 +192,79 @@ describe("package build config", () => {
     });
   });
 
+  // These two used to read .github/workflows/build.yml inside clawd-on-desk/,
+  // which GitHub Actions never executed: only <repo-root>/.github/workflows is
+  // read, and a nested directory is ignored entirely. So they were asserting
+  // against a dead file. They now assert the pipeline that actually runs.
   describe("GitHub release publication", () => {
-    it("publishes GitHub releases only for version tags", () => {
-      const workflow = fs.readFileSync(path.join(ROOT, ".github", "workflows", "build.yml"), "utf8");
-      const releaseIndex = findWorkflowJobIndex(workflow, "release");
-      assert.ok(releaseIndex >= 0, "workflow should define a release job");
-      const releaseGateIndex = workflow.indexOf("if: startsWith(github.ref, 'refs/tags/v')", releaseIndex);
-      const bodyPathIndex = workflow.indexOf("body_path: docs/releases/release-${{ github.ref_name }}.md", releaseIndex);
-      assert.ok(releaseGateIndex >= 0, "release job should be gated to v* tags");
-      assert.ok(bodyPathIndex >= 0, "release job should still use tag-specific release notes");
-      assert.ok(releaseGateIndex < bodyPathIndex, "release job gate should run before release publication");
+    // REPO_ROOT, not ROOT: GitHub only reads <repo-root>/.github/workflows, and
+    // ROOT is clawd-on-desk/. A copy of these workflows under clawd-on-desk/.github
+    // used to exist and was never executed by anything.
+    const REPO_ROOT = path.join(ROOT, "..");
+    const releaseWorkflow = () =>
+      fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "release.yml"), "utf8");
+
+    it("gates publication on the test job", () => {
+      const workflow = releaseWorkflow();
+      assert.ok(/^  test:/m.test(workflow), "release.yml should define a test job");
+      const buildWindows = workflow.indexOf("  build-windows:");
+      const release = workflow.indexOf("  release:");
+      assert.ok(buildWindows >= 0 && release >= 0);
+      // needs: must list test, or a failing suite still ships a release.
+      assert.match(
+        workflow.slice(release, release + 200),
+        /needs:\s*\[[^\]]*test[^\]]*\]/,
+        "the release job must depend on the test job"
+      );
+      assert.ok(
+        buildWindows < release,
+        "builds must complete before publication"
+      );
     });
 
-    it("creates tag releases as drafts for final asset inspection", () => {
-      const workflow = fs.readFileSync(path.join(ROOT, ".github", "workflows", "build.yml"), "utf8");
-      const releaseIndex = findWorkflowJobIndex(workflow, "release");
-      assert.ok(releaseIndex >= 0, "workflow should define a release job");
-      const actionIndex = workflow.indexOf("softprops/action-gh-release@v2", releaseIndex);
-      const draftIndex = workflow.indexOf("draft: true", actionIndex);
-      const prereleaseIndex = workflow.indexOf("prerelease: ${{ contains(github.ref_name, '-') }}", actionIndex);
-      assert.ok(actionIndex >= 0, "release job should use the GitHub release action");
-      assert.ok(draftIndex > actionIndex, "tag releases should be created as drafts first");
-      assert.ok(prereleaseIndex > actionIndex, "hyphenated tags should be marked prerelease");
+    it("refuses to publish an unsigned build as public", () => {
+      const workflow = releaseWorkflow();
+      const gate = workflow.indexOf("steps.gate.outputs.signed");
+      assert.ok(gate >= 0, "publication should be gated on a signing certificate");
+      assert.ok(
+        /draft:\s*\$\{\{\s*steps\.gate\.outputs\.signed == 'false'\s*\}\}/.test(workflow),
+        "an unsigned build must create a DRAFT, never a public release: " +
+          "electron-updater rejects an unsigned .exe at install time, so a " +
+          "public one would strand every existing user"
+      );
+      assert.match(
+        workflow,
+        /fail_on_unmatched_files:\s*true/,
+        "a release with zero artifacts should fail rather than publish empty"
+      );
+    });
+
+    it("does not hardcode a version into the release title", () => {
+      const workflow = releaseWorkflow();
+      const nameIndex = workflow.indexOf("name: Deskpet");
+      assert.ok(nameIndex >= 0, "release should have a name line");
+      const line = workflow.slice(nameIndex, workflow.indexOf("\n", nameIndex));
+      // The old workflow shipped a title pinned to v0.11.0, so pushing v0.12.0
+      // produced a release titled v0.11.0.
+      assert.ok(
+        !/v0\.\d+\.\d+/.test(line),
+        `release title must derive from the tag, found: ${line.trim()}`
+      );
+    });
+
+    it("moves the rolling channel only for public releases", () => {
+      const workflow = releaseWorkflow();
+      const roll = workflow.indexOf("  roll:");
+      assert.ok(roll >= 0, "release.yml should define a roll job");
+      const step = workflow.slice(roll);
+      assert.ok(
+        /if:\s*needs\.release\.outputs\.draft != 'true'/.test(step),
+        "windows-latest must not be pointed at a draft"
+      );
+      assert.ok(
+        /windows-latest/.test(step) && /--force/.test(step),
+        "the roll job should force-move the rolling tag"
+      );
     });
 
     it("resolves product metadata repository and publish configuration", () => {

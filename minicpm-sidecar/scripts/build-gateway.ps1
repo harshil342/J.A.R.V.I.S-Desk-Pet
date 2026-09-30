@@ -48,6 +48,41 @@ try {
     throw "PyInstaller output not found: $src"
   }
 
+  # B7: a declared dependency PyInstaller could not bundle fails the build here
+  # rather than silently at runtime. winotify shipped declared in pyproject.toml,
+  # was absent from the frozen exe, and every reminder toast died with
+  # "No module named 'winotify'" in a crash dump. docs/development.md predicted
+  # this exact failure; it happened anyway, twice.
+  #
+  # PyInstaller already wrote the answer: warn-gateway.txt lists every module its
+  # analysis could not find. Matching must be exact, because the file is mostly
+  # benign optional/conditional imports and PyInstaller reports things like
+  # "missing module named pydantic.BaseModel" (a class, not a module). A loose
+  # match reports pydantic as missing and is wrong.
+  $warnFile = Join-Path $root "build\build\gateway\warn-gateway.txt"
+  if (-not (Test-Path $warnFile)) {
+    Write-Warning "No warn-gateway.txt found; skipping the frozen-import check."
+  } else {
+    $warn = [System.IO.File]::ReadAllText($warnFile)
+    $declared = [regex]::Matches(
+      [System.IO.File]::ReadAllText((Join-Path $root "pyproject.toml")),
+      '(?m)^\s+"([A-Za-z0-9_.-]+)[>=~]'
+    ) | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+
+    $missing = @()
+    foreach ($dep in $declared) {
+      # "missing module named X" where X is exactly the dependency: the
+      # terminator must be end-of-line, not a dot.
+      if ($warn -match "(?m)^missing module named $([regex]::Escape($dep))\s*$") { $missing += $dep }
+    }
+
+    Write-Host "==> Checked $($declared.Count) declared dependencies against warn-gateway.txt" -ForegroundColor Cyan
+    if ($missing.Count -gt 0) {
+      throw ("Frozen binary is missing declared dependencies: " + ($missing -join ", ") +
+        "  -> add them to build/gateway.spec hiddenimports")
+    }
+  }
+
   Copy-Item -Force $src (Join-Path $out "minicpm-sidecar.exe")
   Write-Host "==> OK -> $out\minicpm-sidecar.exe" -ForegroundColor Green
 } finally {

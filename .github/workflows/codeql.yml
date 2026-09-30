@@ -1,0 +1,46 @@
+name: CodeQL
+
+# The first static analysis this repo has ever had. Zero lint, zero typecheck
+# and zero SAST before this: 259 test files and no tool that would have caught a
+# bug the tests did not think to look for.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, because dependency advisories appear without a code change.
+    - cron: "23 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          language: ${{ matrix.language }}
+          queries: security-and-quality
+      # Autobuild only for compiled languages. Neither Electron nor the Python
+      # sidecar needs it, and a build step here would need the llama.cpp
+      # binaries that are not present on a fresh runner.
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+        if: matrix.language == 'python'
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

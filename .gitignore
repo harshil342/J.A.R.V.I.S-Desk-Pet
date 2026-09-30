@@ -54,6 +54,11 @@ progress.md
 clawd-on-desk/build/build-log.txt
 graphify-out/cache/
 graphify-out/202*/
+# The whole graph is generated: graph.json alone is ~12 MB and GRAPH_REPORT.md
+# is regenerated from it. AGENTS.md tells the agent to run `graphify update .`,
+# so nothing is lost by not committing the output. 27 MB of churn per rebuild
+# was drowning out real diffs.
+graphify-out/
 CLAUDE.md
 
 # Local env / secrets
@@ -74,3 +79,20 @@ adapters/.manifest.json
 
 # Loose one-off screenshots/logos at repo root
 /*.png
+
+# Scratch and media produced while iterating, not sources.
+downloads/
+brag-output/
+brag-output-*/
+minicpm-sidecar/scripts/audio_samples/
+*.pfx
+*.p12
+*.cer
+*.key
+.claude/
+.kilo/
+
+# Agent tooling venv, not a product dependency. Scrapling lives here so it can
+# never reach the sidecar's PyInstaller bundle or trip the frozen-import check
+# in build-gateway.ps1.
+.tools/

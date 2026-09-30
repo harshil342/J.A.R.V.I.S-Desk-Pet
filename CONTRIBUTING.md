@@ -1,9 +1,8 @@
-# Contributing to MiniCPM Desk Pet
+# Contributing to Deskpet
 
 Thanks for your interest in this project. This file is the operational
 entry point for developers; deeper background lives in
-[docs/development.md](docs/development.md) and
-[clawd-on-desk/AGENTS.md](clawd-on-desk/AGENTS.md).
+[docs/development.md](docs/development.md) and [plan.md](plan.md).
 
 > The Electron desktop pet layer (`clawd-on-desk/`) is a vendored fork of
 > [rullerzhou-afk/clawd-on-desk](https://github.com/rullerzhou-afk/clawd-on-desk)
@@ -86,15 +85,37 @@ Scope optional, e.g. `feat(sidecar): add /api/load-adapter endpoint`.
 
 ## Issue templates
 
-See `.github/ISSUE_TEMPLATE/` (TBD) for bug-report / feature-request
-forms. For now, please include:
+There are no `.github/ISSUE_TEMPLATE/` forms yet, so please include:
 
-- OS + architecture (e.g. macOS 14.5 / arm64)
-- App version (from About menu) or git commit if running from source
+- OS + architecture (Windows 11 / x64 — currently the only supported target)
+- App version (from the About tab) or the git commit if running from source
 - Steps to reproduce + observed vs expected behaviour
-- Relevant log excerpts from
-  `~/Library/Application Support/Clawd on Desk/logs/main.log` (macOS)
-  or the equivalent on Linux/Windows
+- Relevant log excerpts. Windows paths, and these are the four that exist:
+
+  ```
+  %APPDATA%\deskpet\session-debug.log     session and agent state
+  %APPDATA%\deskpet\permission-debug.log  permission decisions
+  %APPDATA%\deskpet\update-debug.log      update checks
+  %APPDATA%\deskpet\logs\sidecar.log      the Python gateway
+  ```
+
+  Reproducing a bug is much faster with the first line of the sidecar log
+  attached. `npm run sign:check` and `npm run release:check` are also worth
+  running if the problem involves signing or packaging.
+
+## Before you open a pull request
+
+```powershell
+cd clawd-on-desk
+npm ci
+npm run lint        # parse check, no config needed
+npm test            # 4,426 tests
+
+cd ..
+uv run --project minicpm-sidecar pytest minicpm-sidecar/tests -q
+```
+
+Both suites gate the release workflow, so a red run blocks publication.
 
 ## License
 

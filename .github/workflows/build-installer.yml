@@ -47,6 +47,9 @@ jobs:
         run: |
           npm ci
           node test/run-tests.js
+      - name: Syntax check
+        working-directory: clawd-on-desk
+        run: npm run lint
 
       - name: Sidecar tests
         run: uv run --project minicpm-sidecar pytest minicpm-sidecar/tests -q -p no:cacheprovider

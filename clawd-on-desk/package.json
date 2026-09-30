@@ -16,6 +16,7 @@
     "prebuild": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
     "prebuild:win:x64": "node scripts/fetch-adapters.js && node scripts/verify-adapters.js",
     "test": "node test/run-tests.js",
+    "lint": "node scripts/check-syntax.js",
     "sign:dev": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/make-dev-cert.ps1 -Trust",
     "sign:check": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-signing.ps1",
     "build:win:signed": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-signed.ps1",

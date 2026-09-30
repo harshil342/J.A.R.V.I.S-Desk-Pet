@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><img src="https://img.shields.io/badge/Release-v0.11.0%20(Production)-blue?style=for-the-badge&logo=github" alt="Latest Release"></a>
-  <img src="https://img.shields.io/badge/Privacy-100%25%20Offline%20%26%20Air--Gapped-success?style=for-the-badge&logo=shield" alt="100% Offline">
+  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><img src="https://img.shields.io/badge/Release-v0.12.0-blue?style=for-the-badge&logo=github" alt="Latest Release"></a>
+  <img src="https://img.shields.io/badge/Privacy-Local--first%20by%20default-informational?style=for-the-badge&logo=shield" alt="Local first by default">
   <img src="https://img.shields.io/badge/Protocol-Native%20MCP%20Engine-orange?style=for-the-badge&logo=json" alt="Native MCP">
-  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-lightgrey?style=for-the-badge&logo=windows" alt="Platform">
+  <img src="https://img.shields.io/badge/Platform-Windows%20x64-lightgrey?style=for-the-badge&logo=windows" alt="Platform">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-green?style=for-the-badge" alt="License"></a>
 </p>
 
@@ -19,13 +19,11 @@
 </h3>
 
 <p align="center">
-  <strong>J.A.R.V.I.S. Desk Pet</strong> is an ultra-fast, on-device AI companion that lives right on your desktop. Built with sub-15ms screen OCR perception, long-term episodic memory, native <strong>Model Context Protocol (MCP)</strong> tooling, and zero-latency local model inference with <strong>$0 token cost</strong>.
+  <strong>J.A.R.V.I.S. Desk Pet</strong> is an on-device AI companion that lives right on your desktop. Built with sub-1GB model weights and on-device screen perception, long-term episodic memory, native <strong>Model Context Protocol (MCP)</strong> tooling, and zero-latency local model inference with <strong>$0 token cost</strong>.
 </p>
 
 <p align="center">
-  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><strong>⬇️ Download for Windows (.exe)</strong></a>
-  &nbsp;•&nbsp;
-  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><strong>⬇️ Download for macOS (.dmg)</strong></a>
+  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><strong>⬇️ Download for Windows (x64)</strong></a>
   &nbsp;•&nbsp;
   <a href="#-getting-started"><strong>🚀 Quickstart</strong></a>
   &nbsp;•&nbsp;
@@ -38,8 +36,8 @@
 
 | Advantage | J.A.R.V.I.S. Desk Pet | Cloud AI Tools (ChatGPT / Claude) |
 | :--- | :--- | :--- |
-| **🔒 Air-Gapped Privacy** | **100% On-Device.** Code, terminal outputs, and credentials never touch external servers. | Sensitive code & chat history sent to third-party cloud data centers. |
-| **⚡ Zero-Copy Perception** | **Sub-15ms Local OCR.** Reads compiler errors, active IDE files, and windows automatically. | Requires manual copy-pasting or upload of multi-megabyte screenshots. |
+| **🔒 Local-First by Default** | **On-device model, no account, no API key.** Core chat, tools, memory and agent state never leave the machine. See [What actually leaves your machine](#what-actually-leaves-your-machine) for the honest exceptions. | Sensitive code & chat history sent to third-party cloud data centers. |
+| **⚡ Local Screen Perception** | **On-device OCR** of the active window, with no upload. Slower than a GPU model — it spawns a PowerShell OCR host, so budget hundreds of milliseconds, not microseconds. | Requires manual copy-pasting or upload of multi-megabyte screenshots. |
 | **💸 $0 Cost / Unlimited Tokens** | **Free Forever.** Runs indefinitely on your local hardware with 0 subscriptions or API keys. | Monthly $20+ subscriptions or metered per-token API charges. |
 | **🔌 Native MCP Ecosystem** | **Open Model Context Protocol.** Plug in any community or internal MCP server over stdio. | Restricted plugins with strict approval barriers. |
 | **🧠 Episodic Semantic Memory** | **Persistent Fact Store.** Automatically recalls environment configs, ports, and preferences. | Context lost between chat resets or requires manual system prompt editing. |
@@ -54,14 +52,14 @@
   ┌────────────────────────────────────────────────────────────────────────────────────────┐
   │                               ZERO-COPY DEBUGGING FLOW                                 │
   │                                                                                        │
-  │  [IDE / Terminal Error]  ──(15ms OCR)──►  [J.A.R.V.I.S. Core]  ──►  [Instant 2-Sentence │
+  │  [IDE / Terminal Error]  ──(on-device OCR)──►  [J.A.R.V.I.S. Core]  ──►  [Instant 2-Sentence │
   │   Stack Trace on Screen                     Local Brain                  Fix in Bubble]│
   └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1. Zero-Copy Terminal & Compiler Error Debugging
+### 1. Terminal & Compiler Error Debugging
 > *"What does the error on my screen mean?"*
-- J.A.R.V.I.S. reads your active IDE window, extracts the visible stack trace via native OCR in <15ms, and posts a clear, actionable fix into its speech bubble without you ever touching `Ctrl+C` / `Ctrl+V`.
+- J.A.R.V.I.S. reads your active IDE window, extracts the visible stack trace with on-device OCR, and posts a clear, actionable fix into its speech bubble without you ever touching `Ctrl+C` / `Ctrl+V`. OCR spawns a PowerShell host, so expect a few hundred milliseconds rather than a millisecond-scale read.
 
 ### 2. Autonomous Background Agent Supervision
 - While background tools (Cursor, Claude Code, Codex, Antigravity) run heavy multi-file builds, J.A.R.V.I.S. tracks execution states, animates working routines, and pops a toast notification the instant the task finishes or breaks.
@@ -184,7 +182,7 @@ J.A.R.V.I.S. includes a comprehensive suite of **native micro-tools** and **live
 | **`system_status`** | 📊 Diagnostics | **`psutil` Hardware Engine** | Offline | Real-time CPU usage %, RAM utilization (MB/GB), battery status/level %, disk usage, and boot uptime. |
 | **`clipboard_assist`**| 📋 Clipboard | **PowerShell / `xclip` Bridge** with Image Guard | Local OS | Reads copied clipboard text to summarize, explain errors, translate, or format without manually pasting into chat. |
 | **`remember_fact`** / **`recall_fact`** | 🧠 Memory | **Semantic Vector Store (TF-IDF + Cosine)** + `notes.md` | Local Hybrid Vector | Retains developer ports, staging credentials, personal notes, preferences, and recalls them contextually. |
-| **`get_active_window`** / **`read_screen_text`** | 👁️ Zero-Copy OCR | **Local Screen Perception & Win32 Window Inspector** | Offline (<15ms OCR) | Reads compiler errors, stack traces, active file paths, and focused window titles directly from the screen. |
+| **`get_active_window`** / **`read_screen_text`** | 👁️ Screen OCR | **Local Screen Perception & Win32 Window Inspector** | Local (on-device OCR) | Reads compiler errors, stack traces, active file paths, and focused window titles directly from the screen. |
 | **`media_control`** | 🎵 Media Keys | **Windows Shell WScript COM `SendKeys`** | Native OS | Hardware volume adjustments (`volume_up`, `volume_down`, `mute`) and playback control (`play_pause`, `next`, `prev`). |
 | **`set_volume_percent`** | 🔊 Volume Control | **Windows CoreAudio / PowerShell Bridge** | Native OS | Sets exact master system volume percentage (e.g., "set volume to 65%"). |
 | **`site_search`** | 🔎 Site Search | **Direct Site Routing & Query Dispatch** | Free / Web | Targeted search across YouTube, YT Music, Spotify, Reddit, GitHub, X (Twitter), Facebook, Twitch, Wikipedia. |
@@ -229,18 +227,25 @@ iwr -useb https://raw.githubusercontent.com/harshil342/J.A.R.V.I.S-Desk-Pet/main
 
 ### 1. Direct Installer Downloads
 
-#### 🪟 Windows Installation
-1. Download [**`Deskpet-0.11.0-x64.exe`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/v0.11.0/Deskpet-0.11.0-x64.exe) (or [**`ARM64`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/v0.11.0/Deskpet-0.11.0-arm64.exe)) from [Latest Releases](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest).
+#### 🪟 Windows Installation (x64)
+
+Windows 10/11, 64-bit. This is the only platform currently built and verified.
+
+1. Grab the newest build from the rolling channel — the URL never changes:
+   [**`Deskpet-Setup.exe`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/windows-latest/Deskpet-0.12.0-x64.exe)
 2. Run the installer and launch **Deskpet**.
-3. The guided first-run onboarding wizard will automatically configure your local hardware backend and fetch weights.
+3. The guided first-run onboarding wizard detects your GPU and RAM, then fetches the model it recommends.
 
-#### 🍎 macOS Installation
-1. Download [**`Deskpet-0.11.0-arm64.dmg`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/v0.11.0/Deskpet-0.11.0-arm64.dmg) (Apple Silicon) or [**`Intel x64`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/v0.11.0/Deskpet-0.11.0-x64.dmg) from [Latest Releases](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest).
-2. Drag **Deskpet** into your `Applications` folder and launch.
+If SmartScreen warns, click **More info → Run anyway** on a self-signed build. The installer is code-signed; a self-signed certificate cannot buy SmartScreen reputation, only a commercial one can.
 
-#### 🐧 Linux Installation
-1. Download [**`Deskpet-0.11.0-x86_64.AppImage`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/v0.11.0/Deskpet-0.11.0-x86_64.AppImage) or [**`.deb`**](https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/v0.11.0/Deskpet-0.11.0-amd64.deb).
-2. Make executable (`chmod +x Deskpet-0.11.0-x86_64.AppImage`) and run.
+#### Other platforms
+
+macOS and Linux are **not built**. The build configuration, the CI, and these
+docs previously all claimed otherwise, and the arm64 installer that was being
+published contained x64 native binaries. Both were removed rather than shipped
+broken. The sidecar's screen, audio and app-launch tools are also
+Windows-specific by construction, so a macOS or Linux build would be a shell
+around a non-functional core.
 
 ---
 
@@ -249,7 +254,7 @@ iwr -useb https://raw.githubusercontent.com/harshil342/J.A.R.V.I.S-Desk-Pet/main
 | Shortcut (Windows / Linux) | Shortcut (macOS) | Action & Behavior |
 | :--- | :--- | :--- |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> | **Toggle J.A.R.V.I.S. Chat Bubble** — Instant keyboard-first prompt overlay. |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> | **Instant Zero-Click Screen Diagnosis** — Runs <15ms OCR on active IDE window & speaks fix. |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> | **Instant Zero-Click Screen Diagnosis** — Reads the active IDE window with on-device OCR and speaks a fix. |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> | <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> | **Toggle Deep Reasoning Mode** — Engages high-intensity chain-of-thought analysis. |
 | <kbd>Esc</kbd> | <kbd>Esc</kbd> | **Dismiss Bubble / Exit Reader & Fullscreen Mode** — Collapses reader pane or dismisses prompt overlay. |
 | **Right-Click Pet** | **Right-Click Pet** | **Context Menu** — Settings, Persona LoRAs, Model Manager, Mini-Dock Mode. |
@@ -265,20 +270,66 @@ J.A.R.V.I.S. features subtle, non-intrusive futuristic audio feedback:
 
 ---
 
-### 💻 Terminal CLI Companion (`deskpet`)
+### 💻 Release CLI
 
-Control J.A.R.V.I.S. directly from your favorite terminal (PowerShell, Windows Terminal, Bash, Zsh, Neovim):
+A `deskpet` command-line companion was advertised here previously and **did not
+exist** — there was no `bin` entry, no executable, and no entry point in the
+source. Rather than leave the claim, here is what actually exists today:
 
-```bash
-# Query J.A.R.V.I.S. without leaving your terminal
-deskpet "explain why git rebase failed"
+```powershell
+# Release preflight: clean tree, versions in sync, changelog section present,
+# and whether a signing certificate is configured. Reads nothing, changes nothing.
+npm run release:check --prefix clawd-on-desk
 
-# Check system hardware & pet status
-deskpet status
-
-# Schedule background proactive reminder
-deskpet "remind me in 20 minutes to check deployment logs"
+# The release hook itself
+node scripts/release.mjs check       # preflight
+node scripts/release.mjs changelog   # regenerate CHANGELOG.md from commits
+node scripts/release.mjs bump minor
+node scripts/release.mjs tag         # annotated, message taken from the changelog
+node scripts/release.mjs push        # push commit, then tag, then the GitHub release
+node scripts/release.mjs roll        # move the windows-latest rolling tag
 ```
+
+Every subcommand accepts `--dry-run`. A general-purpose `deskpet` CLI — natural
+language queries, background jobs, a daemon — is a real feature and is not built
+yet. See `plan.md` Phase 4.
+
+---
+
+### 🔒 What actually leaves your machine
+
+This section replaces an earlier "100% Offline & Air-Gapped" badge that the code
+did not support. Being precise here is worth more than the badge, because a
+local-first promise you cannot keep is worse than no promise.
+
+**Never leaves the machine**
+
+- Your model weights, and every token of inference. The model runs in a local
+  `llama-server` process. There is no API key to configure and no account.
+- Chat history, memory, reminders, notes and your to-do list. All of it is
+  local JSON and Markdown in your user data directory.
+- Agent state. Every coding-agent hook is a local HTTP server bound to
+  `127.0.0.1`; nothing is relayed anywhere.
+- Tool calls to the filesystem, clipboard, screen, audio and apps.
+
+**Leaves the machine, and when**
+
+| What | Where | When |
+|---|---|---|
+| Model download | Hugging Face, or ModelScope | Once, when you first fetch weights. You choose the model. |
+| A country lookup | `cloudflare.com/cdn-cgi/trace`, `ipapi.co` | Once per model download, to pick a mirror that is reachable. Disable by pointing `MINICPM_MODEL_PROVIDER` at a fixed host. |
+| Model update check | GitHub Releases API | On the scheduled update check. |
+| App update check | GitHub Releases API | On the scheduled update check. |
+| `get_weather` | Open-Meteo | When you ask about weather. |
+| `web_search`, `fetch_page`, `wikipedia_summary`, `convert_currency` | DuckDuckGo / the target site / Wikipedia / open.er-api.com | Only when you invoke those tools. |
+| Telegram approval, if enabled | Telegram | Only if you turn it on and connect a bot. Off by default. |
+| Mobile preview, if enabled | Your LAN | Only if you turn it on. Off by default. |
+
+**The two modes.** With no network, the assistant still runs: the model is
+local, and tools that need the internet fail with a clear message rather than
+inventing an answer. This is what the previous "Air-Gapped" claim was reaching
+for, and it is a real property — it just is not "nothing ever touches the
+network".
 
 ---
 
@@ -322,36 +373,52 @@ J.A.R.V.I.S. pairs ultra-low-latency deterministic execution with native edge mo
 
 ## 🧪 Quality & Test Verification Matrix
 
-J.A.R.V.I.S. Desk Pet is rigorously verified with **4,664 automated tests** passing with 0 failures across both the Electron desktop shell and the Python FastAPI sidecar gateway:
+J.A.R.V.I.S. Desk Pet is verified with **4,708 automated tests** passing with 0
+failures across both the Electron desktop shell and the Python FastAPI sidecar
+gateway. The numbers below are the real output of the two commands in the next
+section, not a target.
 
 ```
 ========================================================================================
-                              OFFICIAL VERIFICATION SCOREBOARD
+                                VERIFICATION SCOREBOARD
 ========================================================================================
  Suite Layer                 | Passed   | Failed | Skipped | Test Suites / Files
------------------------------+----------+--------+---------+----------------------------
- Electron & UI Runtime       | 4,383    | 0      | 12      | 496 suites (1,247 test units)
- Python FastAPI Gateway      | 281      | 0      | 2       | 281 test items
------------------------------+----------+--------+---------+----------------------------
- TOTAL VERIFIED TESTS        | 4,664    | 0      | 14      | 100% Passing Pass Rate
+ -----------------------------+----------+--------+---------+----------------------------
+ Electron & UI Runtime       | 4,426    | 0      | 12      | 500 suites (1,248 test units)
+ Python FastAPI Gateway      | 282      | 0      | 2       | 282 test items
+ -----------------------------+----------+--------+---------+----------------------------
+ TOTAL VERIFIED TESTS        | 4,708    | 0      | 14      | 100% passing pass rate
 ========================================================================================
 ```
+
+**What the tests do and do not cover.** The state machine, permissions, server
+routes, theme loader, updater and the agent integrations are tested against
+executed behaviour. The chat and settings renderers are largely asserted by
+reading their source text rather than by driving a DOM, and there is no coverage
+tool configured — so read "passing" as "these specific claims hold", not "this is
+fully covered". The suite is a floor, not a certificate.
 
 ### Reproduce Test Verification
 
 ```powershell
-# 1. Run the complete Electron & J.A.R.V.I.S. test suite (4,383 tests)
-cd clawd-on-desk && node test/run-tests.js
+# 1. Parse check over every source file (no config, no dependency)
+cd clawd-on-desk && npm run lint
 
-# 2. Run Python FastAPI Gateway test suite (281 tests)
-uv run --project minicpm-sidecar pytest minicpm-sidecar/tests
+# 2. The complete Electron test suite (4,426 tests)
+node test/run-tests.js
+
+# 3. Python FastAPI gateway suite (282 tests), from the repo root
+uv run --project minicpm-sidecar pytest minicpm-sidecar/tests -q
 ```
+
+Both suites also run in CI on every push to `main` and gate the release
+workflow. A failing test blocks publication.
 
 ---
 
-## 🛡️ Dual-Mode Butler Architecture (Online Relay vs Air-Gapped)
+## 🛡️ Dual-Mode But behaviour (Online Relay vs Local)
 
-To eliminate the hallucination risks inherent in small on-device models (0.9B–1B parameters), J.A.R.V.I.S. employs a dual-mode butler architecture:
+To limit the hallucination risk inherent in small on-device models, J.A.R.V.I.S. uses a dual-mode architecture:
 
 ```
                          ┌───────────────────────────┐
@@ -363,10 +430,10 @@ To eliminate the hallucination risks inherent in small on-device models (0.9B–
                          │  (500ms Socket Check)     │
                          └──────┬─────────────┬──────┘
                                 │             │
-                    [Online]    │             │   [Offline / Air-Gapped]
+                    [Online]    │             │   [Offline / Local only]
                                 ▼             ▼
      ┌────────────────────────────┐         ┌────────────────────────────┐
-     │  ONLINE BUTLER RELAY       │         │  OFFLINE AIR-GAPPED CORE   │
+     │  ONLINE BUTLER RELAY       │         │  OFFLINE LOCAL CORE   │
      ├────────────────────────────┤         ├────────────────────────────┤
      │ • Live Web Search RAG      │         │ • Strict No-Hallucination  │
      │ • DuckDuckGo HTML Snippets │         │   System Boundary Prompt   │
@@ -383,8 +450,8 @@ To eliminate the hallucination risks inherent in small on-device models (0.9B–
    - External technical queries, current news, and package documentation are retrieved live via DuckDuckGo and Wikipedia before prompt construction.
    - The 1B local model synthesizes and formats the retrieved facts into a concise response without guessing.
 
-2. **Offline Mode (Air-Gapped Local Assistant)**:
-   - When no internet connection is detected, J.A.R.V.I.S. dynamically injects an air-gapped system boundary prompt.
+2. **Offline Mode (Local Assistant)**:
+   - When no internet connection is detected, J.A.R.V.I.S. injects a system boundary prompt.
    - The model politely and transparently informs the user that it does not possess external real-time knowledge due to operating offline.
    - All local deterministic tools (`calculate`, `get_time`, `todo_add`, `system_status`, `remember_fact`, `launch_app`) continue to execute with zero latency.
 

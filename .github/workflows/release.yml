@@ -141,6 +141,9 @@ jobs:
   release:
     needs: [test, build-windows]
     runs-on: ubuntu-latest
+    outputs:
+      # The roll job must not point the rolling channel at a draft.
+      draft: ${{ steps.gate.outputs.signed == 'false' }}
     permissions:
       contents: write
     steps:
@@ -179,8 +182,38 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: DeskPet ${{ github.ref_name }}
+          name: Deskpet ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
           files: artifacts/**/*
           fail_on_unmatched_files: true
           draft: ${{ steps.gate.outputs.signed == 'false' }}
+
+  # Rolling channel: windows-latest always names the newest signed build, so the
+  # install docs can point at one URL that never goes stale. Adopted from
+  # Coucou, which publishes its Windows installer the same way.
+  #
+  # Only moves when the release is public. Pointing the channel at a draft would
+  # hand every user on that URL a build that may still be unsigned.
+  roll:
+    needs: [test, build-windows, release]
+    if: needs.release.result == 'success' && needs.test.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Point windows-latest at this release
+        # A step-level if, not `exit 0` in a prior step: steps are independent,
+        # so a non-zero-free early exit would still run this one.
+        if: needs.release.outputs.draft != 'true'
+        run: |
+          git tag -f windows-latest "${{ github.ref_name }}"
+          git push origin --force "refs/tags/windows-latest"
+          echo "windows-latest -> ${{ github.ref_name }}"
+
+      - name: Skipped
+        if: needs.release.outputs.draft == 'true'
+        run: echo "::notice::Release is a draft, so windows-latest was left where it is."
+

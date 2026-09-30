@@ -1,0 +1,43 @@
+# The Electron major has broken this app before: the Ozone default flipped in
+# Electron 38 and broke Wayland input routing (upstream issue #441). Nothing
+# tracked that, so it was found by users. These are the files that decide what
+# version we run against.
+version: 2
+
+updates:
+  # The whole app is Electron 41 with electron-builder. A minor bump of either
+  # can change packaging behaviour, so they move together.
+  - package-ecosystem: npm
+    directory: /clawd-on-desk
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      electron:
+        patterns:
+          - "electron"
+          - "electron-builder"
+          - "@electron/*"
+    commit-message:
+      prefix: "build(deps)"
+
+  # The Python sidecar runs from source in dev and is frozen with PyInstaller
+  # for release, so a major bump there is a packaging event, not just a code one.
+  - package-ecosystem: pip
+    directory: /minicpm-sidecar
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      pyinstaller:
+        patterns:
+          - "pyinstaller"
+    commit-message:
+      prefix: "build(deps)"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci(deps)"
