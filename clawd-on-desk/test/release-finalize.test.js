@@ -20,17 +20,38 @@ describe("release hook: finalize", () => {
 
   it("refuses to publish a release that is not a draft", () => {
     // The safety property: a second `finalize` must not silently re-sign and
-    // re-upload over a release that is already public. There is no v0.12.0
-    // release in this repo, so this exercises the missing-release path too.
-    const r = run("finalize");
-    assert.strictEqual(r.status, 1, "should exit non-zero");
-    const msg = r.stdout + r.stderr;
-    assert.match(msg, /no GitHub release named|is not a draft/, `unhelpful failure: ${msg}`);
-    assert.doesNotMatch(
-      msg,
-      /at Object\.|node:internal/,
-      "should fail with a message, not a stack trace"
-    );
+    // re-upload over a release that is already public.
+    //
+    // This asserts on the source rather than running `finalize`. It used to
+    // shell out for real, on the assumption that no v0.12.0 release existed.
+    // One does now - a draft - so the test walked past the draft gate and
+    // called gh for real. Every step after that gate has a side effect on the
+    // live release: download, sign, upload, publish, move the rolling tag.
+    // A green CI run would have made `npm test` publish a release. A test must
+    // never hold that power, so the ordering is pinned statically instead.
+    const body = src.slice(src.indexOf("function finalize"));
+    const gate = body.indexOf("isDraft");
+    const download = body.indexOf("gh\", \"run\", \"download");
+    const sign = body.indexOf("sign-artifact.ps1");
+    const publish = body.indexOf("--draft=false");
+    const roll = body.indexOf("refs/tags/");
+
+    assert.ok(gate > 0, "finalize should check isDraft");
+    for (const [name, at] of [["download", download], ["sign", sign], ["publish", publish], ["roll", roll]]) {
+      assert.ok(at > 0, `finalize should still ${name}`);
+      assert.ok(gate < at, `the draft gate must come before ${name}`);
+    }
+  });
+
+  it("reports a gh failure as a message, not a stack trace", () => {
+    // A red test job skips the build job, so the release run has no artifacts
+    // and `gh run download` fails. That is an ordinary operator state, and it
+    // has to read as a sentence rather than an execFileSync stack trace.
+    const body = src.slice(src.indexOf("function finalize"));
+    const download = body.indexOf("gh\", \"run\", \"download");
+    assert.ok(download > 0, "the download call should exist");
+    const guarded = body.slice(download - 400, download);
+    assert.match(guarded, /try\s*\{/, "the download should be wrapped so it can die() cleanly");
   });
 
   it("keeps --dry-run free of side effects", () => {

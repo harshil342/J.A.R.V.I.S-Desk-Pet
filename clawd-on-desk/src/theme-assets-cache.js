@@ -3,12 +3,19 @@
 // NOTE: log lines keep the legacy "[theme-loader]" prefix so existing grep and
 // alert rules that target the original module name continue to work.
 
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const {
   sanitizeSvg,
   collectSafeRasterRefs,
 } = require("./theme-sanitizer");
+
+// 128 bits of sha256. This is a change detector, not a security boundary, so
+// there is no reason to pay for a full digest to keep it in the cache meta.
+function contentDigest(buffer) {
+  return crypto.createHash("sha256").update(buffer).digest("hex").slice(0, 32);
+}
 
 function isPlainObject(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
@@ -198,20 +205,34 @@ function resolveExternalAssetsDir(themeId, themeDir, opts = {}) {
         const cachedSvgPath = path.join(cacheDir, file);
         const cached = cacheMeta.svgs[file];
         let sanitized = null;
-        if (!forceSvgRefresh && cached && cached.mtime === stat.mtimeMs && cached.size === stat.size && fs.existsSync(cachedSvgPath)) {
-          try {
-            sanitized = fs.readFileSync(cachedSvgPath, "utf8");
-          } catch {
-            sanitized = null;
-          }
-        }
 
+        // The cache key is the content digest, not (mtime, size). Those are not
+        // a change signal: two edits inside one filesystem timestamp tick that
+        // land on the same byte count look untouched. Swapping href="a.webp"
+        // for href="b.webp" is exactly that shape, and it reused the stale
+        // sanitized SVG - the raster it still named stayed "referenced", so
+        // the orphan collector left it alone and the pet kept rendering the
+        // old sprite sheet with no error anywhere.
+        //
+        // A v2 cache entry written before this change has no digest, so it
+        // misses once, re-sanitizes, and starts recording hashes. No version
+        // bump needed: the absent field is already the invalidation signal.
         try {
+          const raw = fs.readFileSync(srcFile);
+          const digest = contentDigest(raw);
+
+          if (!forceSvgRefresh && cached && cached.digest === digest && fs.existsSync(cachedSvgPath)) {
+            try {
+              sanitized = fs.readFileSync(cachedSvgPath, "utf8");
+            } catch {
+              sanitized = null;
+            }
+          }
+
           if (sanitized == null) {
-            const svgContent = fs.readFileSync(srcFile, "utf8");
-            sanitized = sanitizeSvg(svgContent);
+            sanitized = sanitizeSvg(raw.toString("utf8"));
             fs.writeFileSync(cachedSvgPath, sanitized, "utf8");
-            cacheMeta.svgs[file] = { mtime: stat.mtimeMs, size: stat.size };
+            cacheMeta.svgs[file] = { digest, mtime: stat.mtimeMs, size: stat.size };
             metaChanged = true;
           }
           for (const ref of collectSafeRasterRefs(sanitized, sourceAssetsDir).values()) {

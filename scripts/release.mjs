@@ -129,6 +129,9 @@ function changelogVersion(version) {
   const m = readFileSync(CHANGELOG, "utf8").match(new RegExp(`^## \\[?${version.replace(/\./g, "\\.")}\\]?`, "m"));
   return m ? m[0] : null;
 }
+function escapeVersion(version) {
+  return version.replace(/\./g, "\\.");
+}
 function renderSection(version, commits) {
   const date = new Date().toISOString().slice(0, 10);
   const by = new Map();
@@ -147,23 +150,30 @@ function renderSection(version, commits) {
     .join("\n\n");
   return `## [${version}] - ${date}\n\n${body}\n`;
 }
-function writeChangelog(version) {
-  const section = changelogSection(version);
-  if (!section) die(`CHANGELOG.md has no section for ${version} — run "changelog" first`);
-  const header = "# Changelog\n\nAll notable changes to DeskPet. Format follows Keep a Changelog.\n\n";
-  const existing = existsSync(CHANGELOG) ? readFileSync(CHANGELOG, "utf8") : header;
-  // Insert directly under the header, newest first.
-  const at = existing.indexOf("## ");
-  const next = at === -1 ? header + "\n" + section : existing.slice(0, at) + section + "\n" + existing.slice(at);
-  if (!DRY) writeFileSync(CHANGELOG, next, "utf8");
-  console.log(`  ${DRY ? "[dry] " : ""}wrote CHANGELOG.md section for ${version}`);
-}
+// Block boundaries come from indexOf, not a regex, for the same reason
+// insertSection does it: `$` is a line anchor under /m, so `(?=\n## |$)`
+// matches immediately after the heading and every release body comes out
+// empty. That shipped once - v0.12.0 went out with a two-word body.
 function changelogSection(version) {
   if (!existsSync(CHANGELOG)) return null;
   const text = readFileSync(CHANGELOG, "utf8");
-  const re = new RegExp(`^## \\[?${version.replace(/\./g, "\\.")}\\]?[^\\n]*\\n([\\s\\S]*?)(?=\\n## |$)`, "m");
-  const m = text.match(re);
-  return m ? `## [${version}]${m[0].split("\n")[0].replace(/^## \[?[\d.]+\]?/, "").replace(/ - \d{4}-\d{2}-\d{2}$/, "")}\n${m[1]}` : null;
+  const heading = new RegExp(`^## \\[?${escapeVersion(version)}\\]?[^\\n]*$`, "m").exec(text);
+  if (!heading) return null;
+  const bodyStart = heading.index + heading[0].length;
+  const next = text.indexOf("\n## ", bodyStart);
+  const body = (next === -1 ? text.slice(bodyStart) : text.slice(bodyStart, next)).trim();
+  return `## [${version}]\n${body ? `\n${body}\n` : ""}`;
+}
+
+// `notes` exists so release.yml does not carry its own copy of this logic.
+// A duplicated regex that silently returns nothing is exactly the bug above,
+// and a second copy would drift the moment one of them is fixed.
+function notes(wantVersion) {
+  const version = wantVersion || readVersion();
+  const section = changelogSection(version);
+  if (!section) die(`CHANGELOG.md has no section for ${version}`);
+  if (DRY) { console.log(`  [dry] would print the ${version} section`); return; }
+  process.stdout.write(section);
 }
 
 // ── tree state ───────────────────────────────────────────────────────────────
@@ -347,7 +357,18 @@ function finalize() {
     "--json", "headBranch,conclusion,databaseId", "--jq",
     `.[] | select(.headBranch == "${name}") | .databaseId`]).split(/\r?\n/).filter(Boolean)[0];
   if (!runId) die(`no release.yml run found for ${name}. Has CI finished?`);
-  run(["gh", "run", "download", runId, "--name", "windows-installer", "--dir", WORK]);
+  // run() lets execFileSync throw, which surfaces as a raw Node stack trace.
+  // That is the state right now: a red test job means the build job was
+  // skipped, so the run has no artifacts at all. Say that, instead of
+  // printing a stack trace and leaving the reader to decode gh's exit code.
+  try {
+    run(["gh", "run", "download", runId, "--name", "windows-installer", "--dir", WORK]);
+  } catch (e) {
+    die(`could not download the windows-installer artifact from run ${runId}.\n` +
+        `  gh said: ${(e.stderr || e.message).toString().trim()}\n` +
+        `  A red test job skips the build job, so a failed run has no artifacts.\n` +
+        `  Re-run the release workflow for ${name} and try again.`);
+  }
 
   // 3. Sign every installer, locally, with the self-signed certificate.
   const installer = existsSync(WORK)
@@ -425,12 +446,17 @@ function selfTest() {
 }
 
 const cmd = args[0];
-const table = { check, bump, changelog, tag, push, roll, finalize };
+const table = { check, bump, changelog, notes, tag, push, roll, finalize };
 if (cmd === "--self-test") { selfTest(); process.exit(process.exitCode ?? 0); }
 if (!table[cmd]) {
-  console.log(`usage: node scripts/release.mjs <check|bump|changelog|tag|push|finalize|roll|--self-test> [--dry-run]`);
+  console.log(`usage: node scripts/release.mjs <check|bump|changelog|notes|tag|push|finalize|roll|--self-test> [--dry-run]`);
   console.log(`\n  finalize  sign the CI build locally, publish the draft, move ${ROLLING_TAG}`);
+  console.log(`  notes     print the current version's CHANGELOG section to stdout`);
   process.exit(1);
 }
 table[cmd](args[1]);
-if (existsSync(NOTES_TMP) && cmd !== "push" && cmd !== "tag") rmSync(NOTES_TMP, { force: true });
+// Every command, including the ones that just wrote the file. It used to be
+// kept for tag and push, which left an untracked .release-notes.tmp sitting in
+// the repo - and `check` counts untracked files, so the second release of any
+// project would be refused for a temp file the first one created.
+if (existsSync(NOTES_TMP)) rmSync(NOTES_TMP, { force: true });

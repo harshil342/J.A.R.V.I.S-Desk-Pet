@@ -32,7 +32,11 @@ defaults:
 jobs:
   test:
     name: test
-    runs-on: ubuntu-22.04
+    # D3 made Windows x64 the only target, so the gate runs on the platform we
+    # actually ship. Gating a Windows-only product on ubuntu is not free: the
+    # two disagree on filesystem mtime granularity, and that disagreement is
+    # what let the theme raster cache bug below reach a tagged release.
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,7 +46,12 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+        # pwsh, not the bash installer used on ubuntu: this is the same form
+        # the build job uses, and it is the one known to land uv on PATH here.
+        shell: pwsh
+        run: |
+          irm https://astral.sh/uv/install.ps1 | iex
+          Add-Content $env:GITHUB_PATH "$env:USERPROFILE\.local\bin"
       - name: Electron tests
         working-directory: clawd-on-desk
         run: |
@@ -157,15 +166,16 @@ jobs:
 
       - name: Extract release notes from CHANGELOG
         run: |
-          node -e '
-            const fs = require("fs");
-            const v = process.env.GITHUB_REF_NAME.replace(/^v/, "");
-            const esc = v.replace(/\./g, "\\.");
-            const re = new RegExp("^## \\[?" + esc + "\\]?[^\\n]*\\n[\\s\\S]*?(?=\\n## |$)", "m");
-            const m = fs.readFileSync("CHANGELOG.md", "utf8").match(re);
-            if (!m) { console.error("no CHANGELOG.md section for " + v); process.exit(1); }
-            fs.writeFileSync("RELEASE_NOTES.md", m[0].trim() + "\n");
-          '
+          # release.mjs owns changelog parsing. The inline regex that used to
+          # live here is why v0.12.0 shipped with a two-word release body:
+          # under /m, `$` is a line anchor, so the lazy match stopped right
+          # after the heading and the lookahead never had to find a section.
+          # The tag is passed explicitly so a missing section fails the step
+          # instead of silently describing a different version.
+          node scripts/release.mjs notes "${GITHUB_REF_NAME#v}" > RELEASE_NOTES.md
+          # An empty body is the exact failure this replaced. Fail loudly.
+          test -s RELEASE_NOTES.md || { echo "::error::RELEASE_NOTES.md came out empty"; exit 1; }
+          head -1 RELEASE_NOTES.md
 
       - name: Decide public vs draft
         id: gate
