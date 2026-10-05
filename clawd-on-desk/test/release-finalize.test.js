@@ -85,6 +85,57 @@ describe("release hook: finalize", () => {
     );
   });
 
+  it("rewrites latest.yml after signing, not before", () => {
+    // The bug this prevents: CI writes latest.yml from the unsigned build,
+    // finalize signs the .exe, and the manifest keeps describing bytes that
+    // are no longer on the server. electron-updater verifies the download
+    // against that hash, so the published release refuses every update - and
+    // the artifact that would fix it is the update that cannot install.
+    const body = src.slice(src.indexOf("function writeLatestYml"));
+    const sign = src.indexOf("sign-artifact.ps1");
+    const manifest = src.indexOf("writeLatestYml(v, exe, installer)");
+
+    assert.ok(manifest > 0, "finalize should regenerate the manifest");
+    assert.ok(
+      manifest > sign,
+      "the manifest must be built after the signing step, not before it"
+    );
+    // And it has to be published, not just written to disk.
+    assert.match(
+      src,
+      /gh",\s*"release",\s*"upload",\s*name,\s*manifest/,
+      "the regenerated manifest should be uploaded to the release"
+    );
+  });
+
+  it("carries the publisher name electron-updater matches the signature against", () => {
+    // Without publisherName in latest.yml, electron-updater has no subject to
+    // check the downloaded .exe against and the update path is unusable.
+    assert.match(src, /publisherName: \$\{publisher\}/);
+    // Read from the committed public cert rather than hardcoded, so a
+    // reissued certificate does not leave a stale name behind.
+    assert.match(src, /X509Certificate/);
+    assert.match(src, /new X509Certificate\(readFileSync\(CER\)\)/);
+  });
+
+  it("drops the blockmap that no longer describes the installer", () => {
+    // Signing rewrote the file, so every byte range in the CI blockmap is
+    // wrong. Left in place it makes electron-updater splice a differential
+    // download out of two versions that do not correspond.
+    assert.match(src, /delete-asset/);
+    assert.match(src, /blockmap/);
+  });
+
+  it("creates the rolling release before uploading to it", () => {
+    // gh release upload fails outright on a tag that has no release, so the
+    // first finalize on a fresh channel died on its last step - after having
+    // already published, which is the worst possible moment to stop.
+    const body = src.slice(src.indexOf("function releaseExists"));
+    assert.match(body, /function releaseExists/);
+    assert.match(src, /if \(!releaseExists\(ROLLING_TAG\)\)/);
+    assert.match(src, /"release",\s*"create",\s*ROLLING_TAG/);
+  });
+
   it("still passes its own self-test", () => {
     const out = execFileSync(process.execPath, [HOOK, "--self-test"], {
       cwd: ROOT,

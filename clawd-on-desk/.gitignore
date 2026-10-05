@@ -131,3 +131,11 @@ scripts/*
 *.cer
 *.key
 
+# The public half is the one exception, and the negation has to live here
+# rather than in the root .gitignore: a deeper .gitignore wins over a
+# shallower one, so a rule there would be overridden by the *.cer above.
+# This file carries no private key. The installer adds it to the user's trust
+# store so electron-updater can verify a build signed with the matching key,
+# which never leaves the machine that generated it.
+!build/deskpet-selfsigned.cer
+

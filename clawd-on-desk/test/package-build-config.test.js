@@ -240,6 +240,76 @@ describe("package build config", () => {
       );
     });
 
+    it("installs its own trust anchor, or the updater can never accept a build", () => {
+      // electron-updater builds a chain to a trusted root when it verifies a
+      // downloaded .exe. A self-signed cert is trusted nowhere until something
+      // puts it in a store, so without this the first update a user attempts
+      // fails with ERR_UPDATER_INVALID_SIGNATURE - permanently, because the
+      // thing that would fix it is the update that cannot install.
+      const nsh = fs.readFileSync(
+        path.join(__dirname, "..", "build", "installer.nsh"),
+        "utf8"
+      );
+      assert.match(nsh, /deskpet-selfsigned\.cer/);
+      assert.match(nsh, /certutil -user -addstore -f Root/);
+      assert.match(nsh, /certutil -user -addstore -f TrustedPublisher/);
+      // -user, not machine-wide: no admin rights, and a dev cert has no
+      // business in the machine store. Every line that actually invokes
+      // certutil has to say so - checked per line, because a global "no
+      // certutil without -user" also fires on the prose in the comment above.
+      const certutilLines = nsh
+        .split("\n")
+        .filter((l) => /\bcertutil\s+-/.test(l));
+      assert.ok(certutilLines.length >= 2, "expected certutil invocations to inspect");
+      for (const line of certutilLines) {
+        assert.match(
+          line,
+          /\bcertutil\s+-user\s+/,
+          `certutil should target the current user only: ${line.trim()}`
+        );
+      }
+      assert.match(nsh, /untrust-cert\.ps1/, "uninstall should drop the trust anchor");
+    });
+
+    it("commits the public certificate but never the private key", () => {
+      const build = path.join(__dirname, "..", "build");
+      const cer = path.join(build, "deskpet-selfsigned.cer");
+      assert.ok(fs.existsSync(cer), "the public .cer must ship with the installer");
+
+      // A DER certificate has no private key in it. Check the structure rather
+      // than trusting the filename: a PEM-wrapped key pasted here would be a
+      // catastrophic, silent mistake.
+      const bytes = fs.readFileSync(cer);
+      assert.doesNotMatch(
+        bytes.toString("latin1"),
+        /PRIVATE KEY/,
+        "the committed certificate must not contain a private key"
+      );
+
+      // Not `git check-ignore`: it reports a *negated* match too, so a file
+      // that was deliberately un-ignored still looks like a match. Listing
+      // ignored-but-untracked files is unambiguous.
+      const repo = path.join(__dirname, "..", "..");
+      const rel = (p) => path.relative(repo, p).split(path.sep).join("/");
+      // Scoped to the build directory: un-scoped, this lists every ignored
+      // file in the repo (venvs, tool caches) and overflows the exec buffer.
+      const ignored = execFileSync(
+        "git",
+        ["ls-files", "-o", "-i", "--exclude-standard", "--", "clawd-on-desk/build"],
+        { cwd: repo, encoding: "utf8", maxBuffer: 1024 * 1024 }
+      ).split(/\r?\n/).filter(Boolean);
+
+      assert.ok(
+        !ignored.includes(rel(cer)),
+        `the public .cer must not be ignored, but .gitignore still catches it`
+      );
+      // And the private key beside it must stay out of the repo.
+      assert.ok(
+        ignored.includes(rel(path.join(build, "deskpet-selfsigned.pfx"))),
+        "the .pfx must stay gitignored"
+      );
+    });
+
     it("does not hardcode a version into the release title", () => {
       const workflow = releaseWorkflow();
       const nameIndex = workflow.indexOf("name: Deskpet");

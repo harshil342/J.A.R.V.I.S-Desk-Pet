@@ -132,6 +132,19 @@ if (-not (Test-Path $pfxPath)) {
 }
 Write-Host "Exported $pfxPath" -ForegroundColor Green
 
+# The public certificate is committed on purpose. It has no private key, and the
+# installer needs it to add the trust anchor that makes electron-updater's
+# signature check pass on a machine that has never seen this cert. The .pfx
+# beside it stays gitignored and never leaves this machine.
+$cerPath = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\build\deskpet-selfsigned.cer'))
+$leaf = Get-ChildItem Cert:\CurrentUser\My -ErrorAction SilentlyContinue |
+  Where-Object { $_.Subject -eq "CN=$Subject" -and $_.HasPrivateKey } | Select-Object -First 1
+if (-not $leaf) { throw "no cert found for CN=$Subject to export a public certificate from" }
+[System.IO.File]::WriteAllBytes(
+  $cerPath,
+  $leaf.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert))
+Write-Host "Exported $cerPath (public only, committed)" -ForegroundColor Green
+
 if ($Trust) {
   $leaf = Get-ChildItem Cert:\CurrentUser\My -ErrorAction SilentlyContinue |
     Where-Object { $_.Subject -eq "CN=$Subject" -and $_.HasPrivateKey } | Select-Object -First 1

@@ -23,6 +23,7 @@
 
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
+import { createHash, X509Certificate } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -31,6 +32,11 @@ const PKG = join(ROOT, "clawd-on-desk", "package.json");
 const SIDECAR = join(ROOT, "minicpm-sidecar", "pyproject.toml");
 const CHANGELOG = join(ROOT, "CHANGELOG.md");
 const NOTES_TMP = join(ROOT, ".release-notes.tmp");
+// The public half of the signing certificate, committed so the installer can
+// install its own trust anchor. Read for the publisher name so latest.yml
+// always names the cert the user actually has, not a hardcoded string that
+// drifts the first time someone runs make-dev-cert.ps1 with -Subject.
+const CER = join(ROOT, "clawd-on-desk", "build", "deskpet-selfsigned.cer");
 
 // The only place a version is authored. Everything else is derived.
 const VERSION_FILE = "clawd-on-desk/package.json";
@@ -322,6 +328,57 @@ function roll() {
 // of this channel useless.
 const WORK = join(ROOT, ".release-work");
 
+// The CN of the certificate the installer installs into the user's trust store.
+// electron-updater matches the downloaded .exe against this string, so it has
+// to come from the same .cer rather than a literal that goes stale.
+function publisherName() {
+  if (!existsSync(CER)) return null;
+  const m = /(?:^|,)\s*CN=([^,]+)/.exec(new X509Certificate(readFileSync(CER)).subject);
+  return m ? m[1].trim() : null;
+}
+
+// CI wrote latest.yml from the *unsigned* build. Signing rewrites the file, so
+// the hash and size in that manifest describe bytes that are no longer on the
+// server. electron-updater verifies the download against it, so a published
+// release built this way fails every update with a hash mismatch - and the one
+// artifact that would fix it is the update that cannot install. Rewrite it
+// against the signed file.
+function latestYmlText(version, fileName, bytes, publisher, releaseDate) {
+  const sha512 = createHash("sha512").update(bytes).digest("base64");
+  const lines = [
+    `version: ${version}`,
+    "files:",
+    `  - url: ${fileName}`,
+    `    sha512: ${sha512}`,
+    `    size: ${bytes.length}`,
+  ];
+  // publisherName goes in both places on purpose: electron-updater reads the
+  // per-file entry to match the downloaded signature, and the top-level one
+  // is what older readers look at.
+  if (publisher) lines.push(`    publisherName: ${publisher}`);
+  lines.push(`path: ${fileName}`, `sha512: ${sha512}`);
+  if (publisher) lines.push(`publisherName: ${publisher}`);
+  lines.push(`releaseDate: '${releaseDate}'`, "");
+  return lines.join("\n");
+}
+
+function writeLatestYml(version, exePath, fileName) {
+  const bytes = readFileSync(exePath);
+  const publisher = publisherName();
+  const out = join(WORK, "latest.yml");
+  writeFileSync(out, latestYmlText(version, fileName, bytes, publisher, new Date().toISOString()), "utf8");
+  return { out, publisher };
+}
+
+function releaseExists(tag) {
+  try {
+    run(["gh", "release", "view", tag, "--json", "tagName"], { quiet: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function finalize() {
   const v = readVersion();
   const name = `v${v}`;
@@ -381,8 +438,22 @@ function finalize() {
   run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
     join(ROOT, "clawd-on-desk", "scripts", "sign-artifact.ps1"), "-Path", exe]);
 
-  // 4. Re-upload, replacing the unsigned asset of the same name.
+  // 4. Re-upload, replacing the unsigned asset of the same name, and put the
+  //    manifest back in sync with the file that is actually being served.
+  const { out: manifest, publisher } = writeLatestYml(v, exe, installer);
+  console.log(`  rewrote latest.yml for the signed build${publisher ? ` (publisherName: ${publisher})` : ""}`);
   run(["gh", "release", "upload", name, exe, "--clobber"]);
+  run(["gh", "release", "upload", name, manifest, "--clobber"]);
+
+  // The blockmap CI emitted describes the unsigned bytes. Every byte range in
+  // it is now wrong, and electron-updater would use it to assemble a
+  // differential download - splicing a corrupt installer out of two versions
+  // that do not correspond. Deleting it forces a full download, which is
+  // slower and correct. Builds without a blockmap are fine either way.
+  try {
+    run(["gh", "release", "delete-asset", name, `${installer}.blockmap`, "--yes"], { quiet: true });
+    console.log(`  removed the stale ${installer}.blockmap`);
+  } catch { /* not every build emits one */ }
 
   // 5. Publish. Only now is a signed build publicly reachable.
   run(["gh", "release", "edit", name, "--draft=false"]);
@@ -393,6 +464,19 @@ function finalize() {
   execFileSync("cmd", ["/c", "copy", "/y", exe, stable], { stdio: "ignore" });
   run(["git", "tag", "-f", ROLLING_TAG, name]);
   run(["git", "push", "origin", "--force", `refs/tags/${ROLLING_TAG}`]);
+  // The first release has to create the rolling release; every one after it
+  // just replaces the asset. `gh release upload` fails outright on a tag that
+  // has no release, so without this the very first finalize on a fresh channel
+  // dies on its last step - after having already published, which is the worst
+  // moment to stop.
+  if (!releaseExists(ROLLING_TAG)) {
+    run(["gh", "release", "create", ROLLING_TAG,
+      "--title", `DeskPet ${ROLLING_TAG} (rolling)`,
+      "--notes", `Rolling channel. Always the newest signed build.\n\n` +
+        `Currently: ${name}\n\n` +
+        `Install: https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/download/${ROLLING_TAG}/Deskpet-Setup.exe`]);
+    console.log(`  created the ${ROLLING_TAG} release`);
+  }
   run(["gh", "release", "upload", ROLLING_TAG, stable, "--clobber"]);
   console.log(`  ${ROLLING_TAG} -> ${name} as Deskpet-Setup.exe`);
   console.log(`  install URL: releases/download/${ROLLING_TAG}/Deskpet-Setup.exe`);
@@ -441,6 +525,21 @@ function selfTest() {
   t("Unreleased body stays under its heading", inserted.indexOf("work in progress") < inserted.indexOf("## [0.12.0]"), true);
   t("older section still last", inserted.indexOf("## [0.11.0]") > inserted.indexOf("## [0.12.0]"), true);
   t("no Unreleased means newest goes on top", insertSection(`${CHANGELOG_HEADER}\n## [0.11.0] - x\n\n- old\n`, "## [0.12.0] - y\n\n- new\n").indexOf("## [0.12.0]") < insertSection(`${CHANGELOG_HEADER}\n## [0.11.0] - x\n\n- old\n`, "## [0.12.0] - y\n\n- new\n").indexOf("## [0.11.0]"), true);
+
+  // The manifest has to describe the file that is actually served. Signing
+  // rewrites the installer, so a manifest written before signing is a hash of
+  // bytes nobody has - and the updater rejects the very download it was meant
+  // to allow. Build one over known bytes and check every field against them.
+  const sample = Buffer.from("not the real installer, but a fixed set of bytes");
+  const manifest = latestYmlText("0.12.0", "Deskpet-0.12.0-x64.exe", sample, "Deskpet", "2026-10-05T00:00:00.000Z");
+  const expectedSha = createHash("sha512").update(sample).digest("base64");
+  t("manifest sha512 matches the bytes", manifest.includes(`sha512: ${expectedSha}`), true);
+  t("manifest size matches the bytes", manifest.includes(`size: ${sample.length}`), true);
+  t("manifest carries publisherName", manifest.includes("publisherName: Deskpet"), true);
+  t("manifest names the version", /^version: 0\.12\.0$/m.test(manifest), true);
+  t("manifest sha512 is at file and top level", manifest.split("sha512: ").length - 1, 2);
+  t("no publisherName when there is no cert", latestYmlText("0.12.0", "x.exe", sample, null, "x").includes("publisherName"), false);
+  t("publisherName comes from the committed cert", publisherName(), "Deskpet");
 
   console.log(`  self-test: ${pass} passed${process.exitCode ? ", some failed" : ""}`);
 }
