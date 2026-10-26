@@ -26,8 +26,12 @@ $ErrorActionPreference = 'Stop'
 # $PSScriptRoot is not populated while param defaults are evaluated, so resolve
 # the probe path here rather than in the default.
 if (-not $ProbeSource) {
-  $ProbeSource = [System.IO.Path]::GetFullPath(
+  $candidate = [System.IO.Path]::GetFullPath(
     (Join-Path $PSScriptRoot '..\..\minicpm-sidecar\bin\win-x64\llama-server.exe'))
+  if (-not (Test-Path $candidate)) {
+    $candidate = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\bin\llama-server.exe'))
+  }
+  $ProbeSource = $candidate
 }
 
 $cert = Get-ChildItem Cert:\CurrentUser\My -ErrorAction SilentlyContinue |

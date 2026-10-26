@@ -46,9 +46,8 @@ if (-not (Test-Path $pfx)) {
 Write-Host "Verifying the certificate can sign..." -ForegroundColor Cyan
 & (Join-Path $PSScriptRoot 'verify-signing.ps1') | Out-Host
 
-$pfxUrl = 'file:///' + ($pfx -replace '\\', '/')
-$env:CSC_LINK = $pfxUrl
-$env:WIN_CSC_LINK = $pfxUrl
+$env:CSC_LINK = $pfx
+$env:WIN_CSC_LINK = $pfx
 $env:CSC_KEY_PASSWORD = if ($env:DESKPET_CERT_PASSWORD) { $env:DESKPET_CERT_PASSWORD } else { 'deskpet-dev' }
 # A self-signed cert has no timestamp authority, and asking for one makes
 # signtool fail rather than fall back. Real CA certs should set this.
