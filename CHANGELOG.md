@@ -9,6 +9,14 @@ The app and the sidecar ship as one product and carry the same version.
 Work in progress. See `plan.md` for the production-hardening plan and
 `scripts/release.mjs changelog` to fold these into a version.
 
+## [0.13.0] - 2026-10-26
+
+### Added
+
+- add Underdog Bark 3.0-Clean STT and Ming-3.0 TTS presets (models)
+- ship the trust anchor, and stop finalize from breaking the updater (signing)
+
+
 ## [0.12.0] - 2026-09-30
 
 ### Added
