@@ -34,7 +34,7 @@ const MODEL_PRESETS = {
   },
 };
 
-// ponytail: map 4-tier companion recipes to underlying model presets and voice specs
+// ponytail: wire Bark-3.0-Clean (STT with native text-cleaning) and Ming-3.0 (HiFi TTS) into companion presets
 MODEL_PRESETS["eco-sentinel"] = {
   ...MODEL_PRESETS["minicpm5-1b"],
   id: "eco-sentinel",
@@ -42,8 +42,8 @@ MODEL_PRESETS["eco-sentinel"] = {
   tag: "Low VRAM (~0.9 GB)",
   recipeId: "eco-sentinel",
   vram: "~0.9 GB",
-  tts: "sanoTTS (5MB, 50ms CPU)",
-  stt: "Moonshine Tiny",
+  tts: "Kokoro-82M Butler",
+  stt: "Bark-3.0-Clean",
 };
 MODEL_PRESETS["jarvis-studio"] = {
   ...MODEL_PRESETS["minicpm5-1b"],
@@ -53,7 +53,7 @@ MODEL_PRESETS["jarvis-studio"] = {
   recipeId: "jarvis-studio",
   vram: "~1.5 GB",
   tts: "Kokoro-82M Butler",
-  stt: "Whisper-Base",
+  stt: "Bark-3.0-Clean",
 };
 MODEL_PRESETS["deep-cognition"] = {
   ...MODEL_PRESETS["minicpm5-2b"],
@@ -62,8 +62,8 @@ MODEL_PRESETS["deep-cognition"] = {
   tag: "High VRAM (~2.4 GB)",
   recipeId: "deep-cognition",
   vram: "~2.4 GB",
-  tts: "Kokoro-82M Studio",
-  stt: "Parakeet-TDT",
+  tts: "Ming-3.0-0.5B Studio",
+  stt: "Bark-3.0-Clean",
 };
 
 const DEFAULT_MODEL_PRESET = "minicpm5-1b";

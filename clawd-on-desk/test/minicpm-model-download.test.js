@@ -88,6 +88,9 @@ describe("minicpm-model-download", () => {
     assert.equal(downloader.MODEL_PRESETS["minicpm5-2b"].filename, "MiniCPM5-2B-Q4_K_M.gguf");
     assert.equal(downloader.MODEL_PRESETS["minicpm5-1b"].sizeBytes, 1_153_529_216);
     assert.equal(downloader.MODEL_PRESETS["minicpm5-2b"].sizeBytes, 1_561_318_368);
+    assert.equal(downloader.MODEL_PRESETS["jarvis-studio"].stt, "Bark-3.0-Clean");
+    assert.equal(downloader.MODEL_PRESETS["jarvis-studio"].tts, "Kokoro-82M Butler");
+    assert.equal(downloader.MODEL_PRESETS["deep-cognition"].tts, "Ming-3.0-0.5B Studio");
   });
 
   it("resolves model presets with fallback to default", () => {
