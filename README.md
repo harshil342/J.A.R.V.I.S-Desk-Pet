@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><img src="https://img.shields.io/badge/Release-v0.12.0-blue?style=for-the-badge&logo=github" alt="Latest Release"></a>
+  <a href="https://github.com/harshil342/J.A.R.V.I.S-Desk-Pet/releases/latest"><img src="https://img.shields.io/badge/Release-v0.13.0-blue?style=for-the-badge&logo=github" alt="Latest Release"></a>
   <img src="https://img.shields.io/badge/Privacy-Local--first%20by%20default-informational?style=for-the-badge&logo=shield" alt="Local first by default">
   <img src="https://img.shields.io/badge/Protocol-Native%20MCP%20Engine-orange?style=for-the-badge&logo=json" alt="Native MCP">
   <img src="https://img.shields.io/badge/Platform-Windows%20x64-lightgrey?style=for-the-badge&logo=windows" alt="Platform">
